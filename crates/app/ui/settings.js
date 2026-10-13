@@ -56,6 +56,7 @@ function setSeg(seg, value) {
     }
   }
   for (const b of seg.children) b.classList.toggle("active", b.dataset.value === value);
+  placeThumb(seg);
 }
 
 function fill() {
@@ -201,3 +202,20 @@ function updateVisibility() {
 }
 document.addEventListener("change", updateVisibility);
 document.addEventListener("click", (e) => e.target.closest(".seg") && updateVisibility());
+
+// Each segmented control gets one highlight element that slides between its buttons.
+function placeThumb(seg) {
+  const b = seg.querySelector("button.active");
+  const thumb = seg.querySelector(".thumb");
+  if (!b || !b.offsetWidth) return;
+  thumb.style.width = b.offsetWidth + "px";
+  thumb.style.height = b.offsetHeight + "px";
+  thumb.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
+  seg.classList.add("ready");
+}
+const thumbObserver = new ResizeObserver((entries) => entries.forEach((e) => placeThumb(e.target)));
+for (const seg of SEGS) {
+  seg.prepend(Object.assign(document.createElement("i"), { className: "thumb" }));
+  thumbObserver.observe(seg);
+  seg.addEventListener("click", () => placeThumb(seg));
+}

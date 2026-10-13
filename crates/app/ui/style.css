@@ -6,14 +6,15 @@
   --accent-2: #7a5cff;
   --ok: #15803d;
   --err: #c4291c;
-  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28));
+  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.1));
   --glass-border: rgba(255, 255, 255, 0.7);
   --glass-shadow: 0 10px 30px rgba(20, 30, 60, 0.12);
   --shine: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(255, 255, 255, 0.25);
   --divider: rgba(0, 0, 0, 0.07);
-  --field: rgba(255, 255, 255, 0.55);
+  --field: rgba(255, 255, 255, 0.32);
   --track: rgba(0, 0, 0, 0.18);
   --base: 255, 255, 255;
+  --thumb: rgba(255, 255, 255, 0.45);
   font: 13px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
 }
 
@@ -25,14 +26,15 @@
     --accent-2: #9b86ff;
     --ok: #6ee7a0;
     --err: #ff8a80;
-    --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+    --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
     --glass-border: rgba(255, 255, 255, 0.22);
     --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     --shine: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
     --divider: rgba(255, 255, 255, 0.09);
-    --field: rgba(255, 255, 255, 0.08);
+    --field: rgba(255, 255, 255, 0.05);
     --track: rgba(255, 255, 255, 0.22);
     --base: 32, 32, 40;
+    --thumb: rgba(255, 255, 255, 0.14);
   }
 }
 
@@ -160,6 +162,7 @@ label.item { cursor: pointer; }
   border-radius: 14px;
   background: var(--field);
   border: 1px solid var(--divider);
+  position: relative;
 }
 .seg button {
   flex: 1 1 auto;
@@ -168,17 +171,10 @@ label.item { cursor: pointer; }
   border-radius: 10px;
   background: transparent;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
 }
-.seg button:hover { background: var(--field); }
-.seg button.active {
-  background: var(--glass);
-  border-color: var(--glass-border);
-  box-shadow: var(--shine), 0 2px 8px rgba(0, 0, 0, 0.12);
-  font-weight: 600;
-}
-.seg button.active { background-color: rgba(255, 255, 255, 0.5); }
-@media (prefers-color-scheme: dark) { .seg button.active { background-color: rgba(255, 255, 255, 0.14); } }
 
 /* controls */
 button {
@@ -263,3 +259,20 @@ input[type="range"]::-webkit-slider-thumb {
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
+
+/* sliding highlight under the chosen segment */
+.seg .thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+  background: var(--glass);
+  background-color: var(--thumb);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shine), 0 2px 8px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+.seg.ready .thumb { transition: transform 0.32s cubic-bezier(0.3, 1.25, 0.5, 1), width 0.32s cubic-bezier(0.3, 1.25, 0.5, 1), height 0.2s; }
+.seg button.active { font-weight: 600; }
+.seg button:hover:not(.active) { background: var(--field); }
+.item > button { white-space: nowrap; flex: none; }
