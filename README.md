@@ -2,24 +2,35 @@
 
 Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 dùng TSF thật; macOS (arm64) làm ở phase sau. Engine port từ [OpenKey](https://github.com/tuyenvm/OpenKey) nên repo là GPL-3.0.
 
-## Cấu trúc
+## Cài đặt
 
-| Đường dẫn | Nội dung |
-|---|---|
-| `crates/engine` | Engine thuần (không phụ thuộc OS): port OpenKey, `Composer` cho IME, `settings` |
-| `crates/tsf` | Text service Windows (`evkey_tsf.dll`) |
-| `tools/difftest` | Harness C++ build engine OpenKey gốc để so sánh |
-| `scripts/` | Cài/gỡ, kích hoạt, smoke test Notepad |
-
-## Cài trên Windows
+### Cách 1: winget (khuyên dùng)
 
 ```powershell
-cargo build -p evkey-tsf --release
-powershell -ExecutionPolicy Bypass -File scripts/install.ps1   # tự xin quyền admin, 1 lần UAC
+winget install --id chrisnguyen.EVKey -e
 ```
 
-Chọn "EVKey" (English (United States)) bằng `Win+Space`. Gỡ: `scripts/uninstall.ps1`.
-Log gỡ lỗi: tạo file `%LOCALAPPDATA%\EVKey\debug`, đọc `%LOCALAPPDATA%\EVKey\tsf.log`.
+Gói chỉ có trên winget sau khi manifest đầu tiên được Microsoft duyệt (xem `packaging/winget/`). Trước đó dùng cách 2.
+
+### Cách 2: tải installer
+
+Tải `EVKey-Setup-<version>.exe` từ [Releases](https://github.com/ngocnc/EVKey/releases), rồi chạy file. Installer cần quyền admin (UAC) để đăng ký bộ gõ.
+
+**Cảnh báo SmartScreen:** installer chưa ký số nên Windows có thể hiện "Windows protected your PC". Bấm **More info** → **Run anyway**. Kiểm tra SHA256 trong phần ghi chú của release nếu muốn xác minh file.
+
+Sau khi cài, chọn "EVKey" (English (United States)) bằng `Win+Space`. Installer tự thêm bộ gõ vào danh sách bàn phím và bật khởi động cùng Windows; có thể bỏ các tùy chọn này ở bước chọn tác vụ.
+
+Cài im lặng (không hỏi gì, dùng mặc định):
+
+```powershell
+EVKey-Setup-2.0.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+```
+
+Bỏ tùy chọn: thêm `/TASKS=""` (không thêm bàn phím, không khởi động cùng Windows).
+
+### Gỡ cài đặt
+
+Gỡ trong **Settings → Apps → Installed apps → EVKey**, hoặc `winget uninstall --id chrisnguyen.EVKey -e`. Gỡ sẽ đóng EVKey, bỏ khỏi danh sách bàn phím và khởi động cùng Windows, nhưng **giữ nguyên cấu hình** trong `%APPDATA%\EVKey`. Xóa thư mục đó nếu muốn bỏ hẳn cấu hình.
 
 ## Cấu hình
 
@@ -49,7 +60,46 @@ btw = "by the way"
 vn = "Việt Nam"
 ```
 
-## Kiểm thử
+## Trạng thái (v1.0.0)
+
+- Windows 11 x64: đã kiểm chứng Notepad; engine so khớp từng sự kiện với OpenKey gốc.
+- Chưa kiểm chứng đầy đủ: Chrome/Edge, Electron, Windows Terminal, UWP, ô mật khẩu (có nhận diện qua InputScope).
+- Lỗi đã biết: `TextBox` WinForms (EDIT cổ điển) có thể mất chữ gõ sau lần commit đầu.
+- Ứng dụng 32-bit không gõ được (chỉ build x64). macOS (arm64) chưa làm.
+
+## Phát triển
+
+### Cấu trúc
+
+| Đường dẫn | Nội dung |
+|---|---|
+| `crates/engine` | Engine thuần (không phụ thuộc OS): port OpenKey, `Composer` cho IME, `settings` |
+| `crates/tsf` | Text service Windows (`evkey_tsf.dll`) |
+| `tools/difftest` | Harness C++ build engine OpenKey gốc để so sánh |
+| `installer/` | Script Inno Setup (`evkey.iss`) và ngôn ngữ tiếng Việt |
+| `packaging/winget/` | Manifest winget |
+| `scripts/` | Cài/gỡ dev, kích hoạt, smoke test Notepad, build installer |
+
+### Build installer
+
+```powershell
+scripts/build-installer.ps1           # cargo build --release, rồi iscc → dist/EVKey-Setup-<version>.exe
+scripts/build-installer.ps1 -NoBuild  # dùng binary có sẵn trong target/release
+```
+
+Cần Inno Setup 6 (`winget install --id JRSoftware.InnoSetup -e`).
+
+### Cài dev từ mã nguồn
+
+```powershell
+cargo build -p evkey-tsf --release
+powershell -ExecutionPolicy Bypass -File scripts/install.ps1   # tự xin quyền admin, 1 lần UAC
+```
+
+Chọn "EVKey" (English (United States)) bằng `Win+Space`. Gỡ: `scripts/uninstall.ps1`.
+Log gỡ lỗi: tạo file `%LOCALAPPDATA%\EVKey\debug`, đọc `%LOCALAPPDATA%\EVKey\tsf.log`.
+
+### Kiểm thử
 
 ```
 cargo test -p evkey-engine --release     # parity với OpenKey C++ (400k sự kiện), composer, settings
@@ -58,9 +108,6 @@ scripts/smoke_notepad.ps1 -Type "Vieejt Nam, hoaf dduowcj." -Expected "Việt Na
 
 Tạo lại dữ liệu golden: `tools/difftest/gen_golden.bat` (cần MSVC Build Tools).
 
-## Trạng thái (v1.0.0)
+### Phát hành
 
-- Windows 11 x64: đã kiểm chứng Notepad; engine so khớp từng sự kiện với OpenKey gốc.
-- Chưa kiểm chứng đầy đủ: Chrome/Edge, Electron, Windows Terminal, UWP, ô mật khẩu (có nhận diện qua InputScope).
-- Lỗi đã biết: `TextBox` WinForms (EDIT cổ điển) có thể mất chữ gõ sau lần commit đầu.
-- Ứng dụng 32-bit không gõ được (chỉ build x64). macOS (arm64) chưa làm.
+Đẩy tag `v<version>` (khớp version trong `Cargo.toml`) để chạy `.github/workflows/release.yml`. Các bước một lần cần làm: xem comment đầu file workflow.
