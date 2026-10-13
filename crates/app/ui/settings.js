@@ -72,6 +72,7 @@ function fill() {
   $("config-error").hidden = !state.config_error;
   $("config-error-text").textContent = state.config_error ?? "";
   $("toggle-keyboard").textContent = state.enabled ? "Gỡ khỏi danh sách" : "Thêm vào danh sách";
+  updateVisibility();
 }
 
 function readForm() {
@@ -199,6 +200,4 @@ function updateVisibility() {
   }
 }
 document.addEventListener("change", updateVisibility);
-document.addEventListener("click", (e) => e.target.closest(".seg") && setTimeout(updateVisibility));
-const baseFill = fill;
-fill = () => { baseFill(); updateVisibility(); };
+document.addEventListener("click", (e) => e.target.closest(".seg") && updateVisibility());
