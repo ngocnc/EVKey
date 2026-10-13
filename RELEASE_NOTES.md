@@ -1,6 +1,6 @@
 # Release notes
 
-## v2.1.0 (chưa phát hành)
+## v2.1.0
 
 **Chuyển Việt/Anh thật sự, có phím tắt.** Trước đây V/E không phải một trạng thái của bộ gõ: `Win+Space` chỉ đổi bàn phím Windows và icon khay không biết gì. Từ bản này EVKey có chế độ riêng, dùng chung cho mọi ứng dụng.
 
