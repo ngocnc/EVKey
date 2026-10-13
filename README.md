@@ -60,12 +60,12 @@ btw = "by the way"
 vn = "Việt Nam"
 ```
 
-## Trạng thái (v1.0.0)
+## Trạng thái (v2.0.0)
 
-- Windows 11 x64: đã kiểm chứng Notepad; engine so khớp từng sự kiện với OpenKey gốc.
-- Chưa kiểm chứng đầy đủ: Chrome/Edge, Electron, Windows Terminal, UWP, ô mật khẩu (có nhận diện qua InputScope).
+- Windows 11 x64: engine so khớp từng sự kiện với OpenKey gốc; bộ gõ, bộ cài, gỡ cài đã chạy thật trên máy tác giả.
+- Icon khay không đọc được hay chuyển bàn phím đang dùng của app khác (đã đo: Windows không cho tiến trình ngoài làm việc này đáng tin cậy). Công tắc trong popup chỉ thêm/bớt EVKey khỏi danh sách bàn phím; chuyển Việt/Anh bằng `Win+Space`.
 - Lỗi đã biết: `TextBox` WinForms (EDIT cổ điển) có thể mất chữ gõ sau lần commit đầu.
-- Ứng dụng 32-bit không gõ được (chỉ build x64). macOS (arm64) chưa làm.
+- Ứng dụng 32-bit không gõ được (chỉ build x64). macOS (arm64) chưa làm. Bộ cài chưa ký số.
 
 ## Phát triển
 
