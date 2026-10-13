@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EVKey</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="popup">
+  <header class="popup-head">
+    <strong>EVKey</strong>
+    <span id="version" class="muted"></span>
+  </header>
+
+  <section class="status">
+    <div id="badge" class="badge">E</div>
+    <div class="status-text">
+      <div id="status-title"></div>
+      <div id="status-hint" class="hint"></div>
+    </div>
+    <button id="toggle" class="switch" role="switch" aria-checked="false" aria-label="Thêm EVKey vào danh sách bàn phím"><span></span></button>
+  </section>
+
+  <label class="field">
+    <span>Kiểu gõ</span>
+    <select id="input-type">
+      <option value="telex">Telex</option>
+      <option value="vni">VNI</option>
+      <option value="simple_telex1">Simple Telex 1</option>
+      <option value="simple_telex2">Simple Telex 2</option>
+    </select>
+  </label>
+
+  <p id="error" class="error" hidden></p>
+
+  <footer class="actions">
+    <button id="open-settings">Cài đặt…</button>
+    <button id="quit" class="ghost">Thoát EVKey</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

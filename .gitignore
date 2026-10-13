@@ -3,3 +3,5 @@
 /docs
 /tools/difftest/out
 /GLOSSARY.md
+/dist
+/crates/app/gen

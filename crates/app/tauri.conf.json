@@ -1,0 +1,43 @@
+{
+  "productName": "EVKey",
+  "identifier": "com.chrisnguyen.evkey",
+  "build": {
+    "frontendDist": "ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "label": "popup",
+        "title": "EVKey",
+        "url": "popup.html",
+        "width": 320,
+        "height": 430,
+        "decorations": false,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": true,
+        "visible": false
+      },
+      {
+        "label": "settings",
+        "title": "EVKey - Cài đặt",
+        "url": "settings.html",
+        "width": 760,
+        "height": 720,
+        "minWidth": 560,
+        "minHeight": 480,
+        "center": true,
+        "visible": false
+      }
+    ]
+  },
+  "bundle": {
+    "active": false,
+    "icon": ["icons/icon.ico"]
+  }
+}

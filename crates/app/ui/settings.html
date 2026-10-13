@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EVKey - Cài đặt</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="settings">
+<main>
+  <div id="config-error" class="banner" hidden>
+    <span id="config-error-text"></span>
+    <button id="reset-broken">Đặt lại về mặc định</button>
+  </div>
+  <p id="msg" class="msg"></p>
+
+  <section class="card">
+    <h2>Kiểu gõ</h2>
+    <label class="row"><span>Kiểu gõ</span>
+      <select id="input_type">
+        <option value="telex">Telex</option>
+        <option value="vni">VNI</option>
+        <option value="simple_telex1">Simple Telex 1</option>
+        <option value="simple_telex2">Simple Telex 2</option>
+      </select>
+    </label>
+    <label class="row"><span>Vị trí dấu trên nguyên âm đôi</span>
+      <select id="tone_placement">
+        <option value="new">Kiểu mới (hòa)</option>
+        <option value="old">Kiểu cũ (hoà)</option>
+      </select>
+    </label>
+    <label class="row"><span>Bảng mã</span>
+      <select id="code_table">
+        <option value="unicode">Unicode</option>
+        <option value="tcvn3">TCVN3 (ABC)</option>
+        <option value="vni_windows">VNI Windows</option>
+        <option value="unicode_compound">Unicode tổ hợp</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="free_mark"> Cho phép đặt dấu tự do (gõ dấu sau khi kết thúc âm tiết)</label>
+  </section>
+
+  <section class="card">
+    <h2>Chính tả</h2>
+    <label class="check"><input type="checkbox" id="check_spelling"> Kiểm tra chính tả</label>
+    <label class="check"><input type="checkbox" id="restore_if_wrong_spelling"> Khôi phục phím gõ khi sai chính tả (ví dụ <code>window</code> giữ nguyên)</label>
+  </section>
+
+  <section class="card">
+    <h2>Gõ nhanh và viết hoa</h2>
+    <label class="check"><input type="checkbox" id="quick_telex"> Telex nhanh: cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</label>
+    <label class="check"><input type="checkbox" id="quick_start_consonant"> Phụ âm đầu nhanh: f→ph, j→gi, w→qu</label>
+    <label class="check"><input type="checkbox" id="quick_end_consonant"> Phụ âm cuối nhanh: g→ng, h→nh, k→ch</label>
+    <label class="check"><input type="checkbox" id="upper_case_first_char"> Tự viết hoa chữ cái đầu câu</label>
+    <label class="check"><input type="checkbox" id="allow_consonant_zfwj"> Cho phép phụ âm z, f, w, j</label>
+    <label class="check"><input type="checkbox" id="auto_caps_macro"> Macro tự viết hoa theo kiểu gõ (Btw → By the way, BTW → BY THE WAY)</label>
+    <label class="row"><span>Phím tạm tắt giữa từ</span>
+      <select id="temp_off_key">
+        <option value="none">Không dùng</option>
+        <option value="ctrl">Ctrl</option>
+        <option value="alt">Alt</option>
+      </select>
+    </label>
+    <p class="hint">Nhấn phím tạm tắt giữa một từ để giữ nguyên phần còn lại của từ đó.</p>
+  </section>
+
+  <section class="card">
+    <h2>Ứng dụng loại trừ</h2>
+    <p class="hint">EVKey không gõ tiếng Việt trong các ứng dụng sau. Mỗi dòng một tên tệp, ví dụ <code>game.exe</code>.</p>
+    <textarea id="excluded_apps" spellcheck="false"></textarea>
+    <div class="actions"><button id="add-last-app">Thêm ứng dụng vừa dùng</button></div>
+  </section>
+
+  <div class="savebar"><button id="save-settings" class="primary">Lưu cài đặt</button></div>
+
+  <section class="card">
+    <h2>Macro</h2>
+    <p class="hint">Từ viết tắt được thay bằng nội dung khi gõ. Từ viết tắt không được để trống và không được trùng nhau.</p>
+    <div id="macro-rows"></div>
+    <div class="actions">
+      <button id="add-macro" class="ghost">Thêm dòng</button>
+      <button id="save-macros" class="primary">Lưu macro</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Chung</h2>
+    <label class="check"><input type="checkbox" id="autostart"> Tự chạy cùng Windows</label>
+    <div class="row"><span>Thư mục cấu hình</span><code id="config-dir"></code></div>
+    <div class="actions">
+      <button id="open-folder">Mở thư mục cấu hình</button>
+      <button id="reset" class="danger">Đặt lại về mặc định</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Giới thiệu</h2>
+    <p>EVKey <span id="version"></span> · Bộ gõ tiếng Việt cho Windows</p>
+    <div class="actions"><button id="open-github">Mở trang GitHub</button></div>
+  </section>
+</main>
+<script src="settings.js"></script>
+</body>
+</html>
