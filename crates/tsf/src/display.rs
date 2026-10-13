@@ -1,17 +1,17 @@
-//! Display attribute: one thin solid underline, no colours. Enumerator yields that attribute once.
+//! Display attribute: plain text, no underline or colours. Enumerator yields that attribute once.
 use std::cell::Cell;
 
 use windows::core::{implement, BSTR, ComObject, Result, GUID};
 use windows::Win32::UI::TextServices::{
     IEnumTfDisplayAttributeInfo, IEnumTfDisplayAttributeInfo_Impl, ITfDisplayAttributeInfo,
-    ITfDisplayAttributeInfo_Impl, TF_ATTR_INPUT, TF_DISPLAYATTRIBUTE, TF_LS_SOLID,
+    ITfDisplayAttributeInfo_Impl, TF_ATTR_INPUT, TF_DISPLAYATTRIBUTE, TF_LS_NONE,
 };
 
 use crate::guids::GUID_DISPLAY_ATTR;
 use crate::Lock;
 
 pub fn attr() -> TF_DISPLAYATTRIBUTE {
-    TF_DISPLAYATTRIBUTE { lsStyle: TF_LS_SOLID, bAttr: TF_ATTR_INPUT, ..Default::default() }
+    TF_DISPLAYATTRIBUTE { lsStyle: TF_LS_NONE, bAttr: TF_ATTR_INPUT, ..Default::default() }
 }
 
 #[implement(ITfDisplayAttributeInfo)]
