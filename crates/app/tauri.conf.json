@@ -11,19 +11,6 @@
     },
     "windows": [
       {
-        "label": "popup",
-        "title": "EVKey",
-        "url": "popup.html",
-        "width": 320,
-        "height": 430,
-        "decorations": false,
-        "resizable": false,
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "shadow": true,
-        "visible": false
-      },
-      {
         "label": "settings",
         "title": "EVKey - Cài đặt",
         "url": "settings.html",

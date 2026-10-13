@@ -1,4 +1,4 @@
-//! Tauri commands for the popup and settings windows. Each is a thin wrapper over
+//! Tauri commands for the settings window. Each is a thin wrapper over
 //! `evkey_engine::settings` (config files), `keyboard`, `autostart`, `foreground` or `tray`.
 //! The `*_in` functions take the config directory so they can be tested with a temp dir.
 
@@ -98,14 +98,6 @@ pub fn get_state() -> Result<State, String> {
 #[tauri::command]
 pub fn set_enabled(enabled: bool) -> Result<(), String> {
     keyboard::set_enabled(enabled)
-}
-
-/// Flips the shared V/E mode (popup switch) and refreshes the tray icon at once.
-#[tauri::command]
-pub fn toggle_mode(app: AppHandle) -> Result<Mode, String> {
-    let next = mode::toggle()?;
-    tray::refresh_icon(&app);
-    Ok(next)
 }
 
 #[tauri::command]

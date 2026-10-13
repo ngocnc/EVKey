@@ -1,4 +1,4 @@
-//! EVKey 2.0 app: CLI flags, single instance, tray icon, popup and settings windows.
+//! EVKey 2.0 app: CLI flags, single instance, tray icon and settings window.
 #![windows_subsystem = "windows"]
 
 mod autostart;
@@ -74,7 +74,6 @@ fn run(show_settings: bool) {
         .invoke_handler(tauri::generate_handler![
             settings_cmd::get_state,
             settings_cmd::set_enabled,
-            settings_cmd::toggle_mode,
             settings_cmd::save_settings,
             settings_cmd::save_macros,
             settings_cmd::reset_config,
@@ -95,13 +94,10 @@ fn run(show_settings: bool) {
             autostart::repoint_if_enabled();
             let serve = app.handle().clone();
             std::thread::spawn(move || serve_show_requests(serve));
-            // EVKEY_DEBUG_SHOW=popup|settings opens a window at startup (for screenshots).
+            // EVKEY_DEBUG_SHOW=settings opens the settings window at startup (for screenshots).
             let debug = std::env::var("EVKEY_DEBUG_SHOW").unwrap_or_default();
             if show_settings || debug == "settings" {
                 tray::show_settings(app.handle());
-            }
-            if debug == "popup" {
-                tray::show_popup(app.handle(), None);
             }
             Ok(())
         })

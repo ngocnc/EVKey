@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "description": "Popup and settings windows",
-  "windows": ["popup", "settings"],
+  "description": "Settings window",
+  "windows": ["settings"],
   "permissions": ["core:default"]
 }
