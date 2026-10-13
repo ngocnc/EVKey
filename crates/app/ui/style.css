@@ -13,6 +13,7 @@
   --divider: rgba(0, 0, 0, 0.07);
   --field: rgba(255, 255, 255, 0.55);
   --track: rgba(0, 0, 0, 0.18);
+  --base: 255, 255, 255;
   font: 13px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
 }
 
@@ -31,6 +32,7 @@
     --divider: rgba(255, 255, 255, 0.09);
     --field: rgba(255, 255, 255, 0.08);
     --track: rgba(255, 255, 255, 0.22);
+    --base: 32, 32, 40;
   }
 }
 
@@ -63,7 +65,7 @@ kbd {
 }
 
 .glass {
-  background: var(--glass);
+  background: var(--glass), rgba(var(--base), calc((1 - var(--t, 1)) * 0.92));
   border: 1px solid var(--glass-border);
   box-shadow: var(--shine), var(--glass-shadow);
   backdrop-filter: blur(28px) saturate(180%);
@@ -116,7 +118,8 @@ h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacin
   gap: 16px;
   padding: 13px 16px;
 }
-.item + .item { border-top: 1px solid var(--divider); }
+.item { border-bottom: 1px solid var(--divider); }
+.item.last { border-bottom: 0; }
 .item.stack { flex-direction: column; align-items: stretch; gap: 10px; }
 .text b { display: block; font-weight: 600; }
 .text span { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
@@ -238,3 +241,25 @@ textarea { width: 100%; min-height: 150px; resize: vertical; font-family: "Casca
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.ok { color: var(--ok); }
 .toast.err { color: var(--err); }
+
+/* tab switch: the new pane slides in from the side the tab lies on */
+.pane { animation: slide-from-right 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+.pane.from-left { animation-name: slide-from-left; }
+@keyframes slide-from-right { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: none; } }
+@keyframes slide-from-left { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pane { animation: none; } }
+
+/* range */
+.range-row { display: flex; align-items: center; gap: 14px; }
+.range-row output { min-width: 40px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+input[type="range"] { flex: 1; height: 22px; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none; }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--track); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}

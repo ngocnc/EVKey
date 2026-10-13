@@ -127,12 +127,33 @@ async function addLastApp() {
   }
 }
 
-for (const tab of document.querySelectorAll(".tab")) {
+let currentTab = 0;
+const tabs = [...document.querySelectorAll(".tab")];
+for (const [index, tab] of tabs.entries()) {
   tab.onclick = () => {
-    for (const t of document.querySelectorAll(".tab")) t.classList.toggle("active", t === tab);
-    for (const p of document.querySelectorAll(".pane")) p.hidden = p.dataset.pane !== tab.dataset.tab;
+    if (index === currentTab) return;
+    for (const t of tabs) t.classList.toggle("active", t === tab);
+    for (const p of document.querySelectorAll(".pane")) {
+      const show = p.dataset.pane === tab.dataset.tab;
+      p.hidden = !show;
+      p.classList.toggle("from-left", index < currentTab);
+    }
+    currentTab = index;
   };
 }
+
+// Glass transparency is a look-only preference, kept in the window's local storage rather than config.toml.
+const range = $("glass-range");
+function applyGlass(percent) {
+  document.documentElement.style.setProperty("--t", percent / 100);
+  $("glass-value").textContent = percent + "%";
+}
+range.value = localStorage.getItem("evkey-glass") ?? "100";
+applyGlass(Number(range.value));
+range.oninput = () => {
+  applyGlass(Number(range.value));
+  localStorage.setItem("evkey-glass", range.value);
+};
 for (const seg of SEGS) {
   seg.onclick = (e) => {
     const b = e.target.closest("button");
@@ -158,3 +179,26 @@ $("toggle-keyboard").onclick = async () => {
 
 listen("settings-show", load);
 load();
+
+// Items marked data-when ("key", "key=value" or "key!=value") only show while that option is chosen.
+function currentValue(key) {
+  const seg = document.querySelector(`.seg[data-key="${key}"]`);
+  if (seg) return seg.querySelector(".active")?.dataset.value;
+  return $(key)?.checked;
+}
+
+function updateVisibility() {
+  for (const el of document.querySelectorAll("[data-when]")) {
+    const [, key, op, want] = el.dataset.when.match(/^(\w+)(?:(!?=)(.+))?$/);
+    const value = currentValue(key);
+    el.hidden = op === "=" ? value !== want : op === "!=" ? value === want : !value;
+  }
+  for (const group of document.querySelectorAll(".group")) {
+    const visible = [...group.querySelectorAll(".item")].filter((i) => !i.hidden);
+    for (const item of group.querySelectorAll(".item")) item.classList.toggle("last", item === visible.at(-1));
+  }
+}
+document.addEventListener("change", updateVisibility);
+document.addEventListener("click", (e) => e.target.closest(".seg") && setTimeout(updateVisibility));
+const baseFill = fill;
+fill = () => { baseFill(); updateVisibility(); };

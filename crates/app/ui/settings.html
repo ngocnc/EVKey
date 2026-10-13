@@ -88,11 +88,11 @@
       <h2>Chính tả</h2>
       <div class="glass group">
         <label class="item"><div class="text"><b>Kiểm tra chính tả</b><span>Chỉ biến đổi khi âm tiết hợp lệ.</span></div><span class="switch"><input type="checkbox" id="check_spelling"><i></i></span></label>
-        <label class="item"><div class="text"><b>Khôi phục khi sai chính tả</b><span>Gõ <code>window</code> thì giữ nguyên, không biến thành chữ lạ.</span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
+        <label class="item" data-when="check_spelling"><div class="text"><b>Khôi phục khi sai chính tả</b><span>Gõ <code>window</code> thì giữ nguyên, không biến thành chữ lạ.</span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
       </div>
       <h2>Gõ nhanh</h2>
       <div class="glass group">
-        <label class="item"><div class="text"><b>Telex nhanh</b><span>cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</span></div><span class="switch"><input type="checkbox" id="quick_telex"><i></i></span></label>
+        <label class="item" data-when="input_type!=vni"><div class="text"><b>Telex nhanh</b><span>cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</span></div><span class="switch"><input type="checkbox" id="quick_telex"><i></i></span></label>
         <label class="item"><div class="text"><b>Phụ âm đầu nhanh</b><span>f→ph, j→gi, w→qu</span></div><span class="switch"><input type="checkbox" id="quick_start_consonant"><i></i></span></label>
         <label class="item"><div class="text"><b>Phụ âm cuối nhanh</b><span>g→ng, h→nh, k→ch</span></div><span class="switch"><input type="checkbox" id="quick_end_consonant"><i></i></span></label>
         <label class="item"><div class="text"><b>Cho phép phụ âm z, f, w, j</b><span>Dùng khi gõ từ mượn hoặc tên riêng.</span></div><span class="switch"><input type="checkbox" id="allow_consonant_zfwj"><i></i></span></label>
@@ -136,9 +136,16 @@
             <button data-value="tsf">TSF (bàn phím Windows)</button>
           </div>
         </div>
-        <div class="item">
-          <div class="text"><b>Bàn phím Windows</b><span>Chỉ cần với cơ chế TSF.</span></div>
+        <div class="item" data-when="backend=tsf">
+          <div class="text"><b>Bàn phím Windows</b><span>Thêm hoặc gỡ EVKey khỏi danh sách bàn phím Windows.</span></div>
           <button id="toggle-keyboard"></button>
+        </div>
+      </div>
+      <h2>Giao diện</h2>
+      <div class="glass group">
+        <div class="item stack">
+          <div class="text"><b>Độ trong suốt</b><span>Kéo sang phải để kính trong hơn, sang trái để đục hơn.</span></div>
+          <div class="range-row"><input type="range" id="glass-range" min="0" max="100" step="1"><output id="glass-value"></output></div>
         </div>
       </div>
       <h2>Tệp cấu hình</h2>
