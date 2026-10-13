@@ -1,0 +1,45 @@
+use evkey_engine::settings::{load, stamp, CodeTable, TonePlacement};
+
+fn temp_dir(name: &str) -> std::path::PathBuf {
+    let d = std::env::temp_dir().join(format!("evkey-settings-{name}-{}", std::process::id()));
+    std::fs::create_dir_all(&d).unwrap();
+    d
+}
+
+#[test]
+fn missing_files_give_defaults() {
+    let d = temp_dir("missing");
+    let l = load(&d).unwrap();
+    assert!(l.settings.check_spelling && l.macros.is_empty());
+    assert_eq!(stamp(&d), [None, None]);
+}
+
+#[test]
+fn files_are_parsed_and_mapped_to_engine_config() {
+    let d = temp_dir("parse");
+    std::fs::write(
+        d.join("config.toml"),
+        "tone_placement = \"old\"\ncode_table = \"tcvn3\"\nquick_telex = true\nexcluded_apps = [\"Game.exe\"]\n",
+    )
+    .unwrap();
+    std::fs::write(d.join("macros.toml"), "btw = \"by the way\"\n").unwrap();
+    let l = load(&d).unwrap();
+    assert_eq!(l.settings.tone_placement, TonePlacement::Old);
+    assert_eq!(l.settings.code_table, CodeTable::Tcvn3);
+    assert!(l.settings.is_excluded("game.EXE") && !l.settings.is_excluded("notepad.exe"));
+    assert_eq!(l.macros["btw"], "by the way");
+    let c = l.settings.to_config(!l.macros.is_empty());
+    // `old` style (hoà) is the engine's "modern orthography = 1"
+    assert_eq!((c.use_modern_orthography, c.code_table, c.quick_telex, c.use_macro), (1, 1, 1, 1));
+    assert_eq!(l.settings.to_config(false).use_macro, 0);
+    assert!(stamp(&d).iter().all(|s| s.is_some()));
+}
+
+#[test]
+fn typos_and_bad_values_are_errors_not_silently_ignored() {
+    let d = temp_dir("bad");
+    std::fs::write(d.join("config.toml"), "chek_spelling = false\n").unwrap();
+    assert!(load(&d).is_err());
+    std::fs::write(d.join("config.toml"), "input_type = \"qwerty\"\n").unwrap();
+    assert!(load(&d).is_err());
+}
