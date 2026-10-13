@@ -21,7 +21,7 @@
         "center": true,
         "visible": false,
         "transparent": true,
-        "windowEffects": { "effects": ["acrylic"] }
+        "windowEffects": { "effects": ["acrylic"], "color": [30, 24, 36, 0] }
       }
     ]
   },

@@ -220,15 +220,15 @@ for (const seg of SEGS) {
   seg.addEventListener("click", () => placeThumb(seg));
 }
 
-// Backdrop transparency: the slider shows "how clear", the OS acrylic tint alpha is the inverse.
+// Backdrop transparency: a tint layer over the (always clearest) acrylic; 100 = fully clear.
 const backdrop = $("backdrop-range");
-backdrop.value = localStorage.getItem("evkey-backdrop") ?? "50";
 function applyBackdrop() {
   $("backdrop-value").textContent = backdrop.value + "%";
-  invoke("set_backdrop", { percent: 100 - Number(backdrop.value) }).catch((e) => say(String(e), "err"));
+  document.documentElement.style.setProperty("--bt", backdrop.value / 100);
 }
+backdrop.value = localStorage.getItem("evkey-backdrop") ?? "60";
+applyBackdrop();
 backdrop.oninput = () => {
   localStorage.setItem("evkey-backdrop", backdrop.value);
   applyBackdrop();
 };
-applyBackdrop();

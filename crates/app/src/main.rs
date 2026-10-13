@@ -83,7 +83,6 @@ fn run(show_settings: bool) {
             settings_cmd::last_app,
             settings_cmd::show_settings,
             settings_cmd::quit,
-            settings_cmd::set_backdrop,
         ])
         .on_window_event(tray::on_window_event)
         .setup(move |app| {

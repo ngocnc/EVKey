@@ -150,17 +150,6 @@ pub fn quit(app: AppHandle) {
     app.exit(0);
 }
 
-/// Sets how opaque the acrylic backdrop behind the settings window is (0 = clearest, 100 = most tinted).
-#[tauri::command]
-pub fn set_backdrop(app: AppHandle, percent: u8) -> Result<(), String> {
-    use tauri::window::{Color, Effect, EffectsBuilder};
-    use tauri::Manager;
-    let win = app.get_webview_window("settings").ok_or("Không tìm thấy cửa sổ cài đặt")?;
-    let alpha = (u32::from(percent.min(100)) * 255 / 100) as u8;
-    let effects = EffectsBuilder::new().effect(Effect::Acrylic).color(Color(30, 24, 36, alpha)).build();
-    win.set_effects(effects).map_err(|e| e.to_string())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
