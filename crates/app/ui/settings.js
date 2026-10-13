@@ -219,3 +219,16 @@ for (const seg of SEGS) {
   thumbObserver.observe(seg);
   seg.addEventListener("click", () => placeThumb(seg));
 }
+
+// Backdrop transparency: the slider shows "how clear", the OS acrylic tint alpha is the inverse.
+const backdrop = $("backdrop-range");
+backdrop.value = localStorage.getItem("evkey-backdrop") ?? "50";
+function applyBackdrop() {
+  $("backdrop-value").textContent = backdrop.value + "%";
+  invoke("set_backdrop", { percent: 100 - Number(backdrop.value) }).catch((e) => say(String(e), "err"));
+}
+backdrop.oninput = () => {
+  localStorage.setItem("evkey-backdrop", backdrop.value);
+  applyBackdrop();
+};
+applyBackdrop();
