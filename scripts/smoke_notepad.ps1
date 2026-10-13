@@ -26,6 +26,16 @@ public static class Native {
     [DllImport("user32.dll")] static extern ushort MapVirtualKey(uint code, uint map);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, IntPtr pid);
+    [DllImport("user32.dll")] static extern bool AttachThreadInput(uint a, uint b, bool attach);
+    [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
+    // Windows refuses SetForegroundWindow from a background process; attaching to the foreground thread's input lifts that.
+    public static void Focus(IntPtr hwnd) {
+        uint fg = GetWindowThreadProcessId(GetForegroundWindow(), IntPtr.Zero), me = GetCurrentThreadId();
+        AttachThreadInput(me, fg, true);
+        SetForegroundWindow(hwnd);
+        AttachThreadInput(me, fg, false);
+    }
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hwnd, out RECT r);
     [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
 
@@ -76,7 +86,7 @@ for ($i = 0; $i -lt 60 -and $hwnd -eq [IntPtr]::Zero; $i++) {
     if ($cand) { $proc = $cand; $hwnd = $cand.MainWindowHandle }
 }
 if ($hwnd -eq [IntPtr]::Zero) { throw "Notepad window for $name not found" }
-[void][Native]::SetForegroundWindow($hwnd)
+[Native]::Focus($hwnd)
 Start-Sleep -Milliseconds 500
 # Abort before any key goes out: keys sent to a non-target window would edit someone else's text.
 if ([Native]::GetForegroundWindow() -ne $hwnd) { throw 'Notepad is not the foreground window; refusing to send keys' }
