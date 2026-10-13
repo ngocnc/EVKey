@@ -226,7 +226,7 @@ function applyBackdrop() {
   $("backdrop-value").textContent = backdrop.value + "%";
   document.documentElement.style.setProperty("--bt", backdrop.value / 100);
 }
-backdrop.value = localStorage.getItem("evkey-backdrop") ?? "60";
+backdrop.value = localStorage.getItem("evkey-backdrop") ?? "85";
 applyBackdrop();
 backdrop.oninput = () => {
   localStorage.setItem("evkey-backdrop", backdrop.value);
