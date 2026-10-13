@@ -10,3 +10,6 @@ pub const GUID_DISPLAY_ATTR: GUID = GUID::from_u128(0x11DB67BF_41AA_4E39_AC39_7B
 
 /// LANGID the profile is registered under (en-US): no Vietnamese entry needed in the language list.
 pub const LANGID: u16 = 0x0409;
+
+/// Preserved key of the letter toggle hotkey (see `Core::sync_preserved`). Generated once.
+pub const GUID_PRESERVED_TOGGLE: GUID = GUID::from_u128(0x6D0B6E2A_3F1C_4B7E_9A52_0C8E4D1F7A39);

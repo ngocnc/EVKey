@@ -1,6 +1,7 @@
 # Types real key events (SendInput, virtual-key codes) into Notepad, then reads the text back
 # via Ctrl+A / Ctrl+C and compares with -Expected.
 # Tokens in -Type: {BS} {ENTER} {TAB} {LEFT} {RIGHT} {UP} {DOWN} {CTRL} (tap) {CLICK} (click at centre of window).
+# Chords (uppercase): {ALT+Z} = modifiers down, key tap, modifiers up. {CTRL+SHIFT} = modifier-only chord (press and release, no key).
 # Keep this file ASCII-only (Windows PowerShell 5.1 reads BOM-less files as ANSI).
 param(
     [string]$Type = 'Vieejt Nam, hoaf dduowcj.',
@@ -67,11 +68,22 @@ public static class Native {
         Send(new List<INPUT> { d, u });
         Thread.Sleep(150);
     }
+    // Chord: modifiers down, optional key tap, modifiers up. vk 0 = modifier-only (press and release, no key between).
+    public static void Chord(ushort[] mods, ushort vk) {
+        var seq = new List<INPUT>();
+        foreach (var m in mods) seq.Add(Key(m, false));
+        if (vk != 0) { seq.Add(Key(vk, false)); seq.Add(Key(vk, true)); }
+        for (int i = mods.Length - 1; i >= 0; i--) seq.Add(Key(mods[i], true));
+        Send(seq);
+        Thread.Sleep(150);
+    }
 }
 '@
 
 $vkMap = @{ 'BS' = 0x08; 'ENTER' = 0x0D; 'TAB' = 0x09; 'LEFT' = 0x25; 'UP' = 0x26; 'RIGHT' = 0x27; 'DOWN' = 0x28; 'CTRL' = 0x11 }
-$tokens = [regex]::Matches($Type, '\{(BS|ENTER|TAB|LEFT|UP|RIGHT|DOWN|CTRL|CLICK)\}|.')
+$modVk = @{ 'CTRL' = 0x11; 'ALT' = 0x12; 'SHIFT' = 0x10; 'WIN' = 0x5B }
+# {ALT+Z} = chord with a key; {CTRL+SHIFT} = modifier-only chord (no key between press and release).
+$tokens = [regex]::Matches($Type, '\{(BS|ENTER|TAB|LEFT|UP|RIGHT|DOWN|CTRL|CLICK|(?:(?:CTRL|ALT|SHIFT|WIN)\+)+(?:[A-Z0-9]|F(?:1[0-2]|[1-9])|SPACE)|(?:CTRL|ALT|SHIFT|WIN)(?:\+(?:CTRL|ALT|SHIFT|WIN))*)\}|.')
 
 # Win11 Notepad is packaged and single-instance: a new process may not appear, so open a uniquely named
 # file and match the window by its title. Only that window receives the keys below.
@@ -101,6 +113,17 @@ foreach ($m in $tokens) {
         $r = New-Object Native+RECT
         [void][Native]::GetWindowRect($hwnd, [ref]$r)
         [Native]::Click([int](($r.Left + $r.Right) / 2), [int](($r.Top + $r.Bottom) / 2))
+        continue
+    }
+    if ($t -match '^\{((?:CTRL|ALT|SHIFT|WIN)(?:\+(?:CTRL|ALT|SHIFT|WIN|SPACE|F(?:1[0-2]|[1-9])|[A-Z0-9]))*)\}$') {
+        $parts = $Matches[1].Split('+')
+        $last = $parts[-1]
+        if ($modVk.ContainsKey($last)) { $mods = $parts; $vk = [uint16]0 }
+        else {
+            $mods = $parts[0..($parts.Length - 2)]
+            $vk = if ($last -eq 'SPACE') { [uint16]0x20 } elseif ($last -match '^F(\d+)$') { [uint16](0x6F + [int]$Matches[1]) } else { [uint16][char]$last }
+        }
+        [Native]::Chord([uint16[]]@($mods | ForEach-Object { $modVk[$_] }), $vk)
         continue
     }
     if ($t -match '^\{(\w+)\}$') { [Native]::Tap([uint16]$vkMap[$Matches[1]], $false, $false); continue }

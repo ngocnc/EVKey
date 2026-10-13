@@ -14,7 +14,11 @@ use windows::Win32::UI::TextServices::{
 };
 
 use crate::service::Core;
-use crate::{edit, guard, log, secure, Lock};
+use crate::{edit, guard, log, secure, toggle, Lock};
+use crate::guids::GUID_PRESERVED_TOGGLE;
+
+/// lparam bit 30: the key was already down, so this key-down is an auto-repeat.
+const REPEAT_BIT: isize = 1 << 30;
 
 #[implement(ITfKeyEventSink, ITfCompositionSink, ITfThreadMgrEventSink)]
 pub struct Sinks {
@@ -38,20 +42,29 @@ impl ITfKeyEventSink_Impl for Sinks_Impl {
         Ok(guard(false, || pic.as_ref().is_some() && wants(&self.core, wparam.0 as u16)).into())
     }
 
-    fn OnTestKeyUp(&self, _pic: Ref<ITfContext>, _wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
+    fn OnTestKeyUp(&self, _pic: Ref<ITfContext>, wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
+        Ok(guard(false, || toggle::chord_release_fires(&self.core, wparam.0 as u16)).into())
+    }
+
+    fn OnKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, lparam: LPARAM) -> Result<BOOL> {
+        let repeat = lparam.0 & REPEAT_BIT != 0;
+        Ok(guard(false, || key_down(&self.core, pic.as_ref(), wparam.0 as u16, repeat)).into())
+    }
+
+    fn OnKeyUp(&self, pic: Ref<ITfContext>, wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
+        guard((), || toggle::chord_release(&self.core, pic.as_ref(), wparam.0 as u16));
         Ok(BOOL(0))
     }
 
-    fn OnKeyDown(&self, pic: Ref<ITfContext>, wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
-        Ok(guard(false, || key_down(&self.core, pic.as_ref(), wparam.0 as u16)).into())
-    }
-
-    fn OnKeyUp(&self, _pic: Ref<ITfContext>, _wparam: WPARAM, _lparam: LPARAM) -> Result<BOOL> {
-        Ok(BOOL(0))
-    }
-
-    fn OnPreservedKey(&self, _pic: Ref<ITfContext>, _rguid: *const GUID) -> Result<BOOL> {
-        Ok(BOOL(0))
+    fn OnPreservedKey(&self, pic: Ref<ITfContext>, rguid: *const GUID) -> Result<BOOL> {
+        Ok(guard(BOOL(0), || {
+            if unsafe { *rguid } != GUID_PRESERVED_TOGGLE {
+                return BOOL(0);
+            }
+            let ctx = pic.as_ref().cloned().or_else(|| self.core.focus_context());
+            toggle::toggle(&self.core, ctx.as_ref());
+            BOOL(1)
+        }))
     }
 }
 
@@ -106,6 +119,15 @@ fn prepare(core: &Core, vk: u16) -> bool {
 
 /// Ctrl/Alt/Win shortcuts are eaten only mid-composition, so Ctrl+A/Ctrl+C still reach the app otherwise.
 fn wants(core: &Core, vk: u16) -> bool {
+    core.refresh();
+    toggle::note_key_down(core, vk);
+    if toggle::is_key_chord(core, vk) {
+        return true;
+    }
+    if toggle::english(core) {
+        // Only true when a mode change made elsewhere left a composition open; key_down closes it.
+        return core.comp.borrow().is_some();
+    }
     if !prepare(core, vk) {
         return false;
     }
@@ -113,7 +135,7 @@ fn wants(core: &Core, vk: u16) -> bool {
     c.wants_key(vk) && (c.is_composing() || !ctrl_alt_held())
 }
 
-fn held(k: VIRTUAL_KEY) -> bool {
+pub fn held(k: VIRTUAL_KEY) -> bool {
     unsafe { GetKeyState(k.0 as i32) < 0 }
 }
 
@@ -122,7 +144,7 @@ fn ctrl_alt_held() -> bool {
 }
 
 /// Closes an open composition, keeping its text, so the host owns the keys.
-fn end_composition(core: &Rc<Core>, ctx: &ITfContext) {
+pub fn end_composition(core: &Rc<Core>, ctx: &ITfContext) {
     if core.comp.borrow().is_some() {
         core.composer.borrow_mut().reset();
         if let Err(e) = edit::request(core, ctx, Action::Pass) {
@@ -147,7 +169,21 @@ fn typed_char(vk: u16) -> Option<char> {
 }
 
 /// Feeds one key to the engine and applies the resulting `Action`. Returns whether the key is eaten.
-fn key_down(core: &Rc<Core>, ctx: Option<&ITfContext>, vk: u16) -> bool {
+fn key_down(core: &Rc<Core>, ctx: Option<&ITfContext>, vk: u16, repeat: bool) -> bool {
+    core.refresh();
+    toggle::note_key_down(core, vk);
+    if toggle::is_key_chord(core, vk) {
+        if !repeat {
+            toggle::toggle(core, ctx);
+        }
+        return true;
+    }
+    if toggle::english(core) {
+        if let Some(ctx) = ctx {
+            end_composition(core, ctx);
+        }
+        return false;
+    }
     if !prepare(core, vk) {
         return false;
     }
@@ -173,11 +209,11 @@ fn key_down(core: &Rc<Core>, ctx: Option<&ITfContext>, vk: u16) -> bool {
         other => other,
     };
     let eaten = match &action {
- Action::Pass => {
-        // Host key (e.g. arrows) while composing: close the composition first, keeping its text.
-        end_composition(core, ctx);
- return false;
- }
+        Action::Pass => {
+            // Host key (e.g. arrows) while composing: close the composition first, keeping its text.
+            end_composition(core, ctx);
+            return false;
+        }
         Action::Compose(_) => true,
         Action::Commit { eaten, .. } => *eaten,
     };

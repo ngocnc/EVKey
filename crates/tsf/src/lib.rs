@@ -4,10 +4,12 @@ mod edit;
 mod factory;
 mod guids;
 mod log;
+mod mode;
 mod register;
 mod secure;
 mod service;
 mod sinks;
+mod toggle;
 
 use std::ffi::c_void;
 use std::panic::{catch_unwind, AssertUnwindSafe};
