@@ -51,6 +51,7 @@ upper_case_first_char = false
 allow_consonant_zfwj = false
 auto_caps_macro = false
 temp_off_key = "none"           # none | ctrl | alt: bấm giữa từ để phần còn lại của từ không bị biến đổi
+toggle_hotkey = "alt+z"         # chuyển Việt/Anh: "none" để tắt; xem bên dưới
 excluded_apps = []              # ví dụ ["game.exe"]
 ```
 
@@ -59,6 +60,13 @@ excluded_apps = []              # ví dụ ["game.exe"]
 btw = "by the way"
 vn = "Việt Nam"
 ```
+
+### Chuyển Việt / Anh
+
+- Chế độ Việt/Anh là một trạng thái chung của bộ gõ (TSF global compartment), dùng chung cho mọi ứng dụng. Mặc định là Việt. Chế độ Anh: bộ gõ vẫn là bàn phím đang dùng nhưng không biến đổi phím; phím đi thẳng tới ứng dụng.
+- `toggle_hotkey` là tổ hợp phím chuyển chế độ. Cú pháp (không phân biệt hoa thường, nối bằng `+`, không có khoảng trắng): không hoặc nhiều trong `ctrl|alt|shift|win`, kèm theo đúng một phím (`a`-`z`, `0`-`9`, `space`, `f1`-`f12`) hoặc không có phím nào. Ví dụ `alt+z`, `ctrl+shift`, `f8`. Tổ hợp không có phím (như `ctrl+shift`) kích hoạt khi nhả các phím bổ trợ mà không bấm phím nào khác ở giữa. `"none"` tắt phím tắt. Giá trị sai cú pháp làm việc nạp cấu hình báo lỗi.
+- Đổi `toggle_hotkey` có hiệu lực trong khoảng 1 giây, không cần khởi động lại ứng dụng.
+- **Lưu ý**: phím tắt đổi bố cục của Windows (Ctrl+Shift, Alt+Shift) vẫn hoạt động độc lập; EVKey không xử lý chúng. Nếu đặt `toggle_hotkey` trùng với tổ hợp này, cả hai sẽ cùng chạy.
 
 ## Trạng thái (v2.0.0)
 
