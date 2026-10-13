@@ -1,6 +1,6 @@
 # EVKey
 
-Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 dùng TSF thật; macOS (arm64) làm ở phase sau. Engine port từ [OpenKey](https://github.com/tuyenvm/OpenKey) nên repo là GPL-3.0 (xem `docs/adr/`).
+Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 dùng TSF thật; macOS (arm64) làm ở phase sau. Engine port từ [OpenKey](https://github.com/tuyenvm/OpenKey) nên repo là GPL-3.0.
 
 ## Cấu trúc
 
@@ -57,3 +57,10 @@ scripts/smoke_notepad.ps1 -Type "Vieejt Nam, hoaf dduowcj." -Expected "Việt Na
 ```
 
 Tạo lại dữ liệu golden: `tools/difftest/gen_golden.bat` (cần MSVC Build Tools).
+
+## Trạng thái (v1.0.0)
+
+- Windows 11 x64: đã kiểm chứng Notepad; engine so khớp từng sự kiện với OpenKey gốc.
+- Chưa kiểm chứng đầy đủ: Chrome/Edge, Electron, Windows Terminal, UWP, ô mật khẩu (có nhận diện qua InputScope).
+- Lỗi đã biết: `TextBox` WinForms (EDIT cổ điển) có thể mất chữ gõ sau lần commit đầu.
+- Ứng dụng 32-bit không gõ được (chỉ build x64). macOS (arm64) chưa làm.
