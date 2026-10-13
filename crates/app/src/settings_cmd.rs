@@ -7,16 +7,19 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use evkey_engine::settings::{self, Loaded, Settings};
+use evkey_engine::hotkey::parse_hotkey;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
 use crate::{autostart, foreground, keyboard, tray};
+use crate::keyboard::mode::{self, Mode};
 
 const GITHUB_URL: &str = "https://github.com/ngocnc/EVKey";
 
 #[derive(Serialize)]
 pub struct State {
     enabled: bool,
+    mode: Mode,
     autostart: bool,
     config_dir: String,
     /// Set when config.toml or macros.toml is malformed; `settings`/`macros` are then defaults.
@@ -38,6 +41,7 @@ fn config_dir() -> Result<PathBuf, String> {
 
 /// Replaces the engine settings and keeps the macros already on disk.
 fn save_settings_in(dir: &Path, new_settings: Settings) -> Result<(), String> {
+    parse_hotkey(&new_settings.toggle_hotkey).map_err(|e| format!("Phím tắt không hợp lệ: {e}"))?;
     let mut cfg = settings::load(dir)?;
     cfg.settings = new_settings;
     settings::save(dir, &cfg)
@@ -81,6 +85,7 @@ pub fn get_state() -> Result<State, String> {
     };
     Ok(State {
         enabled: keyboard::is_enabled()?,
+        mode: mode::get()?,
         autostart: autostart::is_enabled(),
         config_dir: dir.display().to_string(),
         config_error,
@@ -91,15 +96,24 @@ pub fn get_state() -> Result<State, String> {
 }
 
 #[tauri::command]
-pub fn set_enabled(app: AppHandle, enabled: bool) -> Result<(), String> {
-    keyboard::set_enabled(enabled)?;
+pub fn set_enabled(enabled: bool) -> Result<(), String> {
+    keyboard::set_enabled(enabled)
+}
+
+/// Flips the shared V/E mode (popup switch) and refreshes the tray icon at once.
+#[tauri::command]
+pub fn toggle_mode(app: AppHandle) -> Result<Mode, String> {
+    let next = mode::toggle()?;
     tray::refresh_icon(&app);
-    Ok(())
+    Ok(next)
 }
 
 #[tauri::command]
-pub fn save_settings(settings: Settings) -> Result<(), String> {
-    save_settings_in(&config_dir()?, settings)
+pub fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
+    save_settings_in(&config_dir()?, settings)?;
+    // The tooltip shows the hotkey, so it changes with the settings.
+    tray::refresh_icon(&app);
+    Ok(())
 }
 
 #[tauri::command]
@@ -182,5 +196,32 @@ mod tests {
         assert!(save_macros_in(&dir, vec![row("  ", "x")]).is_err());
         assert!(save_macros_in(&dir, vec![row("a", "1"), row(" a ", "2")]).is_err());
         assert!(!dir.exists());
+    }
+
+    #[test]
+    fn hotkey_is_validated_before_saving() {
+        let dir = temp_dir("hotkey-save");
+        let bad = Settings {
+            toggle_hotkey: "alt+".into(),
+            ..Settings::default()
+        };
+        assert!(save_settings_in(&dir, bad).is_err());
+        assert!(!dir.exists());
+        let good = Settings {
+            toggle_hotkey: "ctrl+shift".into(),
+            ..Settings::default()
+        };
+        save_settings_in(&dir, good).unwrap();
+        assert_eq!(settings::load(&dir).unwrap().settings.toggle_hotkey, "ctrl+shift");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn bad_hotkey_in_config_is_a_load_error() {
+        let dir = temp_dir("hotkey-load");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("config.toml"), "toggle_hotkey = \"alt+\"\n").unwrap();
+        assert!(settings::load(&dir).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

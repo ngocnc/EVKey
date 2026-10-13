@@ -130,7 +130,7 @@ body.settings main { max-width: 680px; margin: 0 auto; padding: 16px 20px 32px; 
   margin-bottom: 12px;
 }
 .card h2 { font-size: 14px; margin: 4px 0 6px; }
-.card select { min-width: 200px; }
+.card select, .card input[type="text"] { min-width: 200px; }
 .savebar { display: flex; justify-content: flex-end; margin: 0 0 12px; }
 .banner {
   display: flex;

@@ -9,13 +9,14 @@ function showError(text) {
 }
 
 function render() {
-  const on = state.enabled;
-  $("badge").textContent = on ? "V" : "–";
-  $("badge").classList.toggle("on", on);
-  $("status-title").textContent = on ? "EVKey có trong danh sách bàn phím" : "EVKey chưa được thêm";
-  $("status-hint").textContent = on ? "Chuyển Việt/Anh bằng Win+Space" : "Bật công tắc để thêm vào danh sách bàn phím";
-  $("toggle").classList.toggle("on", on);
-  $("toggle").setAttribute("aria-checked", String(on));
+  const vi = state.mode === "vietnamese";
+  const hotkey = state.settings.toggle_hotkey;
+  $("badge").textContent = vi ? "V" : "E";
+  $("badge").classList.toggle("on", vi);
+  $("status-title").textContent = vi ? "Tiếng Việt" : "English";
+  $("status-hint").textContent = hotkey === "none" ? "Không có phím tắt chuyển Việt/Anh" : `Phím tắt: ${hotkey}`;
+  $("toggle").classList.toggle("on", vi);
+  $("toggle").setAttribute("aria-checked", String(vi));
   $("input-type").value = state.settings.input_type;
   $("version").textContent = "v" + state.version;
 }
@@ -40,7 +41,7 @@ async function run(action) {
   await load();
 }
 
-$("toggle").onclick = () => run(() => invoke("set_enabled", { enabled: !state.enabled }));
+$("toggle").onclick = () => run(() => invoke("toggle_mode"));
 $("input-type").onchange = () =>
   run(() => invoke("save_settings", { settings: { ...state.settings, input_type: $("input-type").value } }));
 $("open-settings").onclick = () => invoke("show_settings");

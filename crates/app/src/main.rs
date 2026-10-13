@@ -13,6 +13,7 @@ use std::os::windows::io::FromRawHandle;
 use std::time::Duration;
 
 use tauri::AppHandle;
+use keyboard::mode::{self, Mode};
 use windows::core::w;
 use windows::Win32::Foundation::{GetLastError, ERROR_ALREADY_EXISTS};
 use windows::Win32::Storage::FileSystem::PIPE_ACCESS_INBOUND;
@@ -37,6 +38,16 @@ fn main() {
             Some("off") => autostart::set(false),
             _ => Err("cách dùng: evkey --autostart on|off".into()),
         }),
+        "--mode" => {
+            attach_console();
+            exit_with(match args.get(1).map(String::as_str) {
+                Some("get") => mode::get().map(|m| println!("{}", m.as_str())),
+                Some("vietnamese") => mode::set(Mode::Vietnamese),
+                Some("english") => mode::set(Mode::English),
+                Some("toggle") => mode::toggle().map(|_| ()),
+                _ => Err("cách dùng: evkey --mode get|vietnamese|english|toggle".into()),
+            })
+        }
         "" | "--hidden" => run(false),
         "--settings" => run(true),
         other => exit_with(Err(format!("tham số không hợp lệ: {other}"))),
@@ -51,6 +62,7 @@ fn run(show_settings: bool) {
         .invoke_handler(tauri::generate_handler![
             settings_cmd::get_state,
             settings_cmd::set_enabled,
+            settings_cmd::toggle_mode,
             settings_cmd::save_settings,
             settings_cmd::save_macros,
             settings_cmd::reset_config,

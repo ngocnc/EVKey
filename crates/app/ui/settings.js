@@ -46,6 +46,7 @@ function fill() {
   const s = state.settings;
   for (const k of BOOLS) $(k).checked = s[k];
   for (const k of SELECTS) $(k).value = s[k];
+  $("toggle_hotkey").value = s.toggle_hotkey;
   $("excluded_apps").value = s.excluded_apps.join("\n");
   $("macro-rows").replaceChildren();
   for (const [k, v] of Object.entries(state.macros)) addMacroRow(k, v);
@@ -55,12 +56,14 @@ function fill() {
   $("version").textContent = "v" + state.version;
   $("config-error").hidden = !state.config_error;
   $("config-error-text").textContent = state.config_error ?? "";
+  $("toggle-keyboard").textContent = state.enabled ? "Gỡ khỏi danh sách" : "Thêm EVKey vào danh sách bàn phím";
 }
 
 function readForm() {
   const s = { ...state.settings };
   for (const k of BOOLS) s[k] = $(k).checked;
   for (const k of SELECTS) s[k] = $(k).value;
+  s.toggle_hotkey = $("toggle_hotkey").value.trim();
   s.excluded_apps = lines($("excluded_apps").value);
   return s;
 }
@@ -75,7 +78,19 @@ async function load() {
 }
 
 async function saveSettings() {
-  if (await run(() => invoke("save_settings", { settings: readForm() }), "Đã lưu cài đặt.")) await load();
+  try {
+    await invoke("save_settings", { settings: readForm() });
+    $("hotkey-error").hidden = true;
+    say("Đã lưu cài đặt.", "ok");
+    await load();
+  } catch (e) {
+    const text = String(e);
+    // Hotkey errors come from the backend with this prefix; show them under the field.
+    const hotkey = text.startsWith("Phím tắt");
+    $("hotkey-error").hidden = !hotkey;
+    $("hotkey-error").textContent = hotkey ? text : "";
+    say(hotkey ? "Chưa lưu cài đặt. Sửa phím tắt rồi lưu lại." : text, "err");
+  }
 }
 
 async function saveMacros() {
@@ -113,6 +128,9 @@ $("open-folder").onclick = () => run(() => invoke("open_config_dir"), "Đã mở
 $("reset").onclick = resetConfig;
 $("reset-broken").onclick = resetConfig;
 $("open-github").onclick = () => run(() => invoke("open_github"), "Đã mở trang GitHub.");
+$("toggle-keyboard").onclick = async () => {
+  if (await run(() => invoke("set_enabled", { enabled: !state.enabled }), "Đã cập nhật danh sách bàn phím.")) await load();
+};
 
 listen("settings-show", load);
 load();

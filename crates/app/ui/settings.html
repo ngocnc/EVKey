@@ -42,6 +42,16 @@
   </section>
 
   <section class="card">
+    <h2>Phím tắt</h2>
+    <label class="row"><span>Phím tắt chuyển Việt/Anh</span>
+      <input id="toggle_hotkey" type="text" spellcheck="false" autocomplete="off">
+    </label>
+    <p id="hotkey-error" class="error" hidden></p>
+    <p class="hint">Ví dụ: <code>alt+z</code>, <code>ctrl+shift</code> (chỉ tổ hợp phím sửa, không kèm phím thường), <code>none</code> để tắt. Ghép phím bằng dấu <code>+</code>, không có khoảng trắng.</p>
+    <p class="hint">Phím Windows (Ctrl+Shift/Alt+Shift) vẫn đổi bàn phím tách biệt.</p>
+  </section>
+
+  <section class="card">
     <h2>Chính tả</h2>
     <label class="check"><input type="checkbox" id="check_spelling"> Kiểm tra chính tả</label>
     <label class="check"><input type="checkbox" id="restore_if_wrong_spelling"> Khôi phục phím gõ khi sai chính tả (ví dụ <code>window</code> giữ nguyên)</label>
@@ -82,6 +92,12 @@
       <button id="add-macro" class="ghost">Thêm dòng</button>
       <button id="save-macros" class="primary">Lưu macro</button>
     </div>
+  </section>
+
+  <section class="card">
+    <h2>Bàn phím Windows</h2>
+    <p class="hint">Danh sách bàn phím quyết định EVKey có sẵn trong Windows. Chuyển Việt/Anh dùng phím tắt ở trên, không dùng Win+Space.</p>
+    <div class="actions"><button id="toggle-keyboard"></button></div>
   </section>
 
   <section class="card">
