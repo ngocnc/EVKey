@@ -43,3 +43,16 @@ fn typos_and_bad_values_are_errors_not_silently_ignored() {
     std::fs::write(d.join("config.toml"), "input_type = \"qwerty\"\n").unwrap();
     assert!(load(&d).is_err());
 }
+
+#[test]
+fn save_then_load_round_trips() {
+    use evkey_engine::settings::{save, InputKind, Loaded, TempOffKey};
+    let d = temp_dir("save");
+    let mut l = Loaded::default();
+    l.settings.input_type = InputKind::Vni;
+    l.settings.temp_off_key = TempOffKey::Alt;
+    l.settings.excluded_apps = vec!["game.exe".into()];
+    l.macros.insert("vn".into(), "Việt Nam".into());
+    save(&d.join("nested"), &l).unwrap();
+    assert_eq!(load(&d.join("nested")).unwrap(), l);
+}

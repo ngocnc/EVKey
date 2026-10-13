@@ -5,11 +5,11 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::engine::Config;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum InputKind {
     #[default]
@@ -20,7 +20,7 @@ pub enum InputKind {
 }
 
 /// Where the tone mark goes on a two-vowel rhyme: new style `hòa`, old style `hoà`.
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum TonePlacement {
     #[default]
@@ -28,7 +28,7 @@ pub enum TonePlacement {
     Old,
 }
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum CodeTable {
     #[default]
@@ -39,7 +39,7 @@ pub enum CodeTable {
 }
 
 /// Key whose press mid-word leaves the rest of that word unconverted.
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum TempOffKey {
     #[default]
@@ -48,7 +48,7 @@ pub enum TempOffKey {
     Alt,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
     pub input_type: InputKind,
@@ -159,4 +159,19 @@ pub fn load(dir: &Path) -> Result<Loaded, String> {
 pub fn stamp(dir: &Path) -> [Option<SystemTime>; 2] {
     let m = |f: &str| std::fs::metadata(dir.join(f)).and_then(|m| m.modified()).ok();
     [m("config.toml"), m("macros.toml")]
+}
+
+fn write_atomic(path: &Path, text: &str) -> Result<(), String> {
+    let tmp = path.with_extension("toml.tmp");
+    std::fs::write(&tmp, text).map_err(|e| format!("{}: {e}", tmp.display()))?;
+    std::fs::rename(&tmp, path).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// Write both files (creating `dir`). Comments in hand-edited files are not preserved.
+pub fn save(dir: &Path, loaded: &Loaded) -> Result<(), String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let cfg = toml::to_string_pretty(&loaded.settings).map_err(|e| e.to_string())?;
+    write_atomic(&dir.join("config.toml"), &cfg)?;
+    let mac = toml::to_string_pretty(&loaded.macros).map_err(|e| e.to_string())?;
+    write_atomic(&dir.join("macros.toml"), &mac)
 }
