@@ -22,7 +22,7 @@ pub enum Action {
 }
 
 /// Render engine words (already passed through `get_character_code`) like OpenKey's Windows sender.
-fn render(codes: impl IntoIterator<Item = u32>, code_table: i32) -> String {
+pub fn render(codes: impl IntoIterator<Item = u32>, code_table: i32) -> String {
     let mut out: Vec<u16> = Vec::new();
     for c in codes {
         if c & PURE_CHARACTER_MASK != 0 {

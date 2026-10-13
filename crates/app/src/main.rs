@@ -3,17 +3,20 @@
 
 mod autostart;
 mod foreground;
+mod hook;
 mod keyboard;
 mod settings_cmd;
 mod tray;
+mod typing;
 
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::os::windows::io::FromRawHandle;
 use std::time::Duration;
 
-use tauri::AppHandle;
+use evkey_engine::settings::{self, Backend};
 use keyboard::mode::{self, Mode};
+use tauri::AppHandle;
 use windows::core::w;
 use windows::Win32::Foundation::{GetLastError, ERROR_ALREADY_EXISTS};
 use windows::Win32::Storage::FileSystem::PIPE_ACCESS_INBOUND;
@@ -40,12 +43,21 @@ fn main() {
         }),
         "--mode" => {
             attach_console();
-            exit_with(match args.get(1).map(String::as_str) {
-                Some("get") => mode::get().map(|m| println!("{}", m.as_str())),
-                Some("vietnamese") => mode::set(Mode::Vietnamese),
-                Some("english") => mode::set(Mode::English),
-                Some("toggle") => mode::toggle().map(|_| ()),
-                _ => Err("cách dùng: evkey --mode get|vietnamese|english|toggle".into()),
+            let arg = args.get(1).map(String::as_str);
+            exit_with(if configured_backend() == Backend::Hook {
+                // The mode lives inside the running app, so changes go through its pipe.
+                match arg {
+                    Some(a @ ("vietnamese" | "english" | "toggle")) => send_to_running_instance(&format!("mode {a}")),
+                    _ => Err("backend hook: cách dùng evkey --mode vietnamese|english|toggle (không có get)".into()),
+                }
+            } else {
+                match arg {
+                    Some("get") => mode::get().map(|m| println!("{}", m.as_str())),
+                    Some("vietnamese") => mode::set(Mode::Vietnamese),
+                    Some("english") => mode::set(Mode::English),
+                    Some("toggle") => mode::toggle().map(|_| ()),
+                    _ => Err("cách dùng: evkey --mode get|vietnamese|english|toggle".into()),
+                }
             })
         }
         "" | "--hidden" => run(false),
@@ -56,7 +68,7 @@ fn main() {
 
 fn run(show_settings: bool) {
     if !acquire_single_instance() {
-        exit_with(ask_running_instance());
+        exit_with(send_to_running_instance("settings"));
     }
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -75,6 +87,9 @@ fn run(show_settings: bool) {
         ])
         .on_window_event(tray::on_window_event)
         .setup(move |app| {
+            if configured_backend() == Backend::Hook {
+                start_hook();
+            }
             tray::setup(app)?;
             foreground::start();
             autostart::repoint_if_enabled();
@@ -102,15 +117,30 @@ fn acquire_single_instance() -> bool {
     }
 }
 
-/// Asks the running instance to show settings. Retries briefly in case it is still starting its pipe.
-fn ask_running_instance() -> Result<(), String> {
+/// Sends `command` to the running instance. Retries briefly in case it is still starting its pipe.
+fn send_to_running_instance(command: &str) -> Result<(), String> {
     for _ in 0..30 {
         if let Ok(mut pipe) = OpenOptions::new().write(true).open(PIPE_PATH) {
-            return pipe.write_all(b"settings").map_err(|e| e.to_string());
+            return pipe.write_all(command.as_bytes()).map_err(|e| e.to_string());
         }
         std::thread::sleep(Duration::from_millis(100));
     }
     Err("EVKey đang chạy nhưng không phản hồi".into())
+}
+
+/// Hook backend: take over typing and drop the TSF keyboard entry, which would otherwise process every key twice.
+fn start_hook() {
+    if keyboard::is_enabled().unwrap_or(false) {
+        let _ = keyboard::set_enabled(false);
+    }
+    let _ = hook::start();
+}
+
+fn configured_backend() -> Backend {
+    settings::default_dir()
+        .and_then(|d| settings::load(&d).ok())
+        .map(|l| l.settings.backend)
+        .unwrap_or_default()
 }
 
 /// Serves "show settings" requests from second launches. Runs forever on its own thread.
@@ -138,9 +168,15 @@ fn serve_show_requests(app: AppHandle) {
         let mut file = unsafe { File::from_raw_handle(pipe.0) };
         let mut buf = [0u8; 64];
         if let Ok(n) = file.read(&mut buf) {
-            if buf[..n].starts_with(b"settings") {
-                tray::show_settings(&app);
+            let cmd = String::from_utf8_lossy(&buf[..n]);
+            match cmd.as_ref() {
+                "settings" => tray::show_settings(&app),
+                "mode vietnamese" => drop(mode::set(Mode::Vietnamese)),
+                "mode english" => drop(mode::set(Mode::English)),
+                "mode toggle" => drop(mode::toggle()),
+                _ => {}
             }
+            tray::refresh_icon(&app);
         }
     }
 }

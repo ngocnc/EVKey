@@ -59,7 +59,7 @@ english.TaskAutostart=Start EVKey with Windows
 vietnamese.TaskAutostart=Khởi động EVKey cùng Windows
 english.LaunchEVKey=Launch EVKey
 vietnamese.LaunchEVKey=Chạy EVKey
-english.SettingsShortcut=EVKey Settings
+english.SettingsShortcut=EVKey
 vietnamese.SettingsShortcut=Cài đặt EVKey
 english.ErrRegister=Could not register the EVKey text service (regsvr32 exit code %1). Setup was cancelled.
 vietnamese.ErrRegister=Không thể đăng ký dịch vụ văn bản EVKey (regsvr32 mã %1). Đã hủy cài đặt.
@@ -67,7 +67,7 @@ english.UninstallKept=Your settings in %APPDATA%\EVKey were kept. Delete that fo
 vietnamese.UninstallKept=Cấu hình trong %APPDATA%\EVKey đã được giữ lại. Hãy tự xóa thư mục đó nếu không còn cần.
 
 [Tasks]
-Name: "enablekbd"; Description: "{cm:TaskKeyboard}"; Flags: checkedonce
+Name: "enablekbd"; Description: "{cm:TaskKeyboard}"; Flags: unchecked
 Name: "autostart"; Description: "{cm:TaskAutostart}"; Flags: checkedonce
 
 [Files]

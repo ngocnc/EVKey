@@ -6,7 +6,7 @@ const BOOLS = [
   "quick_start_consonant", "quick_end_consonant", "upper_case_first_char",
   "allow_consonant_zfwj", "auto_caps_macro",
 ];
-const SELECTS = ["input_type", "tone_placement", "code_table", "temp_off_key"];
+const SELECTS = ["input_type", "tone_placement", "code_table", "temp_off_key", "backend"];
 let state = null;
 
 function say(text, cls = "") {

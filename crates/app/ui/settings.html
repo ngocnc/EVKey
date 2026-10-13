@@ -95,8 +95,14 @@
   </section>
 
   <section class="card">
-    <h2>Bàn phím Windows</h2>
-    <p class="hint">Danh sách bàn phím quyết định EVKey có sẵn trong Windows. Chuyển Việt/Anh dùng phím tắt ở trên, không dùng Win+Space.</p>
+    <h2>Cơ chế gõ</h2>
+    <label class="row"><span>Cơ chế (cần khởi động lại EVKey)</span>
+      <select id="backend">
+        <option value="hook">Hook như UniKey (không cần thêm bàn phím)</option>
+        <option value="tsf">TSF (bàn phím Windows)</option>
+      </select>
+    </label>
+    <p class="hint">Chỉ dùng với cơ chế TSF: thêm EVKey vào danh sách bàn phím Windows. Cơ chế hook không cần, và tự gỡ EVKey khỏi danh sách khi khởi động.</p>
     <div class="actions"><button id="toggle-keyboard"></button></div>
   </section>
 

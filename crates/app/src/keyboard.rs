@@ -118,6 +118,9 @@ pub mod mode {
 
     /// Current mode. An unset or unreadable compartment reads as Vietnamese, as in `crates/tsf`.
     pub fn get() -> Result<Mode, String> {
+        if crate::hook::active() {
+            return Ok(if crate::hook::english() { Mode::English } else { Mode::Vietnamese });
+        }
         with_thread_mgr(|tm| {
             let value = unsafe { compartment(tm)?.GetValue() }.ok();
             let raw = value.as_ref().and_then(|v| i32::try_from(v).ok()).unwrap_or(VIETNAMESE);
@@ -126,6 +129,10 @@ pub mod mode {
     }
 
     pub fn set(mode: Mode) -> Result<(), String> {
+        if crate::hook::active() {
+            crate::hook::set_english(mode == Mode::English);
+            return Ok(());
+        }
         let raw = match mode {
             Mode::Vietnamese => VIETNAMESE,
             Mode::English => ENGLISH,

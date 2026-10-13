@@ -48,6 +48,15 @@ pub enum TempOffKey {
     Alt,
 }
 
+/// Which backend types text: the global keyboard hook (default) or the TSF text service.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Backend {
+ #[default]
+ Hook,
+ Tsf,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
@@ -75,6 +84,8 @@ pub struct Settings {
     pub temp_off_key: TempOffKey,
     /// Key or modifier chord that toggles Vietnamese/English (`alt+z`, `ctrl+shift`, `none` to disable).
     pub toggle_hotkey: String,
+    /// `hook`: global keyboard hook like UniKey. `tsf`: the TSF text service (needs the keyboard entry).
+    pub backend: Backend,
 }
 
 impl Default for Settings {
@@ -95,6 +106,7 @@ impl Default for Settings {
             excluded_apps: Vec::new(),
             temp_off_key: TempOffKey::None,
             toggle_hotkey: "alt+z".to_string(),
+            backend: Backend::Hook,
         }
     }
 }

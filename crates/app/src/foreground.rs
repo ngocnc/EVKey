@@ -48,27 +48,27 @@ unsafe extern "system" fn on_foreground(
     _thread: u32,
     _time: u32,
 ) {
-    let mut pid = 0u32;
-    let mut buf = [0u16; 512];
-    let mut len = buf.len() as u32;
-    let ok = unsafe {
-        GetWindowThreadProcessId(hwnd, Some(&mut pid));
-        let Ok(process) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
-            return;
-        };
-        let ok = QueryFullProcessImageNameW(process, PROCESS_NAME_FORMAT(0), PWSTR(buf.as_mut_ptr()), &mut len).is_ok();
-        let _ = CloseHandle(process);
-        ok
-    };
-    if !ok {
-        return;
-    }
-    let path = String::from_utf16_lossy(&buf[..len as usize]);
-    let name = path.rsplit('\\').next().unwrap_or(&path).to_string();
+    let Some(name) = exe_name(hwnd) else { return };
     if name.eq_ignore_ascii_case("evkey.exe") || name.eq_ignore_ascii_case("explorer.exe") {
         return;
     }
     if let Ok(mut last) = LAST_APP.lock() {
         *last = Some(name);
     }
+}
+
+/// Executable file name (e.g. `chrome.exe`) of the process owning `hwnd`.
+pub fn exe_name(hwnd: HWND) -> Option<String> {
+    let mut pid = 0u32;
+    let mut buf = [0u16; 512];
+    let mut len = buf.len() as u32;
+    let ok = unsafe {
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+        let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let ok = QueryFullProcessImageNameW(process, PROCESS_NAME_FORMAT(0), PWSTR(buf.as_mut_ptr()), &mut len).is_ok();
+        let _ = CloseHandle(process);
+        ok
+    };
+    let path = String::from_utf16_lossy(&buf[..len as usize]);
+    ok.then(|| path.rsplit('\\').next().unwrap_or(&path).to_string())
 }
