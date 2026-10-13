@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultlocale.1.6.0.schema.json
+PackageIdentifier: chrisnguyen.EVKey
+PackageVersion: 2.0.0
+PackageLocale: en-US
+Publisher: chrisnguyen
+PublisherUrl: https://github.com/ngocnc
+PublisherSupportUrl: https://github.com/ngocnc/EVKey/issues
+PackageName: EVKey
+PackageUrl: https://github.com/ngocnc/EVKey
+License: GPL-3.0-only
+LicenseUrl: https://github.com/ngocnc/EVKey/blob/main/LICENSE
+Copyright: Copyright (c) 2026 chrisnguyen
+ShortDescription: Vietnamese input method (Telex) for Windows 11 x64, built on TSF. / Bộ gõ tiếng Việt (Telex) cho Windows 11 x64.
+Description: >-
+  EVKey is a personal Vietnamese input method for Windows, implemented as a real Text Services Framework (TSF) IME.
+  Telex input, free tone placement, quick consonants, macros, spell check and restore-on-invalid. The engine is ported from OpenKey (GPL-3.0).
+  / EVKey là bộ gõ tiếng Việt cá nhân cho Windows, cài đặt dưới dạng IME TSF thật. Hỗ trợ Telex, đặt dấu tự do, gõ tắt bằng macro, kiểm tra chính tả và khôi phục khi gõ sai.
+Moniker: evkey
+Tags:
+  - vietnamese
+  - input-method
+  - ime
+  - telex
+  - tsf
+  - keyboard
+ReleaseNotesUrl: https://github.com/ngocnc/EVKey/releases/tag/v2.0.0
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0
