@@ -73,6 +73,8 @@ pub struct Settings {
     pub excluded_apps: Vec<String>,
     /// Tap this key while typing a word to leave the rest of the word unconverted.
     pub temp_off_key: TempOffKey,
+    /// Key or modifier chord that toggles Vietnamese/English (`alt+z`, `ctrl+shift`, `none` to disable).
+    pub toggle_hotkey: String,
 }
 
 impl Default for Settings {
@@ -92,6 +94,7 @@ impl Default for Settings {
             auto_caps_macro: false,
             excluded_apps: Vec::new(),
             temp_off_key: TempOffKey::None,
+            toggle_hotkey: "alt+z".to_string(),
         }
     }
 }
@@ -147,6 +150,8 @@ pub fn load(dir: &Path) -> Result<Loaded, String> {
     let cfg = dir.join("config.toml");
     if let Some(text) = read_optional(&cfg)? {
         loaded.settings = toml::from_str(&text).map_err(|e| format!("{}: {e}", cfg.display()))?;
+        crate::hotkey::parse_hotkey(&loaded.settings.toggle_hotkey)
+            .map_err(|e| format!("{}: toggle_hotkey: {e}", cfg.display()))?;
     }
     let mac = dir.join("macros.toml");
     if let Some(text) = read_optional(&mac)? {

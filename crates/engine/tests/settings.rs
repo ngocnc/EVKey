@@ -56,3 +56,14 @@ fn save_then_load_round_trips() {
     save(&d.join("nested"), &l).unwrap();
     assert_eq!(load(&d.join("nested")).unwrap(), l);
 }
+
+#[test]
+fn toggle_hotkey_is_validated_on_load() {
+    let d = temp_dir("hotkey");
+    assert_eq!(load(&d).unwrap().settings.toggle_hotkey, "alt+z");
+    std::fs::write(d.join("config.toml"), "toggle_hotkey = \"alt+zz\"\n").unwrap();
+    let err = load(&d).unwrap_err();
+    assert!(err.contains("toggle_hotkey"), "{err}");
+    std::fs::write(d.join("config.toml"), "toggle_hotkey = \"ctrl+shift\"\n").unwrap();
+    assert_eq!(load(&d).unwrap().settings.toggle_hotkey, "ctrl+shift");
+}
