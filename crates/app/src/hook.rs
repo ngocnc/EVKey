@@ -22,7 +22,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     CallNextHookEx, DispatchMessageW, GetForegroundWindow, GetGUIThreadInfo, GetMessageW, GetWindowLongW,
-    GetWindowThreadProcessId, SetWindowsHookExW, TranslateMessage, GUITHREADINFO, GWL_STYLE, KBDLLHOOKSTRUCT, MSG,
+    GetWindowThreadProcessId, SetTimer, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, HHOOK, GUITHREADINFO, GWL_STYLE, KBDLLHOOKSTRUCT, MSG,
     WH_KEYBOARD_LL, WH_MOUSE_LL,
 };
 
@@ -339,26 +339,53 @@ unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) 
     unsafe { CallNextHookEx(None, code, wparam, lparam) }
 }
 
+/// Installs both hooks. Windows silently removes a low-level hook whose callback ever times out (a busy machine is
+/// enough), so `start` re-installs them on a timer instead of trusting them to live forever.
+fn install() -> Result<(HHOOK, HHOOK), String> {
+    let kb = unsafe { SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), None, 0) };
+    let ms = unsafe { SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_proc), None, 0) };
+    match (kb, ms) {
+        (Ok(kb), Ok(ms)) => Ok((kb, ms)),
+        (kb, ms) => {
+            for h in [kb, ms].into_iter().flatten() {
+                let _ = unsafe { UnhookWindowsHookEx(h) };
+            }
+            Err("SetWindowsHookEx failed".to_string())
+        }
+    }
+}
+
+const WM_TIMER: u32 = 0x113;
+const REINSTALL_EVERY_MS: u32 = 5000;
+
 /// Installs the hooks on a new thread and waits for the result. On failure the app keeps running without typing.
 pub fn start() -> Result<(), String> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
         STATE.with(|s| *s.borrow_mut() = Some(State::new()));
-        let kb = unsafe { SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_proc), None, 0) };
-        let ms = unsafe { SetWindowsHookExW(WH_MOUSE_LL, Some(mouse_proc), None, 0) };
-        match (kb, ms) {
-            (Ok(_), Ok(_)) => {
-                ACTIVE.store(true, Ordering::Relaxed);
-                let _ = tx.send(Ok(()));
-            }
-            (kb, ms) => {
-                let e = kb.err().or(ms.err()).map(|e| e.to_string()).unwrap_or_default();
-                let _ = tx.send(Err(format!("SetWindowsHookEx: {e}")));
+        let mut hooks = match install() {
+            Ok(h) => h,
+            Err(e) => {
+                let _ = tx.send(Err(e));
                 return;
             }
-        }
+        };
+        ACTIVE.store(true, Ordering::Relaxed);
+        let _ = tx.send(Ok(()));
+        unsafe { SetTimer(None, 1, REINSTALL_EVERY_MS, None) };
         let mut msg = MSG::default();
         while unsafe { GetMessageW(&mut msg, None, 0, 0) }.as_bool() {
+            if msg.message == WM_TIMER {
+                // New hooks first, so there is never a moment without one.
+                if let Ok(fresh) = install() {
+                    unsafe {
+                        let _ = UnhookWindowsHookEx(hooks.0);
+                        let _ = UnhookWindowsHookEx(hooks.1);
+                    }
+                    hooks = fresh;
+                }
+                continue;
+            }
             unsafe {
                 let _ = TranslateMessage(&msg);
                 DispatchMessageW(&msg);
