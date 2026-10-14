@@ -77,6 +77,21 @@ const STRINGS = {
     vi: "Văn bản bạn chọn được gửi tới Google qua internet mỗi lần dịch.",
     en: "The text you select is sent to Google over the internet each time you translate.",
   },
+  // Action panel
+  "actions.translate": { vi: "Dịch thuật", en: "Translate" },
+  "actions.add_diacritics": { vi: "Thêm dấu", en: "Add diacritics" },
+  "actions.fix_spelling": { vi: "Sửa chính tả", en: "Fix spelling" },
+  "actions.rewrite_formal": { vi: "Viết lại: trang trọng", en: "Rewrite: formal" },
+  "actions.rewrite_shorter": { vi: "Viết lại: ngắn gọn", en: "Rewrite: shorter" },
+  "actions.rewrite_friendly": { vi: "Viết lại: thân thiện", en: "Rewrite: friendly" },
+  "actions.convert": { vi: "Chuyển mã sang Unicode", en: "Convert to Unicode" },
+  "actions.setup_gemini": { vi: "Thêm dấu, Sửa, Viết lại cần API key Gemini. Thiết lập…", en: "Add diacritics, Fix and Rewrite need a Gemini API key. Set up…" },
+  "actions.hotkey.title": { vi: "Phím tắt bảng hành động", en: "Action panel hotkey" },
+  "actions.hotkey.desc": {
+    vi: "Bôi đen văn bản rồi bấm phím này để chọn: Dịch, Thêm dấu, Sửa chính tả, Viết lại, Chuyển mã. Thêm dấu, Sửa và Viết lại cần API key Gemini.",
+    en: "Select text, then press this key to pick: Translate, Add diacritics, Fix spelling, Rewrite, Convert. Add diacritics, Fix and Rewrite need a Gemini API key.",
+  },
+  "hotkey.taken": { vi: "Phím này đã dùng cho phím tắt khác", en: "This key is already used by another hotkey" },
 
   // Typing pane
   "typing.input_type.title": { vi: "Kiểu gõ", en: "Input method" },
@@ -210,8 +225,8 @@ const STRINGS = {
 
   // Macros pane
   "macro.note": {
-    vi: "Gõ từ viết tắt rồi bấm Space, EVKey sẽ thay bằng nội dung bên phải. Mỗi từ viết tắt chỉ dùng được một lần.",
-    en: "Type an abbreviation and press Space, and EVKey replaces it with the text on the right. Each abbreviation can be used only once.",
+    vi: "Gõ từ viết tắt rồi bấm Space, EVKey sẽ thay bằng nội dung bên phải. Mỗi từ viết tắt chỉ dùng được một lần. Nội dung có thể chứa {date}, {time}, {clipboard}.",
+    en: "Type an abbreviation and press Space, and EVKey replaces it with the text on the right. Each abbreviation can be used only once. The text can contain {date}, {time}, {clipboard}.",
   },
   "macro.row_incomplete": {
     vi: "Dòng {n}: nhập cả từ viết tắt lẫn nội dung thay thế, hoặc xóa dòng này.",
@@ -386,7 +401,7 @@ let uiLang = "vi";
 function t(key, params = {}) {
   const entry = STRINGS[key];
   const text = entry ? entry[uiLang] ?? entry.vi : key;
-  return text.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? "");
+  return text.replace(/\{(\w+)\}/g, (m, name) => params[name] ?? m);
 }
 
 // Anything other than "en" falls back to Vietnamese.

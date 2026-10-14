@@ -142,6 +142,8 @@ pub struct Settings {
     pub translate_action: TranslateAction,
     /// Milliseconds the translation popup stays on screen; 0 keeps it until it is clicked. Otherwise 100-600000.
     pub translate_popup_ms: u32,
+    /// Key chord (`ctrl+alt+a`, must end in a key; `none` disables) that opens the action panel on the selected text.
+    pub action_hotkey: String,
 }
 
 impl Default for Settings {
@@ -185,6 +187,7 @@ impl Default for Settings {
             translate_hotkey: "ctrl+alt+t".to_string(),
             translate_action: TranslateAction::Show,
             translate_popup_ms: 5000,
+            action_hotkey: "ctrl+alt+a".to_string(),
         }
     }
 }
@@ -256,6 +259,11 @@ impl Settings {
         match parse_hotkey(&self.translate_hotkey) {
             Ok(Some(hk)) if hk.vk.is_none() => return Err(format!("translate_hotkey phải kết thúc bằng một phím: {}", self.translate_hotkey)),
             Err(e) => return Err(format!("translate_hotkey: {e}")),
+            _ => {}
+        }
+        match parse_hotkey(&self.action_hotkey) {
+            Ok(Some(hk)) if hk.vk.is_none() => return Err(format!("action_hotkey phải kết thúc bằng một phím: {}", self.action_hotkey)),
+            Err(e) => return Err(format!("action_hotkey: {e}")),
             _ => {}
         }
         if self.translate_popup_ms != 0 && !(100..=600_000).contains(&self.translate_popup_ms) {

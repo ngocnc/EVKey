@@ -56,9 +56,9 @@
         "visible": false
       },
       {
-        "label": "translate",
+        "label": "actions",
         "title": "EVKey",
-        "url": "translate.html",
+        "url": "actions.html",
         "width": 340,
         "height": 80,
         "decorations": false,

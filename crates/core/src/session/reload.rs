@@ -28,6 +28,7 @@ impl Session {
             self.hotkey = hk;
         }
         self.translate_hotkey = parse_hotkey(&loaded.settings.translate_hotkey).ok().flatten();
+        self.action_hotkey = parse_hotkey(&loaded.settings.action_hotkey).ok().flatten();
         if self.composer.is_composing() {
             // Stamp stays stale, so the next check applies the rest after the word ends.
             self.stamp = None;

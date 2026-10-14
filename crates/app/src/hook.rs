@@ -21,8 +21,8 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::WindowsAndMessaging::{
     CallNextHookEx, DispatchMessageW, GetForegroundWindow, GetMessageW, PostThreadMessageW, SetTimer,
-    SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, HHOOK, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
-    WH_MOUSE_LL, WM_APP,
+    SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, HHOOK, KBDLLHOOKSTRUCT, MSG, MSLLHOOKSTRUCT,
+    WH_KEYBOARD_LL, WH_MOUSE_LL, WM_APP,
 };
 
 use crate::{foreground, tray};
@@ -119,6 +119,9 @@ impl State {
     fn on_key(&mut self, vk: u16, down: bool) -> (bool, Vec<INPUT>) {
         // Always, even in English mode: leaving an English app for a Vietnamese one must restore its remembered mode.
         if down {
+            if vk == 0x1B {
+                crate::actions::dismiss_menu(None);
+            }
             self.refresh_foreground();
             if !is_modifier_vk(vk) && !self.session.is_english() {
                 self.refresh_secure();
@@ -134,7 +137,10 @@ impl State {
             crate::keyboard::play_toggle_sound(self.session.is_english());
         }
         if reaction.translate_requested {
-            crate::translate::trigger();
+            crate::actions::trigger(true);
+        }
+        if reaction.actions_requested {
+            crate::actions::trigger(false);
         }
         let mut input = Vec::new();
         if let Some(edit) = reaction.edit {
@@ -144,7 +150,7 @@ impl State {
             for _ in 0..edit.backspaces {
                 input.extend([key(VK_BACK.0, false), key(VK_BACK.0, true)]);
             }
-            for unit in edit.text.encode_utf16() {
+            for unit in expand_vars(&edit.text).encode_utf16() {
                 input.extend(unicode(unit));
             }
             match edit.resend {
@@ -173,6 +179,24 @@ fn key(vk: u16, up: bool) -> INPUT {
 /// Types one UTF-16 unit as a down/up pair.
 fn unicode(unit: u16) -> [INPUT; 2] {
     [input(0, unit, KEYEVENTF_UNICODE), input(0, unit, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP)]
+}
+
+/// Fills macro variables: `{date}` (dd/MM/yyyy), `{time}` (HH:mm), `{clipboard}` (current clipboard text).
+/// ponytail: applied to every edit, not only macro output; typed words never contain `{`, so plain typing is untouched.
+fn expand_vars(text: &str) -> std::borrow::Cow<'_, str> {
+    if !text.contains('{') {
+        return text.into();
+    }
+    let t = unsafe { windows::Win32::System::SystemInformation::GetLocalTime() };
+    fill_vars(text, (t.wDay, t.wMonth, t.wYear, t.wHour, t.wMinute), crate::clipboard::get_text).into()
+}
+
+fn fill_vars(text: &str, (d, mo, y, h, mi): (u16, u16, u16, u16, u16), clipboard: impl FnOnce() -> Option<String>) -> String {
+    let mut out = text.replace("{date}", &format!("{d:02}/{mo:02}/{y}")).replace("{time}", &format!("{h:02}:{mi:02}"));
+    if out.contains("{clipboard}") {
+        out = out.replace("{clipboard}", &clipboard().unwrap_or_default());
+    }
+    out
 }
 
 fn input(vk: u16, scan: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {
@@ -218,6 +242,8 @@ unsafe extern "system" fn keyboard_proc(code: i32, wparam: WPARAM, lparam: LPARA
 unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     // left, right, middle, X button down
     if code >= 0 && matches!(wparam.0, 0x201 | 0x204 | 0x207 | 0x20B) {
+        let pt = unsafe { (*(lparam.0 as *const MSLLHOOKSTRUCT)).pt };
+        crate::actions::dismiss_menu(Some((pt.x, pt.y)));
         STATE.with(|s| {
             if let Some(state) = s.borrow_mut().as_mut() {
                 state.session.on_mouse_click();
@@ -305,4 +331,14 @@ pub fn start() -> Result<(), String> {
         }
     });
     rx.recv().map_err(|e| e.to_string())?
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn fills_date_time_and_clipboard() {
+        let got = super::fill_vars("{date} {time} [{clipboard}] {x}", (4, 7, 2026, 9, 5), || Some("abc".into()));
+        assert_eq!(got, "04/07/2026 09:05 [abc] {x}");
+        assert_eq!(super::fill_vars("{clipboard}", (1, 1, 2026, 0, 0), || None), "");
+    }
 }

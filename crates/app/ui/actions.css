@@ -1,0 +1,16 @@
+[hidden] { display: none !important; }
+/* The panel is as tall as its content; actions.js reports the height so the window can follow. */
+.tr-panel { display: flex; flex-direction: column; width: 100%; height: max-content; max-height: 360px; padding: 0; overflow: hidden; cursor: pointer; }
+/* Time left before the panel hides: runs along the top edge and shrinks from full to empty. */
+.tr-bar { flex: none; height: 3px; background: var(--track); }
+.tr-bar i { display: block; height: 100%; transform-origin: left; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.tr-text { min-height: 0; overflow-y: auto; padding: 14px 18px 16px; white-space: pre-wrap; word-break: break-word; font-size: 15px; font-weight: 500; line-height: 1.5; letter-spacing: 0.1px; }
+.tr-text.loading { color: var(--muted); font-weight: 400; }
+.tr-text.error { color: #c4291c; }
+@media (prefers-color-scheme: dark) { .tr-text.error { color: #ff8a80; } }
+.ac-menu { --field: rgba(0, 0, 0, 0.05); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; }
+@media (prefers-color-scheme: dark) { .ac-menu { --field: rgba(255, 255, 255, 0.07); } }
+.ac-item { font: inherit; font-size: 14px; padding: 9px 10px; border: 0; border-radius: 8px; background: var(--field); color: inherit; text-align: start; cursor: pointer; }
+.ac-item:hover { background: var(--track); }
+.ac-item:disabled { opacity: 0.45; cursor: default; background: var(--field); }
+.ac-setup { grid-column: 1 / -1; font: inherit; font-size: 13px; padding: 6px 10px; border: 0; background: none; color: var(--accent); text-align: start; cursor: pointer; }

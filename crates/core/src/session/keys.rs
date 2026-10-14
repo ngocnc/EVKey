@@ -57,6 +57,8 @@ pub struct Reaction {
     pub dummy_key: bool,
     /// The translate hotkey was pressed; the host translates the selected text.
     pub translate_requested: bool,
+    /// The action hotkey was pressed; the host opens the action panel on the selected text.
+    pub actions_requested: bool,
 }
 
 /// Group index of a modifier virtual key (the hook reports the left/right variants); `None` for other keys.

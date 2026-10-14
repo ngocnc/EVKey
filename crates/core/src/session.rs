@@ -35,6 +35,7 @@ pub struct Session {
     last_check: Option<Instant>,
     hotkey: Option<Hotkey>,
     translate_hotkey: Option<Hotkey>,
+    action_hotkey: Option<Hotkey>,
     /// Modifier groups currently held, from the host's modifier state.
     held: Groups,
     /// Modifier-only chord (`ctrl+shift`): armed while exactly its modifiers are held and nothing else was pressed.
@@ -69,6 +70,7 @@ impl Session {
             last_check: None,
             hotkey: None,
             translate_hotkey: None,
+            action_hotkey: None,
             held: [false; 4],
             chord_armed: false,
             tap_armed: false,
@@ -163,6 +165,11 @@ impl Session {
         if let Some(hk) = self.translate_hotkey {
             if hk.vk == Some(vk) && self.held == wanted(&hk) {
                 return Reaction { swallow: true, translate_requested: true, dummy_key: hk.alt, ..Reaction::default() };
+            }
+        }
+        if let Some(hk) = self.action_hotkey {
+            if hk.vk == Some(vk) && self.held == wanted(&hk) {
+                return Reaction { swallow: true, actions_requested: true, dummy_key: hk.alt, ..Reaction::default() };
             }
         }
         if let Some(hk) = self.hotkey {
@@ -307,6 +314,19 @@ mod tests {
         assert!(!s.is_english());
         // The same key without the full chord is plain typing.
         assert!(!s.on_key(key(t, true, mods(true, false, false))).translate_requested);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn action_hotkey_is_swallowed_without_toggling_the_mode() {
+        let dir = dir_with("actions", Settings { action_hotkey: "ctrl+alt+a".into(), ..Settings::default() });
+        let mut s = Session::new(Some(dir.clone()));
+        let a = 0x41;
+        let r = s.on_key(key(a, true, mods(true, true, false)));
+        assert!(r.swallow && r.actions_requested && !r.translate_requested && !r.hotkey_toggled && r.dummy_key);
+        assert!(!s.is_english());
+        // The same key without the full chord is plain typing.
+        assert!(!s.on_key(key(a, true, mods(true, false, false))).actions_requested);
         let _ = std::fs::remove_dir_all(dir);
     }
 

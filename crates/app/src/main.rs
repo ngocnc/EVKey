@@ -1,6 +1,7 @@
 //! EVKey 2.0 app: CLI flags, single instance, tray icon and settings window.
 #![windows_subsystem = "windows"]
 
+mod actions;
 mod ai;
 mod autostart;
 mod banner;
@@ -15,7 +16,6 @@ mod secret;
 mod secure_input_win;
 mod settings_cmd;
 mod tray;
-mod translate;
 mod updater;
 
 use windows::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};
@@ -65,9 +65,10 @@ fn run(show_settings: bool) {
             settings_cmd::last_app,
             settings_cmd::show_settings,
             settings_cmd::quit,
-            translate::translate_state,
-            translate::translate_close,
-            translate::translate_fit,
+            actions::actions_state,
+            actions::actions_close,
+            actions::actions_fit,
+            actions::actions_run,
             updater::check_update_now,
             updater::update_pending,
             updater::update_skip,
@@ -95,7 +96,7 @@ fn run(show_settings: bool) {
             tray::setup(app)?;
             banner::init(app.handle());
             updater::start(app.handle().clone());
-            translate::init(app.handle());
+            actions::init(app.handle());
             foreground::start();
             autostart::repoint_if_enabled();
             let serve = app.handle().clone();

@@ -29,6 +29,7 @@ typedef struct EvReaction {
     bool hotkey_toggled;
     bool dummy_key;
     bool translate_requested;
+    bool actions_requested;
     bool has_edit;
     bool prefix_empty_char;
     uint32_t backspaces;

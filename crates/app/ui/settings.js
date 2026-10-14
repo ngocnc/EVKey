@@ -446,18 +446,20 @@ for (const id of BANNER_FIELDS) {
 }
 $("reset-broken").onclick = resetConfig;
 
-// Translate hotkey: click the button, then press the new combination (Esc cancels).
+// Translate and action hotkeys: click a `.rec` button (`data-key` = settings field), then press the new combination (Esc cancels).
 const HOTKEY_NAMES = { ctrl: "Ctrl", alt: "Alt", shift: "Shift", win: "Win", space: "Space" };
-let recordingHotkey = false;
+const HOTKEY_BTNS = [...document.querySelectorAll("button.rec[data-key]")];
+let recordingHotkey = null;
 function paintHotkey() {
-  const btn = $("translate-hotkey-btn");
-  const value = state?.settings.translate_hotkey ?? "none";
-  btn.classList.toggle("recording", recordingHotkey);
-  btn.replaceChildren();
-  if (recordingHotkey) btn.textContent = t("translate.hotkey.recording");
-  else if (value === "none") btn.textContent = t("translate.hotkey.unset");
-  else for (const part of value.split("+")) btn.append(Object.assign(document.createElement("kbd"), { textContent: HOTKEY_NAMES[part] ?? part.toUpperCase() }));
-  $("translate-hotkey-off").disabled = value === "none";
+  for (const btn of HOTKEY_BTNS) {
+    const value = state?.settings[btn.dataset.key] ?? "none";
+    btn.classList.toggle("recording", recordingHotkey === btn);
+    btn.replaceChildren();
+    if (recordingHotkey === btn) btn.textContent = t("translate.hotkey.recording");
+    else if (value === "none") btn.textContent = t("translate.hotkey.unset");
+    else for (const part of value.split("+")) btn.append(Object.assign(document.createElement("kbd"), { textContent: HOTKEY_NAMES[part] ?? part.toUpperCase() }));
+    btn.nextElementSibling.disabled = value === "none";
+  }
 }
 // Key name in the config grammar (letter, digit, f1-f12, space) for a keydown event, or null.
 function hotkeyKey(e) {
@@ -467,35 +469,41 @@ function hotkeyKey(e) {
   if ((m = e.code.match(/^F(\d+)$/)) && m[1] >= 1 && m[1] <= 12) return "f" + Number(m[1]);
   return e.code === "Space" ? "space" : null;
 }
-async function setTranslateHotkey(value) {
-  recordingHotkey = false;
-  state.settings.translate_hotkey = value;
+async function setHotkey(btn, value) {
+  recordingHotkey = null;
+  state.settings[btn.dataset.key] = value;
   await saveSettings();
   paintHotkey();
 }
-$("translate-hotkey-btn").onclick = () => {
-  recordingHotkey = true;
-  paintHotkey();
-};
-$("translate-hotkey-btn").onblur = () => {
-  recordingHotkey = false;
-  paintHotkey();
-};
-$("translate-hotkey-btn").onkeydown = (e) => {
-  if (!recordingHotkey) return;
-  e.preventDefault();
-  if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
-  if (e.key === "Escape") {
-    recordingHotkey = false;
-    return paintHotkey();
-  }
-  const key = hotkeyKey(e);
-  if (!key) return say(t("translate.hotkey.bad_key"), "err");
-  const mods = [e.ctrlKey && "ctrl", e.altKey && "alt", e.shiftKey && "shift"].filter(Boolean);
-  if (!mods.length && !/^f\d+$/.test(key)) return say(t("translate.hotkey.need_modifier"), "err");
-  setTranslateHotkey([...mods, key].join("+"));
-};
-$("translate-hotkey-off").onclick = () => setTranslateHotkey("none");
+for (const btn of HOTKEY_BTNS) {
+  btn.onclick = () => {
+    recordingHotkey = btn;
+    paintHotkey();
+  };
+  btn.onblur = () => {
+    recordingHotkey = null;
+    paintHotkey();
+  };
+  btn.onkeydown = (e) => {
+    if (recordingHotkey !== btn) return;
+    e.preventDefault();
+    if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
+    if (e.key === "Escape") {
+      recordingHotkey = null;
+      paintHotkey();
+      return;
+    }
+    const key = hotkeyKey(e);
+    if (!key) return say(t("translate.hotkey.bad_key"), "err");
+    const mods = [e.ctrlKey && "ctrl", e.altKey && "alt", e.shiftKey && "shift"].filter(Boolean);
+    if (!mods.length && !/^f\d+$/.test(key)) return say(t("translate.hotkey.need_modifier"), "err");
+    const value = [...mods, key].join("+");
+    const other = HOTKEY_BTNS.find((b) => b !== btn && state.settings[b.dataset.key] === value);
+    if (other) return say(t("hotkey.taken"), "err");
+    setHotkey(btn, value);
+  };
+  btn.nextElementSibling.onclick = () => setHotkey(btn, "none");
+}
 
 // Popup display time: a number plus a unit (ms, s, or "never" = 0, the popup stays until clicked).
 const TIME_MIN = { ms: 100, s: 1 };

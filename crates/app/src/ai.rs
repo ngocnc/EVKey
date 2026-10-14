@@ -35,7 +35,7 @@ pub enum AiAction {
 
 impl AiAction {
     /// The id the web UI sends to `ai_run`.
-    fn from_id(id: &str) -> Option<Self> {
+    pub fn from_id(id: &str) -> Option<Self> {
         Some(match id {
             "add_diacritics" => Self::AddDiacritics,
             "fix_spelling" => Self::FixSpelling,
