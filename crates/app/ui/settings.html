@@ -42,6 +42,10 @@
             <button data-value="simple_telex2">Simple Telex 2</button>
           </div>
         </div>
+      </div>
+      <details class="advanced" data-adv="typing">
+        <summary data-i18n="common.advanced"></summary>
+        <div class="glass group">
         <div class="item stack">
           <div class="text"><b data-i18n="typing.tone.title"></b><span data-i18n="typing.tone.desc"></span></div>
           <div class="seg" data-key="tone_placement">
@@ -63,6 +67,7 @@
           <span class="switch"><input type="checkbox" id="free_mark"><i></i></span>
         </label>
       </div>
+      </details>
     </section>
 
     <section class="pane" data-pane="keys" hidden>
@@ -77,6 +82,10 @@
             <button data-value="ctrl+alt+z"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Z</kbd></button>
           </div>
         </div>
+      </div>
+      <details class="advanced" data-adv="keys">
+        <summary data-i18n="common.advanced"></summary>
+        <div class="glass group">
         <div class="item stack">
           <div class="text"><b data-i18n="keys.temp_off.title"></b><span data-i18n="keys.temp_off.desc"></span></div>
           <div class="seg" data-key="temp_off_key">
@@ -86,6 +95,7 @@
           </div>
         </div>
       </div>
+      </details>
       <p class="note" data-i18n-html="keys.note"></p>
     </section>
 
@@ -95,6 +105,18 @@
         <label class="item"><div class="text"><b data-i18n="smart.spell.title"></b><span data-i18n="smart.spell.desc"></span></div><span class="switch"><input type="checkbox" id="check_spelling"><i></i></span></label>
         <label class="item" data-when="check_spelling"><div class="text"><b data-i18n="smart.restore.title"></b><span data-i18n-html="smart.restore.desc"></span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
       </div>
+      <div class="glass group">
+        <label class="item">
+          <div class="text"><b data-i18n="smart.app_mode.title"></b><span data-i18n="smart.app_mode.desc"></span></div>
+          <span class="switch"><input type="checkbox" id="remember_app_mode"><i></i></span>
+        </label>
+        <label class="item">
+          <div class="text"><b data-i18n="smart.undo.title"></b><span data-i18n="smart.undo.desc"></span></div>
+          <span class="switch"><input type="checkbox" id="undo_word"><i></i></span>
+        </label>
+      </div>
+      <details class="advanced" data-adv="smart">
+        <summary data-i18n="common.advanced"></summary>
       <h2 data-i18n="smart.quick.heading"></h2>
       <div class="glass group">
         <label class="item" data-when="input_type!=vni"><div class="text"><b data-i18n="smart.quick_telex.title"></b><span>cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</span></div><span class="switch"><input type="checkbox" id="quick_telex"><i></i></span></label>
@@ -111,16 +133,6 @@
           <span class="chip-caption" data-i18n="smart.custom.caption"></span>
         </div>
       </div>
-      <div class="glass group">
-        <label class="item">
-          <div class="text"><b data-i18n="smart.app_mode.title"></b><span data-i18n="smart.app_mode.desc"></span></div>
-          <span class="switch"><input type="checkbox" id="remember_app_mode"><i></i></span>
-        </label>
-        <label class="item">
-          <div class="text"><b data-i18n="smart.undo.title"></b><span data-i18n="smart.undo.desc"></span></div>
-          <span class="switch"><input type="checkbox" id="undo_word"><i></i></span>
-        </label>
-      </div>
       <h2 data-i18n="smart.caps.heading"></h2>
       <div class="glass group">
         <label class="item"><div class="text"><b data-i18n="smart.caps_first.title"></b><span data-i18n="smart.caps_first.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_first_char"><i></i></span></label>
@@ -129,6 +141,7 @@
         <label class="item sub" data-when="upper_case_first_char"><div class="text"><b data-i18n="smart.caps_first_letter.title"></b><span data-i18n="smart.caps_first_letter.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_first_letter"><i></i></span></label>
         <label class="item"><div class="text"><b data-i18n="smart.macro_case.title"></b><span data-i18n="smart.macro_case.desc"></span></div><span class="switch"><input type="checkbox" id="auto_caps_macro"><i></i></span></label>
       </div>
+      </details>
     </section>
 
     <section class="pane" data-pane="macro" hidden>
@@ -140,6 +153,19 @@
           <button id="save-macros" class="primary" data-i18n="macro.save"></button>
         </div>
       </div>
+      <details class="advanced" data-adv="macro">
+        <summary data-i18n="common.advanced"></summary>
+        <div class="glass group">
+          <div class="item">
+            <div class="text"><b data-i18n="macro.import.title"></b><span data-i18n="macro.import.desc"></span></div>
+            <div class="colors">
+              <label class="check"><input type="checkbox" id="macro-import-replace"> <span data-i18n="macro.import.replace"></span></label>
+              <button id="macro-import" type="button" data-i18n="macro.import.button"></button>
+            </div>
+          </div>
+        </div>
+      </details>
+      <input type="file" id="macro-import-file" accept=".txt,.dat,text/plain" hidden>
     </section>
 
     <section class="pane" data-pane="apps" hidden>
@@ -163,6 +189,10 @@
             <button data-value="dark" data-i18n="look.theme.dark"></button>
           </div>
         </div>
+      </div>
+      <details class="advanced" data-adv="appearance">
+        <summary data-i18n="common.advanced"></summary>
+        <div class="glass group">
         <div class="item stack">
           <div class="text"><b data-i18n="look.glass.title"></b><span data-i18n="look.glass.desc"></span></div>
           <div class="seg" data-local="glass-style">
@@ -210,6 +240,7 @@
         </div>
       </div>
       <div class="actions"><button id="gl-reset" class="danger" data-i18n="look.reset"></button></div>
+      </details>
     </section>
 
     <section class="pane" data-pane="system" hidden>
@@ -223,6 +254,10 @@
           </div>
         </div>
         <label class="item"><div class="text"><b id="autostart-title" data-i18n="system.autostart.title"></b><span data-i18n="system.autostart.desc"></span></div><span class="switch"><input type="checkbox" id="autostart"><i></i></span></label>
+      </div>
+      <details class="advanced" data-adv="system">
+        <summary data-i18n="common.advanced"></summary>
+      <div class="glass group">
         <label class="item"><div class="text"><b data-i18n="system.sound.title"></b><span data-i18n="system.sound.desc"></span></div><span class="switch"><input type="checkbox" id="toggle_sound"><i></i></span></label>
       </div>
       <h2 data-i18n="system.files.heading"></h2>
@@ -233,6 +268,19 @@
           <button id="reset" class="danger" data-i18n="reset.defaults"></button>
         </div>
       </div>
+      <h2 data-i18n="system.backup.heading"></h2>
+      <div class="glass group">
+        <div class="item">
+          <div class="text"><b data-i18n="system.export.title"></b><span data-i18n="system.export.desc"></span></div>
+          <button id="config-export" type="button" data-i18n="system.export.button"></button>
+        </div>
+        <div class="item">
+          <div class="text"><b data-i18n="system.import.title"></b><span data-i18n="system.import.desc"></span></div>
+          <button id="config-import" type="button" data-i18n="system.import.button"></button>
+        </div>
+      </div>
+      <input type="file" id="config-import-file" accept=".toml" hidden>
+      </details>
     </section>
     <section class="pane" data-pane="translate" hidden>
       <h1><span data-i18n="nav.translate"></span> <span class="beta">Beta</span></h1>
@@ -252,6 +300,22 @@
             <button data-value="replace" data-i18n="translate.action.replace"></button>
           </div>
         </div>
+      </div>
+      <h2>Gemini (AI)</h2>
+      <div class="glass group">
+        <div class="item stack">
+          <div class="text"><b data-i18n="gemini.key.title"></b><span data-i18n="gemini.key.desc"></span></div>
+          <div class="key-row">
+            <input type="password" id="gemini-key" autocomplete="off" spellcheck="false">
+            <button id="gemini-save" class="primary" type="button" data-i18n="gemini.key.save"></button>
+            <button id="gemini-delete" class="danger" type="button" data-i18n="common.delete"></button>
+          </div>
+          <span id="gemini-status" class="chip-caption"></span>
+        </div>
+      </div>
+      <details class="advanced" data-adv="translate">
+        <summary data-i18n="common.advanced"></summary>
+        <div class="glass group">
         <div class="item">
           <div class="text"><b data-i18n="translate.secs.title"></b><span data-i18n="translate.secs.desc"></span></div>
           <div class="time-field">
@@ -271,6 +335,7 @@
           <span class="pill">Google Translate</span>
         </div>
       </div>
+      </details>
     </section>
     <section class="pane" data-pane="about" hidden>
       <h1 data-i18n="nav.about"></h1>
@@ -295,6 +360,33 @@
 
   </main>
   <p id="msg" class="toast" role="status"></p>
+</div>
+<div id="welcome" class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title" hidden>
+  <div class="welcome-card glass">
+    <span class="logo lg">V</span>
+    <h1 id="welcome-title" data-i18n="welcome.title"></h1>
+    <p class="welcome-sub" data-i18n="welcome.sub"></p>
+    <ol class="welcome-steps">
+      <li>
+        <b data-i18n="welcome.step_input"></b>
+        <div class="seg" data-key="input_type">
+          <button data-value="telex">Telex</button>
+          <button data-value="vni">VNI</button>
+          <button data-value="simple_telex1">Simple Telex 1</button>
+          <button data-value="simple_telex2">Simple Telex 2</button>
+        </div>
+      </li>
+      <li><b data-i18n="welcome.step_toggle"></b><span id="welcome-hotkey" class="welcome-line"></span></li>
+      <li>
+        <b data-i18n="welcome.step_try"></b>
+        <textarea id="welcome-try" rows="2" spellcheck="false"></textarea>
+      </li>
+    </ol>
+    <div class="actions">
+      <button id="welcome-skip" class="ghost" type="button" data-i18n="welcome.skip"></button>
+      <button id="welcome-start" class="primary" type="button" data-i18n="welcome.start"></button>
+    </div>
+  </div>
 </div>
 <script src="i18n.js"></script>
 <script src="banner-view.js"></script>

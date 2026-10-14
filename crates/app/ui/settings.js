@@ -187,7 +187,10 @@ function fill() {
   fillBanner(s);
   fillTime(s.translate_popup_ms);
   paintHotkey();
+  paintWelcome();
+  paintGemini();
   updateVisibility();
+  syncRanges();
 }
 
 // Switches the UI language without rebuilding inputs, so unsaved macro edits stay.
@@ -204,6 +207,8 @@ function applyLanguage(lang) {
   }
   $("pin").title = $("pin").classList.contains("active") ? t("pin.unpin") : t("pin.pin");
   paintHotkey();
+  paintWelcome();
+  paintGemini();
   $("translate-unit").refresh();
 }
 
@@ -309,6 +314,7 @@ function syncGlassControls() {
   glassGradient.checked = glassGet("tint-end") !== "";
   $("glass-tint-end-wrap").hidden = !glassGradient.checked;
   $("accent-color").value = glassGet("accent") || "#ff6b8a";
+  syncRanges();
 }
 syncGlassControls();
 $("accent-color").oninput = () => {
@@ -357,6 +363,7 @@ $("gl-reset").onclick = async () => {
   $("bn-border").value = d.border;
   $("bn-text").value = d.text;
   renderBannerPreview();
+  syncRanges();
   saveSettings();
 };
 for (const seg of SEGS) {
@@ -365,8 +372,11 @@ for (const seg of SEGS) {
     if (!b) return;
     for (const x of seg.children) x.classList.toggle("active", x === b);
     paintHint(seg, b.dataset.value);
+    // The welcome screen repeats the input-method control; keep every copy of a key in step before saving.
+    for (const other of SEGS) if (other !== seg && other.dataset.key === seg.dataset.key) setSeg(other, b.dataset.value);
     saveSettings();
     if (seg.dataset.key === "ui_language") applyLanguage(b.dataset.value);
+    if (seg.dataset.key === "input_type") paintWelcome();
   };
 }
 // Look-only segmented controls (theme, glass style) persist in local storage; the popup reads the same keys.
@@ -615,7 +625,120 @@ $("check-update").onclick = async () => {
 $("open-github").onclick = () => run(() => invoke("open_github"), t("toast.open_github_ok"));
 listen("settings-show", load);
 applyI18n();
-load();
+load().then(() => {
+  if (!localStorage.getItem("evkey-welcomed")) showWelcome();
+});
+
+// Advanced sections: closed by default, the open state is remembered per pane.
+for (const d of document.querySelectorAll("details.advanced")) {
+  const key = "evkey-adv-" + d.dataset.adv;
+  d.open = localStorage.getItem(key) === "1";
+  d.ontoggle = () => {
+    localStorage.setItem(key, d.open ? "1" : "0");
+    updateVisibility();
+  };
+}
+
+// Welcome screen: first open only. Its input-method control is a second `input_type` segment (see the SEGS handler).
+function paintWelcome() {
+  const hk = state?.settings.toggle_hotkey ?? "none";
+  const line = $("welcome-hotkey");
+  if (hk === "none") line.textContent = t("welcome.toggle_none");
+  else {
+    const [before, after] = t("welcome.toggle_line", { keys: "\u0000" }).split("\u0000");
+    const keys = hk.split("+").map((p) => Object.assign(document.createElement("kbd"), { textContent: HOTKEY_NAMES[p] ?? p.toUpperCase() }));
+    line.replaceChildren(before, ...keys, after ?? "");
+  }
+  $("welcome-try").placeholder = t(state?.settings.input_type === "vni" ? "welcome.try.vni" : "welcome.try.telex");
+}
+function showWelcome() {
+  $("welcome").hidden = false;
+  $("welcome-try").focus();
+}
+function closeWelcome() {
+  localStorage.setItem("evkey-welcomed", "1");
+  $("welcome").hidden = true;
+}
+$("welcome-start").onclick = closeWelcome;
+$("welcome-skip").onclick = closeWelcome;
+$("welcome").addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeWelcome();
+});
+
+// Picks a file with the native file chooser and resolves with its File (null when cancelled).
+function pickFile(input) {
+  return new Promise((resolve) => {
+    input.value = "";
+    input.onchange = () => resolve(input.files[0] ?? null);
+    input.oncancel = () => resolve(null);
+    input.click();
+  });
+}
+$("macro-import").onclick = async () => {
+  const file = await pickFile($("macro-import-file"));
+  if (!file) return;
+  const replace = $("macro-import-replace").checked;
+  if (replace && !confirm(t("macro.import.confirm"))) return;
+  try {
+    const content = [...new Uint8Array(await file.arrayBuffer())];
+    const n = await invoke("import_macros", { content, replace });
+    say(t("macro.import.done", { n }), "ok");
+    await load();
+  } catch (e) {
+    say(String(e), "err");
+  }
+};
+$("config-export").onclick = async () => {
+  try {
+    const path = await invoke("export_config");
+    say(t("system.export.done", { path }), "ok");
+  } catch (e) {
+    say(String(e), "err");
+  }
+};
+$("config-import").onclick = async () => {
+  const file = await pickFile($("config-import-file"));
+  if (!file || !confirm(t("system.import.confirm"))) return;
+  if (await run(async () => invoke("import_config", { content: await file.text() }), t("system.import.done"))) await load();
+};
+
+// Gemini API key: the page only learns whether a key exists; the key itself never comes back from the app.
+let geminiSet = false;
+function paintGemini() {
+  $("gemini-key").placeholder = t(geminiSet ? "gemini.key.placeholder_set" : "gemini.key.placeholder_unset");
+  $("gemini-status").textContent = t(geminiSet ? "gemini.key.status_set" : "gemini.key.status_unset");
+  $("gemini-delete").disabled = !geminiSet;
+}
+async function refreshGemini() {
+  geminiSet = await invoke("gemini_key_status").catch(() => false);
+  paintGemini();
+}
+$("gemini-save").onclick = async () => {
+  const key = $("gemini-key").value.trim();
+  if (!key) return $("gemini-key").focus();
+  const btn = $("gemini-save");
+  btn.disabled = true;
+  btn.classList.add("loading");
+  $("gemini-status").textContent = t("gemini.key.checking");
+  try {
+    await invoke("gemini_key_set", { key });
+    $("gemini-key").value = "";
+    say(t("gemini.key.saved"), "ok");
+  } catch (e) {
+    say(String(e), "err");
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    await refreshGemini();
+  }
+};
+$("gemini-key").onkeydown = (e) => {
+  if (e.key === "Enter") $("gemini-save").click();
+};
+$("gemini-delete").onclick = async () => {
+  if (await run(() => invoke("gemini_key_delete"), t("gemini.key.deleted"))) await refreshGemini();
+};
+refreshGemini();
 
 // Items marked data-when ("key", "key=value" or "key!=value") only show while that option is chosen.
 function currentValue(key) {
@@ -684,10 +807,9 @@ for (const seg of ALL_SEGS) {
   seg.addEventListener("click", () => placeThumb(seg));
 }
 
-// Filled part of every range track (left of the thumb), via --p. Values are also set from code, so refresh on a short timer.
-// ponytail: 250 ms poll, a setter hook per range would be event-driven.
-const ranges = [...document.querySelectorAll('input[type="range"]')];
-const syncRanges = () => ranges.forEach((r) => r.style.setProperty("--p", ((r.value - r.min) / (r.max - r.min)) * 100 + "%"));
-setInterval(syncRanges, 250);
+// Filled part of every range track (left of the thumb), via --p. Called after code sets values and on every input.
+function syncRanges() {
+  for (const r of document.querySelectorAll('input[type="range"]')) r.style.setProperty("--p", ((r.value - r.min) / (r.max - r.min)) * 100 + "%");
+}
 document.addEventListener("input", syncRanges);
 syncRanges();
