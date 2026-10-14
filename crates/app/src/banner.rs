@@ -12,7 +12,7 @@ use windows::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowRect
 
 const BANNER: &str = "banner";
 /// Gap between the banner and the bottom edge of the work area, in logical pixels.
-const BOTTOM_GAP: f64 = 48.0;
+const BOTTOM_GAP: f64 = 32.0;
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 /// `Some(holder)` while the banner is up; `holder` is "" when the app is unknown.

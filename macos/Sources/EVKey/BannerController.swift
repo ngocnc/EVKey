@@ -45,7 +45,7 @@ final class BannerController {
         let size = hosting.fittingSize
         let area = Self.viewport()
         let frame = NSRect(
-            x: area.midX - size.width / 2, y: area.minY + 48, width: size.width, height: size.height)
+            x: area.midX - size.width / 2, y: area.minY + 32, width: size.width, height: size.height)
         guard !panel.isVisible || hiding else {
             panel.setFrame(frame, display: true)
             return
