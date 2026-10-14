@@ -1,15 +1,12 @@
-import AppKit
-import Combine
 import EVKeyKit
 import SwiftUI
 
-/// "Dịch thuật" (Beta): the translate hotkey, what happens after a translation, how long the popup stays, and the service.
+/// "Dịch thuật" (Beta): the translate and action panel hotkeys, what happens after a result, how long the popup stays,
+/// the translation service, and the Gemini key.
 struct SettingsTranslateTab: View {
     @ObservedObject private var state = AppState.shared
-    @State private var recording = false
-    @State private var message: String?
-    /// Key-down monitor while recording; removed as soon as recording ends.
-    @State private var monitor: Any?
+    /// Id of the hotkey row that is recording a chord, if any.
+    @State private var recorder: String?
     @State private var timeText = ""
     @State private var timeUnit = TranslateDisplayTime.DisplayUnit.s
     @FocusState private var timeFocused: Bool
@@ -22,118 +19,33 @@ struct SettingsTranslateTab: View {
         ]
     }
 
+    private let providerChoices: [ChoiceOption<TranslateProvider>] = [
+        ChoiceOption(value: .google, label: "Google Translate"),
+        ChoiceOption(value: .gemini, label: "Gemini"),
+    ]
+
     var body: some View {
         SettingsPage(title: UIStrings.tr("tab.translate")) {
             SettingsGroup {
-                hotkeyRow
+                SettingsHotkeyRow(
+                    id: "translate", title: UIStrings.tr("translate.hotkey"), subtitle: UIStrings.tr("translate.hotkey.detail"),
+                    chord: state.binding(\.translateHotkey), recorder: $recorder)
+                SettingsHotkeyRow(
+                    id: "actions", title: UIStrings.tr("actions.hotkey"), subtitle: UIStrings.tr("actions.hotkey.detail"),
+                    chord: state.binding(\.actionHotkey), recorder: $recorder)
                 SettingsChoiceRow(
                     title: UIStrings.tr("translate.action"), subtitle: UIStrings.tr("translate.action.detail"),
                     choices: actionChoices, selection: state.binding(\.translateAction))
                 displayTimeRow
-                serviceRow
+                SettingsChoiceRow(
+                    title: UIStrings.tr("translate.service"), subtitle: UIStrings.tr("translate.service.detail"),
+                    choices: providerChoices, selection: state.binding(\.translateProvider))
             }
+
+            SettingsHeading(UIStrings.tr("gemini.heading"))
+            SettingsGeminiKeyRow()
         }
         .onAppear(perform: loadDisplayTime)
-        .onDisappear(perform: stopRecording)
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
-            stopRecording()
-        }
-    }
-
-    // MARK: Hotkey
-
-    private var hotkeyRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 12) {
-                SettingsRowLabel(title: UIStrings.tr("translate.hotkey"), subtitle: UIStrings.tr("translate.hotkey.detail"))
-                Spacer(minLength: 12)
-                Button(action: toggleRecording) { hotkeyCaps }
-                    .buttonStyle(.plain)
-                Button(UIStrings.tr("keys.hotkey.none"), action: clearHotkey)
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Color.primary.opacity(0.7))
-                    .disabled(state.settings.translateHotkey == "none")
-            }
-            if let message {
-                Text(message)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.red)
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .settingsBlock()
-    }
-
-    /// Key caps for the current chord, or the recording prompt, or the unset text.
-    private var hotkeyCaps: some View {
-        Group {
-            if recording {
-                Text(UIStrings.tr("translate.hotkey.recording"))
-            } else if state.settings.translateHotkey == "none" {
-                Text(UIStrings.tr("translate.hotkey.unset"))
-            } else {
-                HStack(spacing: 4) {
-                    ForEach(TranslateHotkey.labels(state.settings.translateHotkey), id: \.self) { label in
-                        Text(label)
-                            .font(.system(size: 12, weight: .medium))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.primary.opacity(0.1), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
-                    }
-                }
-            }
-        }
-        .font(.system(size: 12, weight: .medium))
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(
-            recording ? Color.accentColor.opacity(0.18) : Color.primary.opacity(0.07),
-            in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-    }
-
-    private func toggleRecording() {
-        if recording { stopRecording() } else { startRecording() }
-    }
-
-    /// Captures the next key combination. Esc cancels; other keys are swallowed while recording.
-    private func startRecording() {
-        stopRecording()
-        message = nil
-        recording = true
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if event.keyCode == 53 {  // Esc
-                self.message = nil
-                self.stopRecording()
-                return nil
-            }
-            let flags = event.modifierFlags
-            switch TranslateHotkey.capture(
-                keycode: event.keyCode,
-                control: flags.contains(.control), option: flags.contains(.option),
-                shift: flags.contains(.shift), command: flags.contains(.command)) {
-            case .chord(let chord):
-                self.state.updateSettings { $0.translateHotkey = chord }
-                self.stopRecording()
-            case .needsModifier:
-                self.message = UIStrings.tr("translate.hotkey.needModifier")
-            case .badKey:
-                self.message = UIStrings.tr("translate.hotkey.badKey")
-            }
-            return nil
-        }
-    }
-
-    private func stopRecording() {
-        if let monitor { NSEvent.removeMonitor(monitor) }
-        monitor = nil
-        recording = false
-    }
-
-    private func clearHotkey() {
-        stopRecording()
-        message = nil
-        state.updateSettings { $0.translateHotkey = "none" }
     }
 
     // MARK: Display time
@@ -201,22 +113,5 @@ struct SettingsTranslateTab: View {
         let ms = TranslateDisplayTime.storedMs(value: Int(timeText) ?? 0, unit: timeUnit)
         state.updateSettings { $0.translatePopupMs = ms }
         timeText = timeUnit == .never ? "" : String(TranslateDisplayTime.shownValue(ms: ms, unit: timeUnit))
-    }
-
-    // MARK: Service
-
-    private var serviceRow: some View {
-        HStack(spacing: 12) {
-            SettingsRowLabel(title: UIStrings.tr("translate.service"), subtitle: UIStrings.tr("translate.service.detail"))
-            Spacer(minLength: 12)
-            Text("Google Translate")
-                .font(.system(size: 12, weight: .medium))
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4)
-                .background(Color.primary.opacity(0.09), in: Capsule())
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .settingsBlock()
     }
 }

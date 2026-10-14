@@ -13,7 +13,7 @@ public struct KeyInjector {
     func apply(_ edit: TextEdit) {
         if edit.prefixEmptyChar { typeUnits([Self.emptyChar]) }
         for _ in 0..<edit.backspaces { tapKey(Self.backspace) }
-        typeUnits(edit.text)
+        typeUnits(MacroVars.expand(edit.text))
         switch edit.resend {
         case .char(let unit)?:
             typeUnits([unit])

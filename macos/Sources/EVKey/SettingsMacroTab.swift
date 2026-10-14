@@ -56,6 +56,9 @@ struct SettingsMacroTab: View {
                 }
                 .padding(14)
             }
+            SettingsAdvanced(pane: "macro") {
+                SettingsMacroImportRow(onImported: reload)
+            }
         }
         .onAppear(perform: reload)
         // Typing in the last row appends a fresh empty one.

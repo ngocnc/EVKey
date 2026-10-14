@@ -24,28 +24,35 @@ struct SettingsSystemTab: View {
                     isOn: Binding(
                         get: { state.autostart },
                         set: { value in state.perform { try state.setAutostart(value) } }))
-                SettingsToggleRow(
-                    title: UIStrings.tr("system.speakOnSwitch"),
-                    subtitle: UIStrings.tr("system.speakOnSwitch.detail"),
-                    isOn: state.binding(\.toggleSound))
             }
 
-            SettingsHeading(UIStrings.tr("system.configFiles"))
-            SettingsCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(state.configDir)
-                        .font(.system(size: 12, design: .monospaced))
-                        .textSelection(.enabled)
-                        .foregroundStyle(.secondary)
-                    HStack {
-                        Button(UIStrings.tr("system.openFolder"), action: state.openConfigDir)
-                        Spacer()
-                        Button(UIStrings.tr("system.reset"), role: .destructive) {
-                            if confirmResetConfig() { state.perform { try state.resetConfig() } }
+            SettingsAdvanced(pane: "system") {
+                SettingsGroup {
+                    SettingsToggleRow(
+                        title: UIStrings.tr("system.speakOnSwitch"),
+                        subtitle: UIStrings.tr("system.speakOnSwitch.detail"),
+                        isOn: state.binding(\.toggleSound))
+                }
+
+                SettingsHeading(UIStrings.tr("system.configFiles"))
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(state.configDir)
+                            .font(.system(size: 12, design: .monospaced))
+                            .textSelection(.enabled)
+                            .foregroundStyle(.secondary)
+                        HStack {
+                            Button(UIStrings.tr("system.openFolder"), action: state.openConfigDir)
+                            Spacer()
+                            Button(UIStrings.tr("system.reset"), role: .destructive) {
+                                if confirmResetConfig() { state.perform { try state.resetConfig() } }
+                            }
                         }
                     }
+                    .padding(14)
                 }
-                .padding(14)
+
+                SettingsBackupSection()
             }
         }
     }

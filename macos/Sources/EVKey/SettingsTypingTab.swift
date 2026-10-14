@@ -53,15 +53,19 @@ struct SettingsTypingTab: View {
                 SettingsChoiceRow(
                     title: UIStrings.tr("typing.inputMethod"), subtitle: UIStrings.tr("typing.inputMethod.detail"),
                     choices: Self.inputChoices, selection: state.binding(\.inputType))
-                SettingsChoiceRow(
-                    title: UIStrings.tr("typing.tonePlacement"), subtitle: UIStrings.tr("typing.tonePlacement.detail"),
-                    choices: Self.toneChoices, selection: state.binding(\.tonePlacement))
-                SettingsChoiceRow(
-                    title: UIStrings.tr("typing.codeTable"), subtitle: UIStrings.tr("typing.codeTable.detail"),
-                    choices: Self.tableChoices, selection: state.binding(\.codeTable))
-                SettingsToggleRow(
-                    title: UIStrings.tr("typing.freeTone"), subtitle: UIStrings.tr("typing.freeTone.detail"),
-                    isOn: state.binding(\.freeMark))
+            }
+            SettingsAdvanced(pane: "typing") {
+                SettingsGroup {
+                    SettingsChoiceRow(
+                        title: UIStrings.tr("typing.tonePlacement"), subtitle: UIStrings.tr("typing.tonePlacement.detail"),
+                        choices: Self.toneChoices, selection: state.binding(\.tonePlacement))
+                    SettingsChoiceRow(
+                        title: UIStrings.tr("typing.codeTable"), subtitle: UIStrings.tr("typing.codeTable.detail"),
+                        choices: Self.tableChoices, selection: state.binding(\.codeTable))
+                    SettingsToggleRow(
+                        title: UIStrings.tr("typing.freeTone"), subtitle: UIStrings.tr("typing.freeTone.detail"),
+                        isOn: state.binding(\.freeMark))
+                }
             }
         }
     }

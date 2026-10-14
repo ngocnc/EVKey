@@ -44,7 +44,7 @@ struct TranslateView: View {
 }
 
 /// 3 pt bar flush with the top edge. It stays in place (hidden) while loading and when the display time is "never".
-private struct DrainBar: View {
+struct DrainBar: View {
     let active: Bool
     /// Restarts the drain each time the popup starts loading or settles.
     let token: Int

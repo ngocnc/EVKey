@@ -1,8 +1,10 @@
 import EVKeyKit
 import SwiftUI
 
-/// Liquid Glass look of the popup and Bảng điều khiển: style, tint colour and tint strength. Applies live.
+/// Liquid Glass look of the popup and Bảng điều khiển. `advanced` false shows the theme; true shows style, tint colour
+/// and tint strength. Applies live.
 struct SettingsGlassSection: View {
+    var advanced = false
     @ObservedObject private var glass = GlassAppearance.shared
     @ObservedObject private var state = AppState.shared
     @Environment(\.colorScheme) private var scheme
@@ -13,35 +15,39 @@ struct SettingsGlassSection: View {
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(UIStrings.tr("glass.theme"))
-                    .font(.system(size: 13, weight: .semibold))
-                SettingsSegmented(
-                    choices: GlassAppearance.Theme.allCases.map { ChoiceOption(value: $0, label: $0.label) },
-                    selection: $glass.theme)
-            }
-            .padding(14)
-            .settingsBlock()
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(UIStrings.tr("glass.style"))
-                    .font(.system(size: 13, weight: .semibold))
-                SettingsSegmented(
-                    choices: GlassAppearance.Style.allCases.map { ChoiceOption(value: $0, label: $0.label) },
-                    selection: $glass.style)
-                if #unavailable(macOS 26.0) {
-                    Text(UIStrings.tr("glass.needsMacOS26"))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+            if !advanced {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(UIStrings.tr("glass.theme"))
+                        .font(.system(size: 13, weight: .semibold))
+                    SettingsSegmented(
+                        choices: GlassAppearance.Theme.allCases.map { ChoiceOption(value: $0, label: $0.label) },
+                        selection: $glass.theme)
                 }
+                .padding(14)
+                .settingsBlock()
             }
-            .padding(14)
-            .settingsBlock()
 
-            SettingsCard {
-                SettingsPercentRow(title: UIStrings.tr("glass.tintStrength"), value: $glass.tintStrength)
-                SettingsDivider()
-                SettingsColorRow(title: UIStrings.tr("glass.tint"), start: tintBinding, end: $glass.tintEndHex)
+            if advanced {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(UIStrings.tr("glass.style"))
+                        .font(.system(size: 13, weight: .semibold))
+                    SettingsSegmented(
+                        choices: GlassAppearance.Style.allCases.map { ChoiceOption(value: $0, label: $0.label) },
+                        selection: $glass.style)
+                    if #unavailable(macOS 26.0) {
+                        Text(UIStrings.tr("glass.needsMacOS26"))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(14)
+                .settingsBlock()
+
+                SettingsCard {
+                    SettingsPercentRow(title: UIStrings.tr("glass.tintStrength"), value: $glass.tintStrength)
+                    SettingsDivider()
+                    SettingsColorRow(title: UIStrings.tr("glass.tint"), start: tintBinding, end: $glass.tintEndHex)
+                }
             }
         }
     }

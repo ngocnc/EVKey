@@ -94,6 +94,84 @@ check(TranslateDisplayTime.storedMs(value: 0, unit: .s) == 1000 && TranslateDisp
 check(TranslateDisplayTime.storedMs(value: 999_999, unit: .ms) == 600_000 && TranslateDisplayTime.storedMs(value: 9_999, unit: .s) == 600_000, "maximum is 600000 ms")
 check(TranslateDisplayTime.storedMs(value: 7, unit: .never) == 0, "never stores 0")
 
+// Gemini: action ids, prompts, request body, response parsing, error mapping (mirrors crates/app/src/ai.rs tests).
+UIStrings.language = .vi
+check(GeminiAction(rawValue: "add_diacritics") == .addDiacritics, "add_diacritics id maps to its action")
+check(GeminiAction(rawValue: "rewrite_shorter") == .rewriteShorter, "rewrite_shorter id maps to its action")
+check(GeminiAction(rawValue: "translate") == .translate, "translate id maps to its action")
+check(GeminiAction(rawValue: "nope") == nil, "unknown action id is rejected")
+let prompts = GeminiAction.allCases.map(\.systemPrompt)
+check(prompts.count == 6, "six Gemini actions")
+check(prompts.allSatisfy { $0.contains("ONLY") }, "every prompt asks for only the result")
+check(Set(prompts).count == prompts.count, "every action has its own prompt")
+check(GeminiAction.rewriteFriendly.loadingKey == "actions.loading.rewrite", "rewrite tones share one loading text")
+check(GeminiAction.rewriteFormal.loadingKey == GeminiAction.rewriteShorter.loadingKey, "all tones share the loading key")
+check(GeminiAction.addDiacritics.loadingKey == "actions.loading.add_diacritics", "add diacritics has its own loading text")
+check(GeminiAction.allCases.allSatisfy { UIStrings.tr($0.loadingKey) != $0.loadingKey }, "every loading text exists in UIStrings")
+if let body = try? JSONSerialization.data(withJSONObject: Gemini.requestBody(action: .addDiacritics, text: "tieng viet")),
+   let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any] {
+    let system = ((json["systemInstruction"] as? [String: Any])?["parts"] as? [[String: Any]])?.first?["text"] as? String
+    check(system?.contains("tone and vowel marks") == true, "request carries the system prompt")
+    let content = (json["contents"] as? [[String: Any]])?.first
+    check(content?["role"] as? String == "user", "request content role is user")
+    check((content?["parts"] as? [[String: Any]])?.first?["text"] as? String == "tieng viet", "request carries the text")
+    check((json["generationConfig"] as? [String: Any])?["temperature"] as? Double == 0.2, "request temperature is 0.2")
+} else {
+    check(false, "request body is valid JSON")
+}
+func geminiParse(_ json: String) -> (text: String?, error: String?) {
+    do { return (try Gemini.parse(Data(json.utf8)), nil) } catch { return (nil, error.localizedDescription) }
+}
+check(geminiParse(#"{"candidates":[{"content":{"parts":[{"text":"thinking","thought":true},{"text":"  Xin chào\nbạn  "}]}}]}"#).text == "Xin chào\nbạn", "response skips thought parts and trims")
+check(geminiParse(#"{"candidates":[]}"#).error == UIStrings.tr("gemini.error.noContent"), "no candidates is an error")
+check(geminiParse(#"{"promptFeedback":{"blockReason":"SAFETY"}}"#).error == UIStrings.tr("gemini.error.refused"), "blocked prompt is refused")
+check(geminiParse("not json").error == UIStrings.tr("gemini.error.invalidResponse"), "invalid JSON is an error")
+check(Gemini.httpError(status: 429, body: Data()).message == UIStrings.tr("gemini.error.quota"), "429 is a quota error")
+check(Gemini.httpError(status: 403, body: Data()).message == UIStrings.tr("gemini.error.invalidKey"), "403 is an invalid key error")
+check(Gemini.httpError(status: 500, body: Data(#"{"error":{"message":"boom"}}"#.utf8)).message.hasSuffix(": boom"), "other statuses show Gemini's message")
+check(Gemini.httpError(status: 502, body: Data()).message.hasSuffix(": HTTP 502"), "other statuses without a body show the status")
+
+// Editable focus decision (the Accessibility reads themselves need a Mac with a focused app).
+check(EditableField.isEditable(.init(role: "AXTextField")), "a text field is editable")
+check(EditableField.isEditable(.init(role: "AXTextArea", editableFlag: true)), "a text area is editable")
+check(EditableField.isEditable(.init(role: "AXComboBox")), "a combo box is editable")
+check(!EditableField.isEditable(.init(role: "AXTextField", subrole: "AXSecureTextField", valueSettable: true)), "a password field is never editable")
+check(!EditableField.isEditable(.init(role: "AXTextArea", editableFlag: false)), "a read-only text area is not editable")
+check(EditableField.isEditable(.init(role: "AXGroup", valueSettable: true)), "a writable value is editable")
+check(EditableField.isEditable(.init(role: "AXGroup", editableFlag: true)), "a contenteditable group is editable")
+check(EditableField.isEditable(.init(role: "AXWebArea", hasEditableAncestor: true)), "web content inside an editable ancestor is editable")
+check(!EditableField.isEditable(.init(role: "AXStaticText")), "page text is not editable")
+check(!EditableField.isEditable(.init()), "no focused role is not editable")
+
+// Convert to Unicode through the core (pairs from crates/engine/tests/convert.rs). Scalars are compared because
+// Swift's == treats "e" + U+0301 and "é" as equal.
+let composedPair = CodeConvert.toUnicode("Tie\u{0301}ng")
+check(composedPair.map { Array($0.unicodeScalars) } == Array("Ti\u{00E9}ng".unicodeScalars), "compound text becomes precomposed")
+check(CodeConvert.toUnicode("Hello 123!") == "Hello 123!", "ASCII is untouched by the conversion")
+check(UIStrings.tr("actions.loading.convert") != "actions.loading.convert", "convert loading text exists in UIStrings")
+check(UIStrings.tr("actions.convert") == "Chuyển mã sang Unicode", "convert menu text")
+
+// New settings: defaults come from the core, and both fields survive a save.
+check(EVSettings.defaults.translateProvider == .google, "translate provider defaults to Google")
+check(EVSettings.defaults.actionHotkey == "ctrl+alt+a", "action hotkey defaults to ctrl+alt+a")
+let actionDir = FileManager.default.temporaryDirectory
+    .appendingPathComponent("evkit-check-actions-\(UUID().uuidString)").path
+do {
+    try FileManager.default.createDirectory(atPath: actionDir, withIntermediateDirectories: true)
+    var settings = EVSettings.defaults
+    settings.translateProvider = .gemini
+    settings.actionHotkey = "ctrl+alt+g"
+    try SettingsStore.save(directory: actionDir, settings: settings, macros: [:])
+    let loaded = try SettingsStore.load(directory: actionDir)
+    check(loaded.settings.translateProvider == .gemini, "translate provider round-trips through core")
+    check(loaded.settings.actionHotkey == "ctrl+alt+g", "action hotkey round-trips through core")
+} catch {
+    check(false, "action settings round-trip threw: \(error)")
+}
+try? FileManager.default.removeItem(atPath: actionDir)
+
+runMiscChecks()
+
 if failures > 0 {
     print("\(failures) check(s) failed")
     exit(1)

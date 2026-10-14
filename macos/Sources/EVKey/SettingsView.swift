@@ -5,6 +5,8 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var navigation: SettingsNavigation
     @ObservedObject private var state = AppState.shared
+    /// True on the very first open; closing the welcome card records it in UserDefaults.
+    @State private var showWelcome = !WelcomeView.seen
 
     var body: some View {
         HStack(spacing: 0) {
@@ -44,7 +46,18 @@ struct SettingsView: View {
                 .padding(.trailing, 12)
                 .ignoresSafeArea(edges: .top)
         }
+        .overlay {
+            if showWelcome {
+                WelcomeView(onClose: closeWelcome)
+                    .transition(.opacity)
+            }
+        }
         .noFocusRing()
+    }
+
+    private func closeWelcome() {
+        WelcomeView.seen = true
+        withAnimation(.easeOut(duration: 0.2)) { showWelcome = false }
     }
 
     /// Height of the titlebar zone (traffic lights and title) the scrolled content must not show through; the

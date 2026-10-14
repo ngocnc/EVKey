@@ -29,10 +29,14 @@ struct SettingsKeysTab: View {
                 SettingsMenuRow(
                     title: UIStrings.tr("keys.toggle"), subtitle: UIStrings.tr("keys.toggle.detail"),
                     choices: hotkeyChoices, selection: state.binding(\.toggleHotkey))
-                SettingsChoiceRow(
-                    title: UIStrings.tr("keys.tempOff"),
-                    subtitle: UIStrings.tr("keys.tempOff.detail"),
-                    choices: Self.tempOffChoices, selection: state.binding(\.tempOffKey))
+            }
+            SettingsAdvanced(pane: "keys") {
+                SettingsGroup {
+                    SettingsChoiceRow(
+                        title: UIStrings.tr("keys.tempOff"),
+                        subtitle: UIStrings.tr("keys.tempOff.detail"),
+                        choices: Self.tempOffChoices, selection: state.binding(\.tempOffKey))
+                }
             }
         }
     }

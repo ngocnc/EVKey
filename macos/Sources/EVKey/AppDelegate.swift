@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         GlassAppearance.shared.applyTheme()
         AppState.shared.start()
         AppState.shared.onTranslateHotkey = { Task { await TranslateController.shared.run() } }
+        AppState.shared.onActionsHotkey = { Task { await ActionPanelController.shared.open() } }
         AppUpdater.shared.start()
         statusItem = StatusItemController()
         banner = BannerController()

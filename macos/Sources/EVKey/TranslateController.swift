@@ -16,9 +16,6 @@ final class TranslateController {
 
     private static let width: CGFloat = 340
     private static let maxHeight: CGFloat = 360
-    private static let copyKey: CGKeyCode = 0x08  // kVK_ANSI_C
-    private static let pasteKey: CGKeyCode = 0x09  // kVK_ANSI_V
-    private static let modifiers: CGEventFlags = [.maskCommand, .maskAlternate, .maskControl, .maskShift]
 
     private let model = TranslateModel()
     private let panel: TranslatePanel
@@ -53,7 +50,7 @@ final class TranslateController {
         anchor = NSEvent.mouseLocation
         runID += 1
         let id = runID
-        let text = await captureSelection()
+        let text = await TextSelection.capture()
         guard id == runID else { return }
         model.start()
         present()
@@ -62,7 +59,7 @@ final class TranslateController {
             guard id == runID else { return }
             model.succeed(result)
             settle()
-            await perform(AppState.shared.settings.translateAction, result: result)
+            await TextSelection.apply(AppState.shared.settings.translateAction, result: result)
         } catch {
             guard id == runID else { return }
             model.fail((error as? TranslateFailure) ?? .failed(error.localizedDescription))
@@ -96,95 +93,26 @@ final class TranslateController {
         }
     }
 
-    /// Runs the chosen action once the result is on screen. The popup never takes focus, so Cmd+V goes to the app the user was in.
-    private func perform(_ action: TranslateAction, result: String) async {
-        switch action {
-        case .show:
-            return
-        case .copy:
-            writePasteboard(result)
-        case .replace:
-            await waitForModifiersReleased()
-            let saved = NSPasteboard.general.string(forType: .string)
-            writePasteboard(result)
-            KeyInjector.commandKey(Self.pasteKey)
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            writePasteboard(saved)
-        }
-    }
-
-    /// Vietnamese source goes to English, anything else to Vietnamese.
+    /// The configured service translates: Vietnamese source goes to English, anything else to Vietnamese.
     private func translate(_ text: String) async throws -> String {
         guard !text.isEmpty else { throw TranslateFailure.noSelection }
         guard text.count <= Translate.maxChars else { throw TranslateFailure.tooLong }
         do {
-            // Ask for Vietnamese first; only a Vietnamese source needs the second request, into English.
-            let first = try await fetch(text, target: "vi")
-            let to = Translate.target(detected: first.detected)
-            if to == "vi" { return first.text }
-            return try await fetch(text, target: to).text
+            return try await TextActions.run(.translate, text: text)
+        } catch let error as GeminiError {
+            throw TranslateFailure.shown(error.message)
         } catch {
             throw TranslateFailure.failed(error.localizedDescription)
         }
     }
 
-    private func fetch(_ text: String, target: String) async throws -> Translate.Translation {
-        guard let url = Translate.url(text: text, target: target) else { throw URLError(.badURL) }
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 10
-        request.setValue("EVKey/\(AppState.shared.version)", forHTTPHeaderField: "User-Agent")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200,
-              let translation = Translate.parse(data) else { throw URLError(.cannotParseResponse) }
-        return translation
-    }
-
-    /// Copies the current selection with Cmd+C and restores the pasteboard. Returns "" when nothing new was copied.
-    private func captureSelection() async -> String {
-        await waitForModifiersReleased()
-        let pasteboard = NSPasteboard.general
-        let saved = pasteboard.string(forType: .string)
-        let before = pasteboard.changeCount
-        KeyInjector.commandKey(Self.copyKey)
-        let deadline = Date().addingTimeInterval(0.6)
-        while pasteboard.changeCount == before && Date() < deadline {
-            try? await Task.sleep(nanoseconds: 15_000_000)
-        }
-        guard pasteboard.changeCount != before else { return "" }
-        let copied = pasteboard.string(forType: .string) ?? ""
-        writePasteboard(saved)
-        return copied.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// The hotkey's own modifiers are still down; Cmd+C sent while they are held would be a different shortcut.
-    private func waitForModifiersReleased() async {
-        let deadline = Date().addingTimeInterval(1)
-        while !CGEventSource.flagsState(.combinedSessionState).intersection(Self.modifiers).isEmpty && Date() < deadline {
-            try? await Task.sleep(nanoseconds: 20_000_000)
-        }
-    }
-
-    /// Fits the popup to its text, capped at `maxHeight` (the text scrolls beyond that), then places it by the pointer:
-    /// below-right, flipped above when it would fall off the bottom, kept inside the screen's visible area.
+    /// Fits the popup to its text, capped at `maxHeight` (the text scrolls beyond that), then places it by the pointer.
     private func resize() {
         let fitted = panel.contentView?.fittingSize.height ?? 40
         let height = min(max(fitted, 1), Self.maxHeight)
-        let screen = NSScreen.screens.first { $0.frame.contains(anchor) } ?? NSScreen.main
-        let area = screen?.visibleFrame ?? .zero
-        let margin: CGFloat = 6
-        let x = min(max(anchor.x + 12, area.minX + margin), area.maxX - Self.width - margin)
-        var y = anchor.y - 16 - height
-        if y < area.minY + margin { y = anchor.y + 16 }
-        y = min(max(y, area.minY + margin), area.maxY - height - margin)
-        panel.setFrame(NSRect(x: x, y: y, width: Self.width, height: height), display: true)
+        panel.setFrame(
+            TextSelection.popupFrame(anchor: anchor, size: NSSize(width: Self.width, height: height)), display: true)
     }
-}
-
-/// Replaces the pasteboard string; nil clears it.
-private func writePasteboard(_ string: String?) {
-    let pasteboard = NSPasteboard.general
-    pasteboard.clearContents()
-    if let string { pasteboard.setString(string, forType: .string) }
 }
 
 /// Why a translation could not be shown.
@@ -192,12 +120,15 @@ enum TranslateFailure: Equatable {
     case noSelection
     case tooLong
     case failed(String)
+    /// Text that is already worded for the user (a Gemini error).
+    case shown(String)
 
     var message: String {
         switch self {
         case .noSelection: return UIStrings.tr("translate.error.noSelection")
         case .tooLong: return UIStrings.tr("translate.error.tooLong")
         case .failed(let detail): return UIStrings.tr("translate.error.failed", detail)
+        case .shown(let text): return text
         }
     }
 }

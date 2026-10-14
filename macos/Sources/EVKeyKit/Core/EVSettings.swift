@@ -89,6 +89,10 @@ public struct EVSettings: Codable, Equatable {
     public var translateAction: TranslateAction
     /// Milliseconds the translate popup stays before closing; 0 keeps it until clicked.
     public var translatePopupMs: Int
+    /// Service that translates (`translate_provider`); Gemini uses the key saved in the Keychain.
+    public var translateProvider: TranslateProvider
+    /// Key chord (`ctrl+alt+a`; `none` disables) that opens the action panel on the selected text.
+    public var actionHotkey: String
 
     /// Engine defaults, read from the core (the hotkey default depends on the platform).
     public static let defaults: EVSettings = SettingsStore.engineDefaults()
@@ -132,10 +136,17 @@ public struct EVSettings: Codable, Equatable {
         case translateHotkey = "translate_hotkey"
         case translateAction = "translate_action"
         case translatePopupMs = "translate_popup_ms"
+        case translateProvider = "translate_provider"
+        case actionHotkey = "action_hotkey"
     }
 }
 
 /// What the translate flow does after the popup shows the result (`translate_action`).
 public enum TranslateAction: String, Codable, CaseIterable {
     case show, copy, replace
+}
+
+/// Service that translates the selection (`translate_provider`).
+public enum TranslateProvider: String, Codable, CaseIterable {
+    case google, gemini
 }
