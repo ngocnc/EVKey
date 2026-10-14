@@ -11,14 +11,17 @@ path = "src/main.rs"
 
 [dependencies]
 evkey-engine = { path = "../engine" }
+evkey-core = { path = "../core" }
 serde = { version = "1.0.229", features = ["derive"] }
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
+parking_lot = "0.12"
 windows = { version = "0.62.2", features = [
     "Win32_Foundation",
     "Win32_Security",
     "Win32_Storage_FileSystem",
     "Win32_System_Com",
     "Win32_System_Console",
+    "Win32_System_Diagnostics_Debug",
     "Win32_System_IO",
     "Win32_System_LibraryLoader",
     "Win32_System_Pipes",

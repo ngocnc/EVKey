@@ -741,11 +741,22 @@ dependencies = [
 name = "evkey-app"
 version = "2.1.0"
 dependencies = [
+ "evkey-core",
  "evkey-engine",
+ "parking_lot",
  "serde",
  "tauri",
  "tauri-build",
  "windows",
+]
+
+[[package]]
+name = "evkey-core"
+version = "2.1.0"
+dependencies = [
+ "evkey-engine",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

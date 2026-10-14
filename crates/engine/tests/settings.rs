@@ -19,7 +19,7 @@ fn files_are_parsed_and_mapped_to_engine_config() {
     let d = temp_dir("parse");
     std::fs::write(
         d.join("config.toml"),
-        "tone_placement = \"old\"\ncode_table = \"tcvn3\"\nquick_telex = true\nexcluded_apps = [\"Game.exe\"]\n",
+        "tone_placement = \"old\"\ncode_table = \"tcvn3\"\nquick_telex = true\nexcluded_apps = [\"Game.exe\"]\nexcluded_apps_macos = [\"Game.exe\"]\n",
     )
     .unwrap();
     std::fs::write(d.join("macros.toml"), "btw = \"by the way\"\n").unwrap();
@@ -60,7 +60,8 @@ fn save_then_load_round_trips() {
 #[test]
 fn toggle_hotkey_is_validated_on_load() {
     let d = temp_dir("hotkey");
-    assert_eq!(load(&d).unwrap().settings.toggle_hotkey, "alt+z");
+    let default_hotkey = if cfg!(target_os = "macos") { "ctrl+shift" } else { "alt+z" };
+    assert_eq!(load(&d).unwrap().settings.toggle_hotkey, default_hotkey);
     std::fs::write(d.join("config.toml"), "toggle_hotkey = \"alt+zz\"\n").unwrap();
     let err = load(&d).unwrap_err();
     assert!(err.contains("toggle_hotkey"), "{err}");

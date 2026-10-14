@@ -118,6 +118,13 @@ fn quick_consonants_expand_on_commit() {
 }
 
 #[test]
+fn custom_consonants_choose_which_letters_may_start_a_syllable() {
+    let cfg = |letters: Vec<u16>| Config { check_spelling: 1, allow_consonant_zfwj: 1, custom_consonants: letters, ..telex() };
+    assert_eq!(typed(cfg(vec![evkey_engine::keys::KEY_F]), "fas "), "fá ");
+    assert_eq!(typed(cfg(vec![evkey_engine::keys::KEY_Z]), "fas "), "fas ");
+}
+
+#[test]
 fn legacy_tables_render() {
     // TCVN3: 'ệ' is a single legacy code, not Unicode
     let cfg = Config { code_table: 1, ..telex() };

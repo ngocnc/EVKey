@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="banner.css">
+<style>
+  html, body { margin: 0; background: transparent; overflow: hidden; }
+  .sec-banner { box-sizing: border-box; width: 100vw; height: 100vh; border-radius: 14px; }
+</style>
+</head>
+<body>
+<div class="sec-banner" id="banner"></div>
+<script src="banner-view.js"></script>
+<script>
+  const { invoke } = window.__TAURI__.core;
+  const { listen } = window.__TAURI__.event;
+  const el = document.getElementById("banner");
+  invoke("banner_state").then((s) => renderBanner(el, s));
+  listen("banner-state", (e) => renderBanner(el, e.payload));
+</script>
+</body>
+</html>

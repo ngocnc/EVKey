@@ -1,0 +1,4 @@
+module CEVKeyCore {
+    header "evkey_core.h"
+    export *
+}

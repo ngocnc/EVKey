@@ -5,3 +5,5 @@
 /GLOSSARY.md
 /dist
 /crates/app/gen
+/build
+/macos/.build

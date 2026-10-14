@@ -1,4 +1,4 @@
-//! Turns one engine answer into the edit the hook types. Pure: no Win32 calls, so it is unit-tested.
+//! Turns one engine answer into the edit a host types. Pure: no OS calls, so it is unit-tested.
 use evkey_engine::composer::render;
 use evkey_engine::engine::{
     HookState, V_BREAK_WORD, V_DO_NOTHING, V_REPLACE_MACRO, V_RESTORE, V_RESTORE_AND_START_NEW_SESSION,
@@ -40,7 +40,7 @@ mod tests {
     use evkey_engine::settings::{Loaded, Settings};
     use std::collections::BTreeMap;
 
-    /// Types `keys` into a fake text field, applying each edit the way SendInput would.
+    /// Types `keys` into a fake text field, applying each edit the way a host injects it.
     fn type_keys(loaded: &Loaded, keys: &str) -> String {
         let mut c = Composer::new(Settings::default().to_config(false));
         c.apply(loaded);

@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
+# Windows-only crates (app, tsf) are excluded from plain `cargo build`/`cargo test` so macOS can build the shared crates.
+default-members = ["crates/engine", "crates/core"]
 
 [workspace.package]
 version = "2.1.0"

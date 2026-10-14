@@ -11,7 +11,8 @@ use evkey_engine::hotkey::parse_hotkey;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
-use crate::{autostart, foreground, keyboard, tray};
+use crate::{autostart, foreground, tray};
+use crate::keyboard;
 use crate::keyboard::mode::{self, Mode};
 
 const GITHUB_URL: &str = "https://github.com/ngocnc/EVKey";
@@ -36,7 +37,7 @@ pub struct MacroRow {
 }
 
 fn config_dir() -> Result<PathBuf, String> {
-    settings::default_dir().ok_or_else(|| "Không tìm thấy %APPDATA%".to_string())
+    settings::default_dir().ok_or_else(|| "Không tìm thấy thư mục cấu hình".to_string())
 }
 
 /// Replaces the engine settings and keeps the macros already on disk.
@@ -83,8 +84,9 @@ pub fn get_state() -> Result<State, String> {
         Ok(cfg) => (cfg, None),
         Err(e) => (Loaded::default(), Some(e)),
     };
+    let enabled = keyboard::is_enabled()?;
     Ok(State {
-        enabled: keyboard::is_enabled()?,
+        enabled,
         mode: mode::get()?,
         autostart: autostart::is_enabled(),
         config_dir: dir.display().to_string(),

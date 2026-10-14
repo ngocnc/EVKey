@@ -1,93 +1,50 @@
-//! Tray icon (V/E), its menu, and the settings window.
+//! Tray icon (V/E), the tray popup window, and the settings window.
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::sync::OnceLock;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use parking_lot::Mutex;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tauri::image::Image;
-use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{App, AppHandle, Emitter, Manager, Window, WindowEvent, Wry};
+use tauri::window::{Effect, EffectsBuilder};
+use tauri::{App, AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Window, WindowEvent};
 
-use evkey_engine::settings::{self, CodeTable, InputKind, Settings};
+use evkey_engine::settings::{self, Settings};
 
 use crate::keyboard::mode::{self, Mode};
 
 const TRAY_ID: &str = "evkey";
+const POPUP: &str = "popup";
 const ICON_V: &[u8] = include_bytes!("../icons/tray-v.png");
 const ICON_E: &[u8] = include_bytes!("../icons/tray-e.png");
 const MODE_POLL: Duration = Duration::from_millis(400);
+/// Clicking the tray while the popup is open blurs (hides) it first; the click that follows must not reopen it.
+const BLUR_GRACE: Duration = Duration::from_millis(300);
 
-struct MenuItems {
-    vi: CheckMenuItem<Wry>,
-    input: Vec<(InputKind, CheckMenuItem<Wry>)>,
-    table: Vec<(CodeTable, CheckMenuItem<Wry>)>,
-}
-
-static MENU: OnceLock<MenuItems> = OnceLock::new();
-
-const INPUT_KINDS: [(InputKind, &str); 4] = [
-    (InputKind::Telex, "Telex"),
-    (InputKind::Vni, "VNI"),
-    (InputKind::SimpleTelex1, "Simple Telex 1"),
-    (InputKind::SimpleTelex2, "Simple Telex 2"),
-];
-
-const CODE_TABLES: [(CodeTable, &str); 4] = [
-    (CodeTable::Unicode, "Unicode"),
-    (CodeTable::Tcvn3, "TCVN3 (ABC)"),
-    (CodeTable::VniWindows, "VNI Windows"),
-    (CodeTable::UnicodeCompound, "Unicode tổ hợp"),
-];
+/// Tray icon rect in physical pixels, kept so the popup can be re-anchored after it resizes.
+static ANCHOR: Mutex<Option<(PhysicalPosition<f64>, PhysicalSize<f64>)>> = Mutex::new(None);
+static LAST_BLUR_HIDE: Mutex<Option<Instant>> = Mutex::new(None);
 
 pub fn setup(app: &mut App) -> tauri::Result<()> {
-    let vi = CheckMenuItem::with_id(app, "mode", "Tiếng Việt", true, true, None::<&str>)?;
-    let input = INPUT_KINDS
-        .iter()
-        .enumerate()
-        .map(|(i, (k, label))| Ok((*k, CheckMenuItem::with_id(app, format!("input:{i}"), *label, true, false, None::<&str>)?)))
-        .collect::<tauri::Result<Vec<_>>>()?;
-    let table = CODE_TABLES
-        .iter()
-        .enumerate()
-        .map(|(i, (t, label))| Ok((*t, CheckMenuItem::with_id(app, format!("table:{i}"), *label, true, false, None::<&str>)?)))
-        .collect::<tauri::Result<Vec<_>>>()?;
-    let input_refs: Vec<&dyn IsMenuItem<Wry>> = input.iter().map(|(_, i)| i as &dyn IsMenuItem<Wry>).collect();
-    let table_refs: Vec<&dyn IsMenuItem<Wry>> = table.iter().map(|(_, i)| i as &dyn IsMenuItem<Wry>).collect();
-    let input_menu = Submenu::with_items(app, "Kiểu gõ", true, &input_refs)?;
-    let table_menu = Submenu::with_items(app, "Bảng mã", true, &table_refs)?;
-    let settings = MenuItem::with_id(app, "settings", "Cài đặt…", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Thoát EVKey", true, None::<&str>)?;
-    let sep = PredefinedMenuItem::separator(app)?;
-    let menu = Menu::with_items(app, &[&vi, &input_menu, &table_menu, &sep, &settings, &quit])?;
-    let _ = MENU.set(MenuItems { vi, input, table });
+    if let Some(popup) = app.get_webview_window(POPUP) {
+        let _ = popup.set_effects(EffectsBuilder::new().effect(Effect::Acrylic).build());
+    }
     TrayIconBuilder::with_id(TRAY_ID)
         .icon(Image::from_bytes(ICON_E)?)
         .tooltip("EVKey")
-        .menu(&menu)
-        .show_menu_on_left_click(false)
-        .on_menu_event(|app, event| {
-            let id = event.id.as_ref();
-            let index = |prefix: &str| id.strip_prefix(prefix).and_then(|n| n.parse::<usize>().ok());
-            if id == "settings" {
-                show_settings(app);
-            } else if id == "quit" {
-                app.exit(0);
-            } else if id == "mode" {
-                let _ = mode::toggle();
-            } else if let Some((kind, _)) = index("input:").and_then(|i| INPUT_KINDS.get(i)) {
-                update_settings(|s| s.input_type = *kind);
-            } else if let Some((table, _)) = index("table:").and_then(|i| CODE_TABLES.get(i)) {
-                update_settings(|s| s.code_table = *table);
-            }
-            refresh_icon(app);
-        })
         .on_tray_icon_event(|tray, event| {
-            // Left click flips V/E; right click opens the menu (handled by the shell).
-            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
-                if mode::toggle().is_ok() {
-                    refresh_icon(tray.app_handle());
-                }
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left | MouseButton::Right,
+                button_state: MouseButtonState::Up,
+                rect,
+                ..
+            } = event
+            {
+                let scale = tray.app_handle().get_webview_window(POPUP).and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
+                let position = rect.position.to_physical::<f64>(scale);
+                let size = rect.size.to_physical::<f64>(scale);
+                *ANCHOR.lock() = Some((position, size));
+                toggle_popup(tray.app_handle());
             }
         })
         .build(app)?;
@@ -98,24 +55,11 @@ pub fn setup(app: &mut App) -> tauri::Result<()> {
 }
 
 /// Applies `f` to `config.toml` and writes it back (macros are kept). The running engine picks it up within a second.
-fn update_settings(f: impl FnOnce(&mut Settings)) {
+pub(crate) fn update_settings(f: impl FnOnce(&mut Settings)) {
     let Some(dir) = settings::default_dir() else { return };
     if let Ok(mut loaded) = settings::load(&dir) {
         f(&mut loaded.settings);
         let _ = settings::save(&dir, &loaded);
-    }
-}
-
-/// Ticks the menu entries that match the current mode and settings.
-fn sync_menu(mode: Mode) {
-    let Some(items) = MENU.get() else { return };
-    let current = settings::default_dir().and_then(|d| settings::load(&d).ok()).map(|l| l.settings).unwrap_or_default();
-    let _ = items.vi.set_checked(mode == Mode::Vietnamese);
-    for (kind, item) in &items.input {
-        let _ = item.set_checked(*kind == current.input_type);
-    }
-    for (table, item) in &items.table {
-        let _ = item.set_checked(*table == current.code_table);
     }
 }
 
@@ -127,6 +71,67 @@ pub fn show_settings(app: &AppHandle) {
     let _ = win.unminimize();
     let _ = win.set_focus();
     let _ = app.emit("settings-show", ());
+}
+
+/// Opens the settings window on `tab` (a `data-tab` name such as `macro`).
+pub fn show_settings_tab(app: &AppHandle, tab: &str) {
+    show_settings(app);
+    let _ = app.emit("settings-tab", tab);
+}
+
+/// EVKEY_DEBUG_SHOW=popup: opens the popup near the top-right of the primary monitor (for screenshots).
+pub fn debug_show_popup(app: &AppHandle) {
+    if let Ok(Some(m)) = app.primary_monitor() {
+        let w = f64::from(m.size().width);
+        *ANCHOR.lock() = Some((PhysicalPosition::new(w - 400.0, 0.0), PhysicalSize::new(24.0, 48.0)));
+    }
+    toggle_popup(app);
+}
+
+fn toggle_popup(app: &AppHandle) {
+    let Some(win) = app.get_webview_window(POPUP) else {
+        return;
+    };
+    if win.is_visible().unwrap_or(false) {
+        hide_popup(app);
+        return;
+    }
+    let just_blurred = LAST_BLUR_HIDE.lock().is_some_and(|t| t.elapsed() < BLUR_GRACE);
+    if just_blurred {
+        return;
+    }
+    place_popup(app);
+    let _ = win.show();
+    let _ = win.set_focus();
+    let _ = app.emit("popup-show", ());
+}
+
+pub fn hide_popup(app: &AppHandle) {
+    if let Some(win) = app.get_webview_window(POPUP) {
+        let _ = win.hide();
+    }
+}
+
+/// Puts the popup above the tray icon (taskbar at the bottom), clamped to the monitor the icon is on.
+pub fn place_popup(app: &AppHandle) {
+    let (Some(win), Some((pos, size))) = (app.get_webview_window(POPUP), *ANCHOR.lock()) else {
+        return;
+    };
+    let Ok(popup) = win.outer_size() else {
+        return;
+    };
+    let (w, h) = (f64::from(popup.width), f64::from(popup.height));
+    let cx = pos.x + size.width / 2.0;
+    let mut x = cx - w / 2.0;
+    let mut y = pos.y - h;
+    if let Ok(Some(monitor)) = app.monitor_from_point(cx, pos.y) {
+        let area = monitor.work_area();
+        let (left, top) = (f64::from(area.position.x), f64::from(area.position.y));
+        let (right, bottom) = (left + f64::from(area.size.width), top + f64::from(area.size.height));
+        x = x.clamp(left, (right - w).max(left));
+        y = y.clamp(top, (bottom - h).max(top));
+    }
+    let _ = win.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32));
 }
 
 /// Syncs the tray icon and tooltip with the shared V/E mode.
@@ -146,7 +151,6 @@ pub fn refresh_icon(app: &AppHandle) {
     }
     let tip = tooltip(mode);
     let _ = tray.set_tooltip(Some(tip.as_str()));
-    sync_menu(mode);
     debug_dump(mode, &tip);
 }
 
@@ -162,7 +166,7 @@ fn tooltip(mode: Mode) -> String {
     }
 }
 
-/// Polls the shared mode, so changes from the IME, the CLI or another process reach the icon.
+/// Polls the shared mode, so changes from the IME, the CLI, another process or a per-app switch reach the icon and the open popup.
 // ponytail: polling every 400 ms; ITfCompartmentEventSink would make it event-driven if the delay matters.
 fn watch_mode(app: AppHandle) {
     let mut shown = None;
@@ -171,7 +175,7 @@ fn watch_mode(app: AppHandle) {
         if let Ok(mode) = mode::get() {
             if shown != Some(mode) {
                 shown = Some(mode);
-                refresh_icon(&app);
+                crate::popup_cmd::changed(&app);
             }
         }
     }
@@ -192,9 +196,17 @@ fn debug_dump(mode: Mode, tip: &str) {
 }
 
 pub fn on_window_event(window: &Window, event: &WindowEvent) {
-    // Closing only hides: the tray app keeps running and the settings window is reused.
-    if let WindowEvent::CloseRequested { api, .. } = event {
-        api.prevent_close();
-        let _ = window.hide();
+    match event {
+        // Closing only hides: the tray app keeps running and the windows are reused.
+        WindowEvent::CloseRequested { api, .. } => {
+            api.prevent_close();
+            let _ = window.hide();
+        }
+        // The popup behaves like a menu: clicking anywhere else dismisses it.
+        WindowEvent::Focused(false) if window.label() == POPUP && std::env::var_os("EVKEY_DEBUG_POPUP_STICKY").is_none() => {
+            let _ = window.hide();
+            *LAST_BLUR_HIDE.lock() = Some(Instant::now());
+        }
+        _ => {}
     }
 }

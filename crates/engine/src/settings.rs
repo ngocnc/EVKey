@@ -74,18 +74,40 @@ pub struct Settings {
     pub quick_start_consonant: bool,
     /// `g`→`ng`, `h`→`nh`, `k`→`ch` at the end of a syllable.
     pub quick_end_consonant: bool,
+    /// Letters (`a`-`z`) the engine accepts as a syllable start while `allow_consonant_zfwj` is on.
+    pub custom_consonants: Vec<String>,
     pub upper_case_first_char: bool,
     pub allow_consonant_zfwj: bool,
     /// `Btw` expands to `By the way`, `BTW` to `BY THE WAY`.
     pub auto_caps_macro: bool,
-    /// Executable names (e.g. `game.exe`) where the IME never converts keys.
+    /// Windows executable names (e.g. `game.exe`) where the IME never converts keys.
     pub excluded_apps: Vec<String>,
+    /// macOS bundle identifiers (e.g. `com.apple.Terminal`) where the IME never converts keys.
+    pub excluded_apps_macos: Vec<String>,
     /// Tap this key while typing a word to leave the rest of the word unconverted.
     pub temp_off_key: TempOffKey,
     /// Key or modifier chord that toggles Vietnamese/English (`alt+z`, `ctrl+shift`, `none` to disable).
     pub toggle_hotkey: String,
     /// `hook`: global keyboard hook like UniKey. `tsf`: the TSF text service (needs the keyboard entry).
     pub backend: Backend,
+    /// Secure Input banner: background opacity, 0-100 (100 = opaque).
+    pub banner_opacity: u8,
+    /// Secure Input banner: glass blur, 0-100; 0 turns the glass effect off.
+    pub banner_blur: u8,
+    /// Secure Input banner colors as `#rrggbb`.
+    pub banner_bg: String,
+    pub banner_border: String,
+    pub banner_text: String,
+    /// Optional gradient end colors (`#rrggbb`); empty keeps the matching color solid.
+    pub banner_bg_end: String,
+    pub banner_border_end: String,
+    pub banner_text_end: String,
+    /// Remember the V/E mode per app (`app_modes.toml`) and restore it when the app is focused again.
+    pub remember_app_mode: bool,
+    /// Play a short sound on a user-initiated V/E switch, not on automatic per-app restores.
+    pub toggle_sound: bool,
+    /// Esc while a word is composing restores its raw keys and leaves the rest of the word unconverted.
+    pub undo_word: bool,
 }
 
 impl Default for Settings {
@@ -100,15 +122,32 @@ impl Default for Settings {
             quick_telex: false,
             quick_start_consonant: false,
             quick_end_consonant: false,
+            custom_consonants: ["z", "f", "w", "j"].map(String::from).to_vec(),
             upper_case_first_char: false,
             allow_consonant_zfwj: false,
             auto_caps_macro: false,
             excluded_apps: Vec::new(),
+            excluded_apps_macos: Vec::new(),
             temp_off_key: TempOffKey::None,
-            toggle_hotkey: "alt+z".to_string(),
+            toggle_hotkey: if cfg!(target_os = "macos") { "ctrl+shift" } else { "alt+z" }.to_string(),
             backend: Backend::Hook,
+            banner_opacity: 80,
+            banner_blur: 60,
+            banner_bg: "#1c1c1e".to_string(),
+            banner_border: "#ff9f0a".to_string(),
+            banner_text: "#ffffff".to_string(),
+            banner_bg_end: String::new(),
+            banner_border_end: String::new(),
+            banner_text_end: String::new(),
+            remember_app_mode: true,
+            toggle_sound: false,
+            undo_word: true,
         }
     }
+}
+
+fn is_letter(s: &str) -> bool {
+    s.len() == 1 && s.bytes().all(|b| b.is_ascii_lowercase())
 }
 
 impl Settings {
@@ -129,11 +168,44 @@ impl Settings {
             allow_consonant_zfwj: self.allow_consonant_zfwj as i32,
             quick_start_consonant: self.quick_start_consonant as i32,
             quick_end_consonant: self.quick_end_consonant as i32,
+            // Engine key codes are the uppercase ASCII letters.
+            custom_consonants: self.custom_consonants.iter().filter(|s| is_letter(s)).map(|s| s.as_bytes()[0].to_ascii_uppercase() as u16).collect(),
         }
     }
 
-    pub fn is_excluded(&self, exe_name: &str) -> bool {
-        self.excluded_apps.iter().any(|a| a.eq_ignore_ascii_case(exe_name))
+    pub fn is_excluded(&self, app_id: &str) -> bool {
+        self.is_excluded_on(cfg!(target_os = "macos"), app_id)
+    }
+
+    /// Picks the platform's list: `macos` selects bundle IDs, otherwise Windows exe names.
+    fn is_excluded_on(&self, macos: bool, app_id: &str) -> bool {
+        let list = if macos { &self.excluded_apps_macos } else { &self.excluded_apps };
+        list.iter().any(|a| a.eq_ignore_ascii_case(app_id))
+    }
+
+    /// Rejects banner values the UI cannot show; checked on load and save.
+    pub fn validate(&self) -> Result<(), String> {
+        if self.banner_opacity > 100 || self.banner_blur > 100 {
+            return Err("banner_opacity và banner_blur phải từ 0 đến 100".into());
+        }
+        for (name, color) in [("banner_bg", &self.banner_bg), ("banner_border", &self.banner_border), ("banner_text", &self.banner_text)] {
+            if !is_hex_color(color) {
+                return Err(format!("{name} phải có dạng #rrggbb: {color}"));
+            }
+        }
+        for (name, color) in [
+            ("banner_bg_end", &self.banner_bg_end),
+            ("banner_border_end", &self.banner_border_end),
+            ("banner_text_end", &self.banner_text_end),
+        ] {
+            if !color.is_empty() && !is_hex_color(color) {
+                return Err(format!("{name} phải để trống hoặc có dạng #rrggbb: {color}"));
+            }
+        }
+        if let Some(bad) = self.custom_consonants.iter().find(|s| !is_letter(s)) {
+            return Err(format!("custom_consonants: mỗi phụ âm phải là 1 chữ cái a-z: {bad}"));
+        }
+        Ok(())
     }
 }
 
@@ -144,9 +216,17 @@ pub struct Loaded {
     pub macros: BTreeMap<String, String>,
 }
 
-/// `%APPDATA%\EVKey`.
+/// `%APPDATA%\EVKey` on Windows, `~/Library/Application Support/EVKey` on macOS.
 pub fn default_dir() -> Option<PathBuf> {
-    std::env::var_os("APPDATA").map(|p| PathBuf::from(p).join("EVKey"))
+    if cfg!(target_os = "macos") {
+        std::env::var_os("HOME").map(|p| PathBuf::from(p).join("Library/Application Support/EVKey"))
+    } else {
+        std::env::var_os("APPDATA").map(|p| PathBuf::from(p).join("EVKey"))
+    }
+}
+
+fn is_hex_color(s: &str) -> bool {
+    s.len() == 7 && s.starts_with('#') && s[1..].bytes().all(|b| b.is_ascii_hexdigit())
 }
 
 fn read_optional(path: &Path) -> Result<Option<String>, String> {
@@ -164,6 +244,7 @@ pub fn load(dir: &Path) -> Result<Loaded, String> {
         loaded.settings = toml::from_str(&text).map_err(|e| format!("{}: {e}", cfg.display()))?;
         crate::hotkey::parse_hotkey(&loaded.settings.toggle_hotkey)
             .map_err(|e| format!("{}: toggle_hotkey: {e}", cfg.display()))?;
+        loaded.settings.validate().map_err(|e| format!("{}: {e}", cfg.display()))?;
     }
     let mac = dir.join("macros.toml");
     if let Some(text) = read_optional(&mac)? {
@@ -186,9 +267,58 @@ fn write_atomic(path: &Path, text: &str) -> Result<(), String> {
 
 /// Write both files (creating `dir`). Comments in hand-edited files are not preserved.
 pub fn save(dir: &Path, loaded: &Loaded) -> Result<(), String> {
+    loaded.settings.validate()?;
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let cfg = toml::to_string_pretty(&loaded.settings).map_err(|e| e.to_string())?;
     write_atomic(&dir.join("config.toml"), &cfg)?;
     let mac = toml::to_string_pretty(&loaded.macros).map_err(|e| e.to_string())?;
     write_atomic(&dir.join("macros.toml"), &mac)
+}
+
+const APP_MODES_FILE: &str = "app_modes.toml";
+
+/// Per-app Mode (`true` = English) for "Chế độ theo ứng dụng", in `app_modes.toml`. Missing or malformed: empty.
+pub fn load_app_modes(dir: &Path) -> BTreeMap<String, bool> {
+    std::fs::read_to_string(dir.join(APP_MODES_FILE)).ok().and_then(|t| toml::from_str(&t).ok()).unwrap_or_default()
+}
+
+pub fn save_app_modes(dir: &Path, modes: &BTreeMap<String, bool>) -> Result<(), String> {
+    let text = toml::to_string_pretty(modes).map_err(|e| e.to_string())?;
+    write_atomic(&dir.join(APP_MODES_FILE), &text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn excluded_list_follows_platform() {
+        let s = Settings {
+            excluded_apps: vec!["game.exe".into()],
+            excluded_apps_macos: vec!["com.apple.Terminal".into()],
+            ..Settings::default()
+        };
+        assert!(s.is_excluded_on(false, "GAME.exe"));
+        assert!(!s.is_excluded_on(false, "com.apple.Terminal"));
+        assert!(s.is_excluded_on(true, "com.apple.terminal"));
+        assert!(!s.is_excluded_on(true, "game.exe"));
+    }
+
+    #[test]
+    fn banner_values_are_validated() {
+        let mut s = Settings::default();
+        assert!(s.validate().is_ok());
+        s.banner_bg = "red".into();
+        assert!(s.validate().is_err());
+        s.banner_bg = "#12345G".into();
+        assert!(s.validate().is_err());
+        s.banner_bg = "#12ab34".into();
+        s.banner_blur = 101;
+        assert!(s.validate().is_err());
+        s.banner_blur = 60;
+        s.banner_bg_end = "#ff00aa".into();
+        assert!(s.validate().is_ok());
+        s.banner_text_end = "pink".into();
+        assert!(s.validate().is_err());
+    }
 }

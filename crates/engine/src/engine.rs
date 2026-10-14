@@ -50,10 +50,12 @@ pub struct Config {
     pub allow_consonant_zfwj: i32,
     pub quick_start_consonant: i32,
     pub quick_end_consonant: i32,
+    /// Letters allowed as a syllable start while `allow_consonant_zfwj` is on (key codes; only `f`, `w`, `z`, `j` need it).
+    pub custom_consonants: Vec<u16>,
 }
 
 impl Default for Config {
-    /// Zero-initialised like the C++ globals.
+    /// Zero-initialised like the C++ globals; the custom consonants start at `z`, `f`, `w`, `j`.
     fn default() -> Self {
         Config {
             input_type: 0,
@@ -69,6 +71,7 @@ impl Default for Config {
             allow_consonant_zfwj: 0,
             quick_start_consonant: 0,
             quick_end_consonant: 0,
+            custom_consonants: vec![KEY_Z, KEY_F, KEY_W, KEY_J],
         }
     }
 }
@@ -373,7 +376,7 @@ impl Engine {
             // check first consonant
             if is_consonant(self.chr(0)) {
                 let m1: u32 = if self.cfg.quick_start_consonant != 0 { END_CONSONANT_MASK } else { 0 };
-                let m2: u32 = if self.cfg.allow_consonant_zfwj != 0 { CONSONANT_ALLOW_MASK } else { 0 };
+                let allow = self.cfg.allow_consonant_zfwj != 0;
                 for row in t.consonant_table.iter() {
                     let mut flag = false;
                     if (end as usize) < row.len() {
@@ -383,7 +386,9 @@ impl Engine {
                     while (j as usize) < row.len() {
                         let e = row[j as usize] as u32;
                         let c = self.chr(j) as u32;
-                        if end > j && (e & !m1) != c && (e & !m2) != c {
+                        let base = e & !CONSONANT_ALLOW_MASK;
+                        let extra = allow && e & CONSONANT_ALLOW_MASK != 0 && self.cfg.custom_consonants.contains(&(base as u16));
+                        if end > j && (e & !m1) != c && !(extra && base == c) {
                             flag = true;
                             break;
                         }
@@ -1485,19 +1490,35 @@ impl Engine {
             if !is_consonant(self.chr(ii))
                 && (self.tw(ii) & MARK_MASK != 0 || self.tw(ii) & TONE_MASK != 0 || self.tw(ii) & TONEW_MASK != 0)
             {
-                self.hook.code = handle_code;
-                self.set_bpc(self.index);
-                self.set_ncc(self.state_index);
-                for i in 0..self.state_index {
-                    let v = self.key_states[i as usize];
-                    self.set_tw(i, v);
-                    self.set_hdata(self.state_index - 1 - i, v);
-                }
-                self.index = self.state_index;
+                self.restore_raw_word(handle_code);
                 return true;
             }
         }
         false
+    }
+
+    /// Rebuilds the word from the raw typed keys (`key_states`) and tells the host to show them.
+    fn restore_raw_word(&mut self, handle_code: u8) {
+        self.hook.code = handle_code;
+        self.set_bpc(self.index);
+        self.set_ncc(self.state_index);
+        for i in 0..self.state_index {
+            let v = self.key_states[i as usize];
+            self.set_tw(i, v);
+            self.set_hdata(self.state_index - 1 - i, v);
+        }
+        self.index = self.state_index;
+    }
+
+    /// Hoàn tác từ (Esc): shows the raw typed keys of the word in progress and leaves the rest of it unconverted.
+    /// Returns false when no word is in progress, so the key passes through.
+    pub fn undo_word(&mut self) -> bool {
+        if self.index == 0 {
+            return false;
+        }
+        self.restore_raw_word(V_RESTORE);
+        self.temp_off_engine(true);
+        true
     }
 
     /// `vTempOffSpellChecking`.
@@ -1518,12 +1539,12 @@ impl Engine {
     }
 
     fn check_quick_consonant(&mut self) -> bool {
-        let t = tables();
         if self.index <= 1 {
             return false;
         }
         let mut l = 0;
         let caps = |w: u32| if w & CAPS_MASK != 0 { CAPS_MASK } else { 0 };
+        let t = tables();
         if self.index > 0 {
             if self.cfg.quick_start_consonant != 0 && t.quick_start_consonant.contains_key(&self.chr(0)) {
                 let q = t.quick_start_consonant[&self.chr(0)].clone();

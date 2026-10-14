@@ -22,6 +22,36 @@
         "visible": false,
         "transparent": true,
         "windowEffects": { "effects": ["acrylic"], "color": [30, 24, 36, 0] }
+      },
+      {
+        "label": "popup",
+        "title": "EVKey",
+        "url": "popup.html",
+        "width": 320,
+        "height": 300,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": true,
+        "focus": true,
+        "visible": false
+      },
+      {
+        "label": "banner",
+        "title": "EVKey Banner",
+        "url": "banner.html",
+        "width": 360,
+        "height": 64,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": false,
+        "focus": false,
+        "visible": false
       }
     ]
   },

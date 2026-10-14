@@ -9,6 +9,7 @@ fn parses_key_chords() {
     assert_eq!(parse_hotkey("alt+z"), Ok(hk(false, true, false, false, Some(b'Z' as u16))));
     assert_eq!(parse_hotkey("Ctrl+Shift+F12"), Ok(hk(true, false, true, false, Some(0x7B))));
     assert_eq!(parse_hotkey("win+space"), Ok(hk(false, false, false, true, Some(0x20))));
+    assert_eq!(parse_hotkey("cmd+shift"), Ok(hk(false, false, true, true, None)));
     assert_eq!(parse_hotkey("ctrl+5"), Ok(hk(true, false, false, false, Some(b'5' as u16))));
     assert_eq!(parse_hotkey("f1"), Ok(hk(false, false, false, false, Some(0x70))));
 }

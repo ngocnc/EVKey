@@ -2,9 +2,9 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
 const BOOLS = [
-  "free_mark", "check_spelling", "restore_if_wrong_spelling", "quick_telex",
+  "free_mark", "remember_app_mode", "undo_word", "check_spelling", "restore_if_wrong_spelling", "quick_telex",
   "quick_start_consonant", "quick_end_consonant", "upper_case_first_char",
-  "allow_consonant_zfwj", "auto_caps_macro",
+  "allow_consonant_zfwj", "auto_caps_macro", "toggle_sound",
 ];
 const SEGS = [...document.querySelectorAll(".seg")];
 let state = null;
@@ -46,6 +46,40 @@ function addMacroRow(key = "", value = "") {
   $("macro-rows").append(row);
 }
 
+function renderCustomConsonants(list) {
+  $("custom-consonants").replaceChildren(
+    ...list.map((k) => {
+      const chip = Object.assign(document.createElement("span"), { className: "chip" });
+      const del = Object.assign(document.createElement("button"), { className: "chip-x", textContent: "×", title: "Xóa" });
+      del.onclick = () => setCustomConsonants(state.settings.custom_consonants.filter((x) => x !== k));
+      chip.append(Object.assign(document.createElement("b"), { textContent: k.toUpperCase() }), del);
+      return chip;
+    }),
+  );
+}
+
+// Every add/remove saves immediately, like the other settings.
+async function setCustomConsonants(list) {
+  const next = { ...readForm(), custom_consonants: list };
+  try {
+    await invoke("save_settings", { settings: next });
+    state.settings = next;
+    renderCustomConsonants(list);
+    say("Đã lưu", "ok");
+  } catch (e) {
+    say(String(e), "err");
+  }
+}
+
+async function addCustomConsonant() {
+  const input = $("custom-consonant-input");
+  const k = input.value.trim().toLowerCase();
+  if (!/^[a-z]$/.test(k)) return say("Phụ âm phải là đúng 1 chữ cái a–z.", "err");
+  if (state.settings.custom_consonants.includes(k)) return say(`Phụ âm "${k}" đã có.`, "err");
+  input.value = "";
+  await setCustomConsonants([...state.settings.custom_consonants, k]);
+}
+
 function setSeg(seg, value) {
   // A hotkey written by hand in config.toml that is not one of the presets gets its own button, so saving never rewrites it.
   if (seg.dataset.key === "toggle_hotkey") {
@@ -59,6 +93,32 @@ function setSeg(seg, value) {
   placeThumb(seg);
 }
 
+
+
+// Secure Input banner look: the preview uses the same renderer as the overlay window.
+const BANNER_FIELDS = ["bn-opacity", "bn-blur", "bn-bg", "bn-border", "bn-text"];
+
+function renderBannerPreview() {
+  $("bn-opacity-value").textContent = $("bn-opacity").value + "%";
+  $("bn-blur-value").textContent = $("bn-blur").value + "%";
+  renderBanner($("bn-preview"), {
+    app: "Chrome",
+    opacity: Number($("bn-opacity").value),
+    blur: Number($("bn-blur").value),
+    bg: $("bn-bg").value,
+    border: $("bn-border").value,
+    text: $("bn-text").value,
+  });
+}
+
+function fillBanner(s) {
+  $("bn-opacity").value = s.banner_opacity;
+  $("bn-blur").value = s.banner_blur;
+  $("bn-bg").value = s.banner_bg;
+  $("bn-border").value = s.banner_border;
+  $("bn-text").value = s.banner_text;
+  renderBannerPreview();
+}
 function fill() {
   const s = state.settings;
   for (const k of BOOLS) $(k).checked = s[k];
@@ -67,12 +127,16 @@ function fill() {
   $("macro-rows").replaceChildren();
   for (const [k, v] of Object.entries(state.macros)) addMacroRow(k, v);
   if (!Object.keys(state.macros).length) addMacroRow();
+  renderCustomConsonants(s.custom_consonants);
   $("autostart").checked = state.autostart;
   $("config-dir").textContent = state.config_dir;
   $("version").textContent = "v" + state.version;
+  $("about-version").textContent = "v" + state.version;
   $("config-error").hidden = !state.config_error;
   $("config-error-text").textContent = state.config_error ?? "";
   $("toggle-keyboard").textContent = state.enabled ? "Gỡ khỏi danh sách" : "Thêm vào danh sách";
+  $("excluded_apps").placeholder = "game.exe";
+  fillBanner(s);
   updateVisibility();
 }
 
@@ -81,6 +145,11 @@ function readForm() {
   for (const k of BOOLS) s[k] = $(k).checked;
   for (const seg of SEGS) s[seg.dataset.key] = seg.querySelector(".active")?.dataset.value ?? s[seg.dataset.key];
   s.excluded_apps = lines($("excluded_apps").value);
+  s.banner_opacity = Number($("bn-opacity").value);
+  s.banner_blur = Number($("bn-blur").value);
+  s.banner_bg = $("bn-bg").value;
+  s.banner_border = $("bn-border").value;
+  s.banner_text = $("bn-text").value;
   return s;
 }
 
@@ -131,18 +200,18 @@ async function addLastApp() {
 
 let currentTab = 0;
 const tabs = [...document.querySelectorAll(".tab")];
-for (const [index, tab] of tabs.entries()) {
-  tab.onclick = () => {
-    if (index === currentTab) return;
-    for (const t of tabs) t.classList.toggle("active", t === tab);
-    for (const p of document.querySelectorAll(".pane")) {
-      const show = p.dataset.pane === tab.dataset.tab;
-      p.hidden = !show;
-      p.classList.toggle("from-left", index < currentTab);
-    }
-    currentTab = index;
-  };
+function showTab(name) {
+  const index = tabs.findIndex((t) => t.dataset.tab === name);
+  if (index < 0 || index === currentTab) return;
+  tabs.forEach((t, i) => t.classList.toggle("active", i === index));
+  for (const p of document.querySelectorAll(".pane")) {
+    p.hidden = p.dataset.pane !== name;
+    p.classList.toggle("from-left", index < currentTab);
+  }
+  currentTab = index;
 }
+for (const tab of tabs) tab.onclick = () => showTab(tab.dataset.tab);
+listen("settings-tab", (e) => showTab(e.payload));
 
 // Glass transparency is a look-only preference, kept in the window's local storage rather than config.toml.
 const range = $("glass-range");
@@ -169,10 +238,41 @@ $("excluded_apps").onchange = saveSettings;
 $("add-macro").onclick = () => addMacroRow();
 $("save-macros").onclick = saveMacros;
 $("add-last-app").onclick = addLastApp;
+$("add-custom-consonant").onclick = addCustomConsonant;
+$("custom-consonant-input").onkeydown = (e) => e.key === "Enter" && addCustomConsonant();
+const appWindow = window.__TAURI__.window.getCurrentWindow();
+// Settings window starts pinned; keep the real window level in sync with the pin button.
+appWindow.setAlwaysOnTop(true).catch((e) => say(String(e), "err"));
+$("pin").onclick = async () => {
+  const pin = $("pin");
+  const on = !pin.classList.contains("active");
+  try {
+    await appWindow.setAlwaysOnTop(on);
+    pin.classList.toggle("active", on);
+    pin.setAttribute("aria-pressed", String(on));
+    pin.title = on ? "Bỏ ghim" : "Ghim lên trên cùng";
+  } catch (e) {
+    say(String(e), "err");
+  }
+};
 $("autostart").onchange = () =>
   run(() => invoke("set_autostart", { on: $("autostart").checked }), "Đã cập nhật tự chạy cùng Windows");
 $("open-folder").onclick = () => run(() => invoke("open_config_dir"), "Đã mở thư mục cấu hình");
 $("reset").onclick = resetConfig;
+for (const id of BANNER_FIELDS) {
+  $(id).oninput = () => renderBannerPreview();
+  $(id).onchange = saveSettings;
+}
+$("bn-reset").onclick = async () => {
+  const d = await invoke("banner_defaults");
+  $("bn-opacity").value = d.opacity;
+  $("bn-blur").value = d.blur;
+  $("bn-bg").value = d.bg;
+  $("bn-border").value = d.border;
+  $("bn-text").value = d.text;
+  renderBannerPreview();
+  saveSettings();
+};
 $("reset-broken").onclick = resetConfig;
 $("open-github").onclick = () => run(() => invoke("open_github"), "Đã mở trang GitHub");
 $("toggle-keyboard").onclick = async () => {
@@ -190,10 +290,14 @@ function currentValue(key) {
 }
 
 function updateVisibility() {
-  for (const el of document.querySelectorAll("[data-when]")) {
-    const [, key, op, want] = el.dataset.when.match(/^(\w+)(?:(!?=)(.+))?$/);
-    const value = currentValue(key);
-    el.hidden = op === "=" ? value !== want : op === "!=" ? value === want : !value;
+  for (const el of document.querySelectorAll("[data-platform], [data-when]")) {
+    let hide = false;
+    if (el.dataset.when) {
+      const [, key, op, want] = el.dataset.when.match(/^(\w+)(?:(!?=)(.+))?$/);
+      const value = currentValue(key);
+      hide ||= op === "=" ? value !== want : op === "!=" ? value === want : !value;
+    }
+    el.hidden = hide;
   }
   for (const group of document.querySelectorAll(".group")) {
     const visible = [...group.querySelectorAll(".item")].filter((i) => !i.hidden);

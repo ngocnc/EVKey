@@ -1,7 +1,8 @@
 //! The Vietnamese/English toggle hotkey (`toggle_hotkey` in `config.toml`), parsed once and shared by TSF and the app.
 //!
 //! Grammar (case-insensitive, `+`-separated, no spaces): zero or more of `ctrl|alt|shift|win`, then either
-//! one key (`a`-`z`, `0`-`9`, `space`, `f1`-`f12`) or nothing. A chord with no key (`ctrl+shift`) fires when
+//! one key (`a`-`z`, `0`-`9`, `space`, `f1`-`f12`) or nothing. `cmd` is an alias of `win` (the Command key on
+//! macOS). A chord with no key (`ctrl+shift`) fires when
 //! exactly those modifiers were pressed together and released with no other key in between. `none` disables it.
 
 /// A parsed toggle chord. `vk` is a Windows virtual-key code; `None` means a modifier-only chord.
@@ -27,7 +28,7 @@ pub fn parse_hotkey(s: &str) -> Result<Option<Hotkey>, String> {
             "ctrl" => &mut hk.ctrl,
             "alt" => &mut hk.alt,
             "shift" => &mut hk.shift,
-            "win" => &mut hk.win,
+            "win" | "cmd" => &mut hk.win,
             key => {
                 if i + 1 != parts.len() {
                     return Err(format!("key {key:?} must be last in hotkey {s:?}"));

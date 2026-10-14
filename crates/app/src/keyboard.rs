@@ -7,8 +7,10 @@
 //! reliably (GetActiveProfile reports EVKey for every thread, and the HKL is 04090409 for
 //! both EVKey and en-US), so the app does not claim to show the active profile.
 use windows::core::{s, w, PCWSTR};
+use windows::Win32::System::Diagnostics::Debug::MessageBeep;
 use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
 use windows::Win32::System::Registry::{RegGetValueW, HKEY_CURRENT_USER, RRF_RT_REG_DWORD};
+use windows::Win32::UI::WindowsAndMessaging::{MB_ICONASTERISK, MB_OK};
 
 const ILOT_UNINSTALL: u32 = 0x1;
 
@@ -152,6 +154,12 @@ pub mod mode {
         set(next)?;
         Ok(next)
     }
+}
+
+/// Short cue for a user-initiated V/E toggle (hotkey, popup switch). One system sound per mode; `MessageBeep` returns at once, so it is safe in the hook callback.
+pub fn play_toggle_sound(english: bool) {
+    let style = if english { MB_OK } else { MB_ICONASTERISK };
+    let _ = unsafe { MessageBeep(style) };
 }
 
 #[cfg(test)]

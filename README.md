@@ -1,6 +1,6 @@
 # EVKey
 
-Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 dùng TSF thật; macOS (arm64) làm ở phase sau. Engine port từ [OpenKey](https://github.com/tuyenvm/OpenKey) nên repo là GPL-3.0.
+Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 dùng TSF thật; macOS (arm64 + x86_64) dùng CGEventTap. Engine port từ [OpenKey](https://github.com/tuyenvm/OpenKey) nên repo là GPL-3.0.
 
 ## Cài đặt
 
@@ -28,7 +28,31 @@ EVKey-Setup-2.0.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 
 Bỏ tùy chọn: thêm `/TASKS=""` (không thêm bàn phím, không khởi động cùng Windows).
 
-### Gỡ cài đặt
+### macOS
+
+Yêu cầu macOS 13 Ventura trở lên. Bản phát hành là universal (Apple Silicon + Intel) và **ad-hoc signed**, chưa notarize.
+
+Cài bằng Homebrew:
+
+```sh
+brew tap ngocnc/evkey
+brew install --cask evkey
+```
+
+Hoặc tải `EVKey-<version>-universal.dmg` từ [Releases](https://github.com/ngocnc/EVKey/releases), kéo `EVKey.app` vào `Applications`.
+
+**Build từ source**: cần macOS 13+, Command Line Tools (Swift 6+), Rust stable. Chạy `scripts/build-macos.sh` ở root repo; script build lõi Rust (`evkey-core`) cho arm64 + x86_64, build app SwiftUI trong `macos/` (SwiftPM), đóng gói `build/EVKey.app` và `build/EVKey-<version>-universal.dmg` (ad-hoc signed, kèm SHA256 in ra terminal). Giao diện macOS là SwiftUI; phần engine dùng chung Rust qua C FFI.
+
+**Lần mở đầu tiên**: vì app chưa notarize, Gatekeeper có thể chặn. Bản cài bằng Homebrew đã tự gỡ cờ quarantine. Bản tải dmg thì chuột phải `EVKey.app` → **Mở** → **Mở**.
+
+**Cấp quyền**: vào **System Settings → Privacy & Security** và bật EVKey trong **Accessibility** và **Input Monitoring**. Chưa cấp quyền thì EVKey không gõ được; app tự kiểm tra lại và bắt đầu hoạt động khi quyền đã được cấp.
+
+- Sau khi cập nhật phiên bản mới, bản ad-hoc có thể bị macOS reset quyền do chữ ký đổi. Khi build từ source, tạo một lần chứng chỉ tự ký tên `EVKey Local Signing` (Keychain Access → Certificate Assistant → Create a Certificate → Code Signing); `build-macos.sh` sẽ dùng nó nên quyền được giữ qua các lần build.
+- Khi có **Secure Input** (ô nhập mật khẩu, hoặc app như Terminal bật "Secure Keyboard Entry"), EVKey tạm không xử lý tiếng Việt và hiện banner ở cạnh dưới màn hình, nêu tên ứng dụng đang giữ Secure Input. Windows có banner tương tự khi phát hiện ô mật khẩu.
+
+Gỡ: `brew uninstall --cask evkey`. Thêm `--zap` để xóa cấu hình trong `~/Library/Application Support/EVKey` và LaunchAgent.
+
+### Gỡ cài đặt (Windows)
 
 Gỡ trong **Settings → Apps → Installed apps → EVKey**, hoặc `winget uninstall --id chrisnguyen.EVKey -e`. Gỡ sẽ đóng EVKey, bỏ khỏi danh sách bàn phím và khởi động cùng Windows, nhưng **giữ nguyên cấu hình** trong `%APPDATA%\EVKey`. Xóa thư mục đó nếu muốn bỏ hẳn cấu hình.
 
@@ -73,9 +97,9 @@ vn = "Việt Nam"
 ## Trạng thái (v2.0.0)
 
 - Windows 11 x64: engine so khớp từng sự kiện với OpenKey gốc; bộ gõ, bộ cài, gỡ cài đã chạy thật trên máy tác giả.
-- Icon khay: bấm trái để chuyển Việt/Anh, bấm phải để chọn kiểu gõ, bảng mã, mở Cài đặt hoặc thoát. Mọi lựa chọn trong menu ghi vào `config.toml`.
+- Icon khay: bấm trái hoặc phải để mở Popup (công tắc Việt/Anh, kiểu gõ, bảng mã, Quản lý Macro, Bảng điều khiển, Thoát). Mọi lựa chọn ghi vào `config.toml`.
 - Lỗi đã biết: `TextBox` WinForms (EDIT cổ điển) có thể mất chữ gõ sau lần commit đầu.
-- Ứng dụng 32-bit không gõ được (chỉ build x64). macOS (arm64) chưa làm. Bộ cài chưa ký số.
+- Ứng dụng 32-bit không gõ được (chỉ build x64). Bộ cài chưa ký số. macOS: app SwiftUI chạy được (menu bar, Bảng điều khiển, Banner); gõ thật cần cấp quyền Accessibility và chưa có người dùng kiểm chứng trên nhiều ứng dụng.
 
 ## Phát triển
 
