@@ -1,6 +1,18 @@
 # Release notes
 
-## v2.3.0
+## v3.0.0
+
+- Bỏ hẳn bộ gõ TSF: EVKey chỉ còn cơ chế bắt phím Hook (thay đổi lớn, vì vậy lên 3.0). Cấu hình cũ có `backend = "tsf"` vẫn đọc được.
+- Bảng hành động (Ctrl+Alt+A, chỉ mở khi đang ở ô nhập): Dịch, Thêm dấu, Sửa chính tả, Viết lại (trang trọng / ngắn gọn / thân thiện), Chuyển mã sang Unicode. Kết quả có nút sao chép. Giao diện liquid glass mới.
+- Gemini: API key lưu trong Windows Credential Manager; dùng cho Thêm dấu, Sửa, Viết lại và có thể chọn làm dịch vụ dịch thay Google.
+- Biến gõ tắt `{date}`, `{time}`, `{clipboard}`; nhập gõ tắt từ UniKey/OpenKey; xuất/nhập cấu hình.
+- Cài đặt: màn chào mừng lần đầu, chia Cơ bản / Nâng cao, Kiểu gõ / Bảng mã / Dịch vụ dịch thành menu thả xuống, ô phụ âm thêm gọn hơn.
+- Hiệu năng: CPU lúc rảnh giảm khoảng 3–4 lần (bỏ polling); độ trễ phím, RAM, khởi động giữ nguyên.
+- Chưa kiểm chứng: bản macOS của các tính năng trên (chưa build được).
+
+Gồm cả các thay đổi của 2.3.0 (chưa phát hành riêng):
+
+### v2.3.0
 
 - Ngôn ngữ giao diện: thêm English (Cài đặt, Popup, Banner Secure Input, thông báo lỗi). Chọn ở tab Hệ thống, đổi ngay không cần khởi động lại.
 - Cập nhật trong app: tự kiểm tra khi mở và mỗi 24 giờ (tắt được), có nút "Kiểm tra cập nhật" ở tab Thông tin. Khi có bản mới hiện release notes với "Cài đặt & mở lại", "Bỏ qua bản này", "Để sau". Windows hiện UAC khi cài.

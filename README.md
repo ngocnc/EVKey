@@ -93,7 +93,7 @@ vn = "Việt Nam"
 - Đổi `toggle_hotkey` có hiệu lực trong khoảng 1 giây, không cần khởi động lại ứng dụng.
 - **Lưu ý**: phím tắt đổi bố cục của Windows (Ctrl+Shift, Alt+Shift) vẫn hoạt động độc lập; EVKey không xử lý chúng. Nếu đặt `toggle_hotkey` trùng với tổ hợp này, cả hai sẽ cùng chạy.
 
-## Trạng thái (v2.2.3)
+## Trạng thái (v3.0.0)
 
 - Windows 11 x64: engine so khớp từng sự kiện với OpenKey gốc; bộ gõ (hook), bộ cài, gỡ cài đã chạy thật trên máy tác giả.
 - Khay: bấm trái đổi Việt/Anh, bấm phải mở menu. Cửa sổ Cài đặt (liquid-glass, tự lưu) có các tab: Gõ tiếng Việt, Chính tả & gõ nhanh, Gõ tắt, Phím tắt, Ứng dụng loại trừ, Giao diện (sáng/tối, kiểu kính, màu phủ, màu chủ đạo, banner Secure Input), Hệ thống, Thông tin. Mọi lựa chọn ghi vào `config.toml`.
