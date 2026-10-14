@@ -1,5 +1,11 @@
 # Release notes
 
+## v2.2.1
+
+- Banner Secure Input: góc cửa sổ được bo tròn bằng DWM, hết khung vuông xám quanh banner.
+- Cài đặt: các chip phụ âm tùy chỉnh không còn dính nhau; mục Secure Input xếp lại cân đối (xem trước ở trên, slider cùng hàng với nhãn, ba màu trên một hàng).
+- Chưa kiểm chứng: banner trên màn hình thật sau thay đổi này.
+
 ## v2.2.0
 
 **Backend hook mặc định, giao diện liquid-glass mới.**

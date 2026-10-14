@@ -1,5 +1,6 @@
 //! Secure Input banner (Windows): a click-through overlay at the bottom of the screen that says EVKey is paused
 //! while a password field has focus. `secure_input_win` calls `notify` from its poll thread.
+use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWINDOWATTRIBUTE};
 use std::sync::OnceLock;
 
 use evkey_engine::settings::{self, Settings};
@@ -43,6 +44,11 @@ pub fn init(app: &AppHandle) {
     if let Some(win) = app.get_webview_window(BANNER) {
         let _ = win.set_ignore_cursor_events(true);
         let _ = win.set_focusable(false);
+        // The acrylic fills the whole window rectangle; DWM rounds it (DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWCP_ROUND = 2).
+        if let Ok(hwnd) = win.hwnd() {
+            let round: u32 = 2;
+            let _ = unsafe { DwmSetWindowAttribute(hwnd, DWMWINDOWATTRIBUTE(33), std::ptr::from_ref(&round).cast(), 4) };
+        }
     }
     let _ = APP.set(app.clone());
     // EVKEY_DEBUG_BANNER=<app name> shows the banner at startup (for screenshots).

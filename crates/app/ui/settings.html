@@ -167,7 +167,7 @@
             <button data-value="clear">Trong suốt</button>
           </div>
         </div>
-        <div class="item stack">
+        <div class="item inline">
           <div class="text"><b>Độ đậm màu phủ</b><span>Lớp màu phủ lên nền cửa sổ; 0 để bỏ.</span></div>
           <div class="range-row"><input type="range" id="glass-strength" min="0" max="100" step="1"><output id="glass-strength-value"></output></div>
         </div>
@@ -183,20 +183,25 @@
       </div>
       <h2>Cảnh báo Secure Input</h2>
       <div class="glass group">
-        <div class="item stack">
+        <div class="item preview">
+          <div class="sec-banner" id="bn-preview"></div>
+          <span class="hint">Hiện ở cạnh dưới màn hình khi EVKey tạm tắt trong ô mật khẩu.</span>
+        </div>
+        <div class="item inline">
           <div class="text"><b>Độ đậm nền</b></div>
           <div class="range-row"><input type="range" id="bn-opacity" min="0" max="100" step="1"><output id="bn-opacity-value"></output></div>
         </div>
-        <div class="item stack">
+        <div class="item inline">
           <div class="text"><b>Độ mờ kính</b><span>0 để tắt hiệu ứng kính.</span></div>
           <div class="range-row"><input type="range" id="bn-blur" min="0" max="100" step="1"><output id="bn-blur-value"></output></div>
         </div>
-        <div class="item"><div class="text"><b>Màu nền</b></div><input type="color" id="bn-bg"></div>
-        <div class="item"><div class="text"><b>Màu viền</b></div><input type="color" id="bn-border"></div>
-        <div class="item"><div class="text"><b>Màu chữ</b></div><input type="color" id="bn-text"></div>
-        <div class="item stack">
-          <div class="text"><b>Xem trước</b><span>Hiện ở cạnh dưới màn hình khi EVKey tạm tắt trong ô mật khẩu.</span></div>
-          <div><div class="sec-banner" id="bn-preview"></div></div>
+        <div class="item">
+          <div class="text"><b>Màu sắc</b></div>
+          <div class="swatches">
+            <label>Nền<input type="color" id="bn-bg"></label>
+            <label>Viền<input type="color" id="bn-border"></label>
+            <label>Chữ<input type="color" id="bn-text"></label>
+          </div>
         </div>
       </div>
       <div class="actions"><button id="gl-reset" class="danger">Đặt lại giao diện</button></div>
