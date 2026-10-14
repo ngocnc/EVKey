@@ -112,8 +112,9 @@ kbd {
 /* content */
 main { overflow-x: hidden; overflow-y: auto; padding: 12px 8px 36px 4px; margin: -12px 0; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 14px), transparent); }
 h1 { font-size: 22px; font-weight: 650; margin: 0 4px 10px; }
-h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 20px 8px 8px; }
-.note { color: var(--muted); font-size: 12px; margin: 10px 8px; }
+/* Section headings, advanced summaries and notes share the card text's left edge (the 16px row padding). */
+h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 24px 16px 8px; }
+.note { color: var(--muted); font-size: 12px; margin: 10px 16px; }
 .group { border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
 .group.pad { padding: 14px 16px; }
 
@@ -498,24 +499,25 @@ button.loading::before { content: ""; display: inline-block; width: 11px; height
 /* Description of the active option under a segmented control. */
 .seg-hint { margin: -2px 2px 0; color: var(--muted); font-size: 12px; }
 
-/* Advanced options: a collapsible section at the bottom of a pane, closed by default. */
-details.advanced { margin-top: 16px; }
+/* Advanced options: a collapsible section at the bottom of a pane, closed by default. The summary sits on the same
+   left edge and rhythm as an h2 section heading, with a chevron after the text. */
 details.advanced > summary {
-  display: flex; align-items: center; gap: 8px; width: max-content; margin: 0 4px 8px; padding: 6px 10px;
-  border-radius: 8px; list-style: none; cursor: pointer; color: var(--muted);
+  display: flex; align-items: center; gap: 6px; width: max-content; margin: 24px 16px 8px; padding: 0;
+  list-style: none; cursor: pointer; color: var(--muted);
   font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 details.advanced > summary::-webkit-details-marker { display: none; }
-details.advanced > summary::before {
-  content: ""; width: 6px; height: 6px; margin: 0 2px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg); transition: transform 0.2s;
+details.advanced > summary::after {
+  content: ""; width: 5px; height: 5px; margin: -3px 2px 0; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg); transition: transform 0.2s, margin 0.2s;
 }
-details.advanced[open] > summary::before { transform: rotate(45deg); }
-details.advanced > summary:hover { background: var(--field); color: var(--fg); }
-details.advanced > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.advanced[open] > summary::after { transform: rotate(-135deg); margin-top: 3px; }
+details.advanced > summary:hover { color: var(--fg); }
+details.advanced > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
 details.advanced[open] > :not(summary) { animation: adv-in 0.24s cubic-bezier(0.22, 1, 0.36, 1); }
-details.advanced > h2:first-of-type { margin-top: 4px; }
+/* A heading right under the summary would double the gap. */
+details.advanced > summary + h2 { margin-top: 12px; }
 @keyframes adv-in { from { opacity: 0; transform: translateY(-6px); } }
 @media (prefers-reduced-motion: reduce) { details.advanced[open] > :not(summary) { animation: none; } }
 
