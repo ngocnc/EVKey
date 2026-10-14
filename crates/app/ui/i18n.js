@@ -20,7 +20,6 @@ const STRINGS = {
   "toast.autostart_ok": { vi: "Đã cập nhật tùy chọn tự chạy cùng Windows", en: "Start with Windows updated" },
   "toast.open_folder_ok": { vi: "Đã mở thư mục cấu hình", en: "Config folder opened" },
   "toast.open_github_ok": { vi: "Đã mở trang GitHub", en: "GitHub page opened" },
-  "toast.keyboard_ok": { vi: "Đã cập nhật danh sách bàn phím Windows", en: "Windows keyboard list updated" },
   "apps.none_recorded": {
     vi: "Chưa ghi nhận ứng dụng nào. Hãy chuyển sang ứng dụng muốn loại trừ rồi thử lại.",
     en: "No app recorded yet. Switch to the app you want to exclude, then try again.",
@@ -288,26 +287,6 @@ const STRINGS = {
     vi: "Phát một tiếng ngắn khi bạn bật hoặc tắt gõ tiếng Việt.",
     en: "Plays a short sound when you turn Vietnamese typing on or off.",
   },
-  "system.backend.title": {
-    vi: "Cách EVKey bắt phím",
-    en: "How EVKey reads keys",
-  },
-  "system.backend.desc": {
-    vi: "Hook hoạt động như UniKey, không cần thêm bàn phím vào Windows (khuyên dùng). TSF là một bàn phím riêng của Windows. Đổi xong phải mở lại EVKey.",
-    en: "Hook works like UniKey and needs no extra Windows keyboard (recommended). TSF is a separate Windows keyboard. Restart EVKey after changing it.",
-  },
-  "system.backend.hook": { vi: "Hook (như UniKey)", en: "Hook (like UniKey)" },
-  "system.backend.tsf": { vi: "TSF (bàn phím Windows)", en: "TSF (Windows keyboard)" },
-  "system.keyboard.title": {
-    vi: "Bàn phím EVKey trong Windows",
-    en: "EVKey keyboard in Windows",
-  },
-  "system.keyboard.desc": {
-    vi: "Thêm hoặc gỡ EVKey trong danh sách bàn phím của Windows. Chỉ cần khi dùng TSF.",
-    en: "Add EVKey to, or remove it from, the Windows keyboard list. Only needed with TSF.",
-  },
-  "system.keyboard.add": { vi: "Thêm vào danh sách", en: "Add to list" },
-  "system.keyboard.remove": { vi: "Gỡ khỏi danh sách", en: "Remove from list" },
   "system.files.heading": { vi: "Tệp cấu hình", en: "Config files" },
   "system.open_folder": { vi: "Mở thư mục", en: "Open folder" },
 
@@ -336,8 +315,6 @@ const STRINGS = {
   "hint.code_table.tcvn3": { vi: "TCVN3 (ABC): bảng mã cũ, chỉ dùng cho ứng dụng cần font .Vn như VnTime.", en: "TCVN3 (ABC): an old code table, only for apps that need .Vn fonts." },
   "hint.code_table.vni_windows": { vi: "VNI Windows: bảng mã cũ, chỉ dùng cho ứng dụng cần font VNI.", en: "VNI Windows: an old code table, only for apps that need VNI fonts." },
   "hint.code_table.unicode_compound": { vi: "Unicode tổ hợp: lưu dấu thành ký tự rời sau chữ cái. Dùng khi ứng dụng không hiển thị đúng Unicode dựng sẵn.", en: "Unicode compound: stores each mark as a separate character after the letter. Use when an app does not show precomposed Unicode correctly." },
-  "hint.backend.hook": { vi: "Hook: EVKey bắt phím trực tiếp như UniKey, không cần thêm bàn phím vào Windows. Nên dùng.", en: "Hook: EVKey reads keys directly like UniKey, with no keyboard added to Windows. Recommended." },
-  "hint.backend.tsf": { vi: "TSF: đăng ký như một bàn phím của Windows, chuyển bằng Win+Space. Cần thêm bàn phím ở nút bên dưới.", en: "TSF: registers as a Windows keyboard, switched with Win+Space. Add the keyboard with the button below." },
   "hint.translate_action.show": { vi: "Chỉ hiện: bản dịch hiện trong cửa sổ nhỏ, không đụng vào văn bản của bạn.", en: "Show only: the translation appears in a small window and your text is left alone." },
   "hint.translate_action.copy": { vi: "Sao chép: hiện bản dịch và tự chép vào clipboard để bạn dán ở nơi khác.", en: "Copy: shows the translation and puts it on the clipboard for you to paste." },
   "hint.translate_action.replace": { vi: "Thay thế: dán bản dịch đè lên đoạn văn bản đang chọn. Clipboard cũ được khôi phục.", en: "Replace: pastes the translation over the selected text. Your previous clipboard is restored." },

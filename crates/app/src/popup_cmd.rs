@@ -20,7 +20,7 @@ pub struct PopupState {
 fn snapshot() -> PopupState {
     let current = load_settings();
     PopupState {
-        mode: mode::get().unwrap_or(Mode::English),
+        mode: mode::get(),
         input_type: current.input_type,
         code_table: current.code_table,
         ui_language: current.ui_language,
@@ -56,10 +56,9 @@ pub fn popup_set_table(app: AppHandle, table: CodeTable) {
 
 #[tauri::command]
 pub fn popup_toggle_mode(app: AppHandle) {
-    if let Ok(next) = mode::toggle() {
-        if load_settings().toggle_sound {
-            crate::keyboard::play_toggle_sound(next == Mode::English);
-        }
+    let next = mode::toggle();
+    if load_settings().toggle_sound {
+        crate::keyboard::play_toggle_sound(next == Mode::English);
     }
     changed(&app);
 }

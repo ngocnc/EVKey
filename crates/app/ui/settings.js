@@ -183,7 +183,6 @@ function fill() {
   $("about-version").textContent = "v" + state.version;
   $("config-error").hidden = !state.config_error;
   $("config-error-text").textContent = state.config_error ?? "";
-  $("toggle-keyboard").textContent = state.enabled ? t("system.keyboard.remove") : t("system.keyboard.add");
   $("excluded_apps").placeholder = "game.exe";
   fillBanner(s);
   fillTime(s.translate_popup_ms);
@@ -203,7 +202,6 @@ function applyLanguage(lang) {
     row.querySelector(".mv").placeholder = t("macro.value_placeholder");
     row.querySelector(".ghost").textContent = t("common.delete");
   }
-  $("toggle-keyboard").textContent = state.enabled ? t("system.keyboard.remove") : t("system.keyboard.add");
   $("pin").title = $("pin").classList.contains("active") ? t("pin.unpin") : t("pin.pin");
   paintHotkey();
   $("translate-unit").refresh();
@@ -615,10 +613,6 @@ $("check-update").onclick = async () => {
   if (r.status === "error") $("update-status").textContent = t("about.update.error", { error: r.error });
 };
 $("open-github").onclick = () => run(() => invoke("open_github"), t("toast.open_github_ok"));
-$("toggle-keyboard").onclick = async () => {
-  if (await run(() => invoke("set_enabled", { enabled: !state.enabled }), t("toast.keyboard_ok"))) await load();
-};
-
 listen("settings-show", load);
 applyI18n();
 load();

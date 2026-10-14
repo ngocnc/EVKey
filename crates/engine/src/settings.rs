@@ -49,15 +49,6 @@ pub enum TempOffKey {
     Alt,
 }
 
-/// Which backend types text: the global keyboard hook (default) or the TSF text service.
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum Backend {
- #[default]
- Hook,
- Tsf,
-}
-
 /// Display language of every EVKey screen. Not the V/E Chế độ.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -116,8 +107,11 @@ pub struct Settings {
     pub temp_off_key: TempOffKey,
     /// Key or modifier chord that toggles Vietnamese/English (`alt+z`, `ctrl+shift`, `none` to disable).
     pub toggle_hotkey: String,
-    /// `hook`: global keyboard hook like UniKey. `tsf`: the TSF text service (needs the keyboard entry).
-    pub backend: Backend,
+    /// Removed (ADR 0006: Windows always uses the keyboard hook). Still accepted so older `config.toml` files load;
+    /// dropped on the next save.
+    #[serde(rename = "backend", skip_serializing)]
+    #[doc(hidden)]
+    pub legacy_backend: Option<String>,
     /// Secure Input banner: background opacity, 0-100 (100 = opaque).
     pub banner_opacity: u8,
     /// Secure Input banner: glass blur, 0-100; 0 turns the glass effect off.
@@ -173,7 +167,7 @@ impl Default for Settings {
             excluded_apps_macos: Vec::new(),
             temp_off_key: TempOffKey::None,
             toggle_hotkey: if cfg!(target_os = "macos") { "ctrl+shift" } else { "alt+z" }.to_string(),
-            backend: Backend::Hook,
+            legacy_backend: None,
             banner_opacity: 80,
             banner_blur: 60,
             banner_bg: "#1c1c1e".to_string(),

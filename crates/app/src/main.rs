@@ -16,8 +16,6 @@ mod tray;
 mod translate;
 mod updater;
 
-use evkey_engine::settings::{self, Backend};
-use keyboard::mode::{self, Mode};
 use windows::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};
 
 fn main() {
@@ -27,8 +25,6 @@ fn main() {
             attach_console();
             println!("{}", env!("CARGO_PKG_VERSION"));
         }
-        "--enable-keyboard" => exit_with(keyboard::set_enabled(true)),
-        "--disable-keyboard" => exit_with(keyboard::set_enabled(false)),
         "--autostart" => exit_with(match args.get(1).map(String::as_str) {
             Some("on") => autostart::set(true),
             Some("off") => autostart::set(false),
@@ -36,21 +32,10 @@ fn main() {
         }),
         "--mode" => {
             attach_console();
-            let arg = args.get(1).map(String::as_str);
-            exit_with(if configured_backend() == Backend::Hook {
-                // The mode lives inside the running app, so changes go through its pipe.
-                match arg {
-                    Some(a @ ("vietnamese" | "english" | "toggle")) => ipc::send_to_running_instance(&format!("mode {a}")),
-                    _ => Err(i18n::tr("cơ chế Hook: cách dùng evkey --mode vietnamese|english|toggle (không có get)", "Hook typing engine: usage evkey --mode vietnamese|english|toggle (get is not available)").into()),
-                }
-            } else {
-                match arg {
-                    Some("get") => mode::get().map(|m| println!("{}", m.as_str())),
-                    Some("vietnamese") => mode::set(Mode::Vietnamese),
-                    Some("english") => mode::set(Mode::English),
-                    Some("toggle") => mode::toggle().map(|_| ()),
-                    _ => Err(i18n::tr("cách dùng: evkey --mode get|vietnamese|english|toggle", "usage: evkey --mode get|vietnamese|english|toggle").into()),
-                }
+            // The mode lives inside the running app, so changes go through its pipe.
+            exit_with(match args.get(1).map(String::as_str) {
+                Some(a @ ("vietnamese" | "english" | "toggle")) => ipc::send_to_running_instance(&format!("mode {a}")),
+                _ => Err(i18n::tr("cách dùng: evkey --mode vietnamese|english|toggle", "usage: evkey --mode vietnamese|english|toggle").into()),
             })
         }
         "" | "--hidden" => run(false),
@@ -66,7 +51,6 @@ fn run(show_settings: bool) {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             settings_cmd::get_state,
-            settings_cmd::set_enabled,
             settings_cmd::save_settings,
             settings_cmd::save_macros,
             settings_cmd::reset_config,
@@ -97,9 +81,8 @@ fn run(show_settings: bool) {
         ])
         .on_window_event(tray::on_window_event)
         .setup(move |app| {
-            if configured_backend() == Backend::Hook {
-                start_hook();
-            }
+            keyboard::remove_legacy_keyboard();
+            let _ = hook::start();
             tray::setup(app)?;
             banner::init(app.handle());
             updater::start(app.handle().clone());
@@ -120,21 +103,6 @@ fn run(show_settings: bool) {
         })
         .run(tauri::generate_context!())
         .expect("EVKey không chạy được");
-}
-
-/// Hook backend: take over typing and drop the TSF keyboard entry, which would otherwise process every key twice.
-fn start_hook() {
-    if keyboard::is_enabled().unwrap_or(false) {
-        let _ = keyboard::set_enabled(false);
-    }
-    let _ = hook::start();
-}
-
-fn configured_backend() -> Backend {
-    settings::default_dir()
-        .and_then(|d| settings::load(&d).ok())
-        .map(|l| l.settings.backend)
-        .unwrap_or_default()
 }
 
 fn attach_console() {

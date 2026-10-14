@@ -1,5 +1,5 @@
 //! Tauri commands for the settings window. Each is a thin wrapper over
-//! `evkey_engine::settings` (config files), `keyboard`, `autostart`, `foreground` or `tray`.
+//! `evkey_engine::settings` (config files), `autostart`, `foreground` or `tray`.
 //! The `*_in` functions take the config directory so they can be tested with a temp dir.
 
 use std::collections::BTreeMap;
@@ -12,14 +12,12 @@ use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
 use crate::{autostart, foreground, tray};
-use crate::keyboard;
 use crate::keyboard::mode::{self, Mode};
 
 const GITHUB_URL: &str = "https://github.com/ngocnc/EVKey";
 
 #[derive(Serialize)]
 pub struct State {
-    enabled: bool,
     mode: Mode,
     autostart: bool,
     config_dir: String,
@@ -84,10 +82,8 @@ pub fn get_state() -> Result<State, String> {
         Ok(cfg) => (cfg, None),
         Err(e) => (Loaded::default(), Some(e)),
     };
-    let enabled = keyboard::is_enabled()?;
     Ok(State {
-        enabled,
-        mode: mode::get()?,
+        mode: mode::get(),
         autostart: autostart::is_enabled(),
         config_dir: dir.display().to_string(),
         config_error,
@@ -95,11 +91,6 @@ pub fn get_state() -> Result<State, String> {
         macros: cfg.macros,
         version: env!("CARGO_PKG_VERSION"),
     })
-}
-
-#[tauri::command]
-pub fn set_enabled(enabled: bool) -> Result<(), String> {
-    keyboard::set_enabled(enabled)
 }
 
 #[tauri::command]

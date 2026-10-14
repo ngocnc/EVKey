@@ -1,4 +1,4 @@
-//! UniKey-style typing backend: a low-level keyboard hook feeds the platform-independent `evkey_core::Session`, and
+//! Typing on Windows (ADR 0006): a low-level keyboard hook feeds the platform-independent `evkey_core::Session`, and
 //! each answer is typed back with `SendInput` (backspaces, then the new characters). No Windows keyboard entry and
 //! no DLL are needed. This file only maps Win32 state (modifiers, caps lock, foreground window, password fields)
 //! into session inputs and injects what the session asks for.
@@ -27,14 +27,8 @@ use crate::foreground;
 
 /// Tags our own injected events ("EVKY").
 const MARKER: usize = 0x4556_4B59;
-static ACTIVE: AtomicBool = AtomicBool::new(false);
 /// The Vietnamese/English flag. The session on the hook thread shares it, so other threads can read and set it.
 static MODE: LazyLock<Arc<AtomicBool>> = LazyLock::new(|| Arc::new(AtomicBool::new(false)));
-
-/// True once the hook is installed; the V/E mode then lives in this process (see `keyboard::mode`).
-pub fn active() -> bool {
-    ACTIVE.load(Ordering::Relaxed)
-}
 
 pub fn english() -> bool {
     MODE.load(Ordering::Relaxed)
@@ -236,7 +230,6 @@ pub fn start() -> Result<(), String> {
                 return;
             }
         };
-        ACTIVE.store(true, Ordering::Relaxed);
         crate::secure_input_win::start();
         let _ = tx.send(Ok(()));
         // With no window the system picks the timer ids; WM_TIMER carries the id in wParam.

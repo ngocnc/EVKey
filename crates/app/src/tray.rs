@@ -162,9 +162,7 @@ pub fn refresh_icon(app: &AppHandle) {
     let Some(tray) = app.tray_by_id(TRAY_ID) else {
         return;
     };
-    let Ok(mode) = mode::get() else {
-        return;
-    };
+    let mode = mode::get();
     let icon = match mode {
         Mode::Vietnamese => ICON_V,
         Mode::English => ICON_E,
@@ -189,17 +187,15 @@ fn tooltip(mode: Mode) -> String {
     }
 }
 
-/// Polls the shared mode, so changes from the IME, the CLI, another process or a per-app switch reach the icon and the open popup.
-// ponytail: polling every 400 ms; ITfCompartmentEventSink would make it event-driven if the delay matters.
+/// Polls the shared mode, so changes from the hotkey, the CLI or a per-app switch reach the icon and the open popup.
 fn watch_mode(app: AppHandle) {
     let mut shown = None;
     loop {
         std::thread::sleep(MODE_POLL);
-        if let Ok(mode) = mode::get() {
-            if shown != Some(mode) {
-                shown = Some(mode);
-                crate::popup_cmd::changed(&app);
-            }
+        let mode = mode::get();
+        if shown != Some(mode) {
+            shown = Some(mode);
+            crate::popup_cmd::changed(&app);
         }
     }
 }
@@ -210,7 +206,7 @@ fn debug_dump(mode: Mode, tip: &str) {
         return;
     };
     let ms = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis());
-    let line = format!("{ms} mode={} tooltip={tip}\n", mode.as_str());
+    let line = format!("{ms} mode={mode:?} tooltip={tip}\n");
     let _ = OpenOptions::new()
         .create(true)
         .append(true)

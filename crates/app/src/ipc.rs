@@ -66,8 +66,8 @@ pub fn serve_show_requests(app: AppHandle) {
             let cmd = String::from_utf8_lossy(&buf[..n]);
             match cmd.as_ref() {
                 "settings" => tray::show_settings(&app),
-                "mode vietnamese" => drop(mode::set(Mode::Vietnamese)),
-                "mode english" => drop(mode::set(Mode::English)),
+                "mode vietnamese" => mode::set(Mode::Vietnamese),
+                "mode english" => mode::set(Mode::English),
                 "mode toggle" => drop(mode::toggle()),
                 _ => {}
             }

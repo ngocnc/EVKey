@@ -13,14 +13,12 @@ if ($cargoToml -notmatch '(?ms)\[workspace\.package\].*?^version\s*=\s*"([^"]+)"
 $version = $Matches[1]
 
 if (-not $NoBuild) {
-    cargo build --release -p evkey-app -p evkey-tsf
+    cargo build --release -p evkey-app
     if ($LASTEXITCODE -ne 0) { throw "cargo build failed with exit code $LASTEXITCODE" }
 }
 
 $bin = Join-Path $root 'target\release'
-foreach ($f in 'evkey.exe', 'evkey_tsf.dll') {
-    if (-not (Test-Path (Join-Path $bin $f))) { throw "Missing $bin\$f (run without -NoBuild or build first)" }
-}
+if (-not (Test-Path (Join-Path $bin 'evkey.exe'))) { throw "Missing $bin\evkey.exe (run without -NoBuild or build first)" }
 
 $iscc = @(
     (Get-Command iscc -ErrorAction SilentlyContinue).Source,

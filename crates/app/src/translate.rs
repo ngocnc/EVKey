@@ -1,7 +1,6 @@
 //! Translate the selected text: the hotkey copies the selection (Ctrl+C) and Google Translate's public endpoint
 //! translates it Vietnamese <-> other (auto-detected). A small popup that never takes focus shows only the result for
 //! a few seconds; the `translate_action` setting can also copy it or paste it over the selection (Ctrl+V).
-//! Works with the hook backend only; the TSF backend never reports the hotkey.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::OnceLock;
