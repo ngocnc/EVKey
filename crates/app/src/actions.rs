@@ -53,11 +53,13 @@ pub struct View {
     ui_language: UiLanguage,
     /// A Gemini key is saved; without one the AI entries are disabled in the menu.
     gemini: bool,
+    /// The result came from the action menu (an editable field): the result button replaces the selection instead of copying.
+    replace: bool,
 }
 
 impl View {
     const fn new() -> View {
-        View { status: "loading", text: String::new(), ms: 5000, ui_language: UiLanguage::Vi, gemini: false }
+        View { status: "loading", text: String::new(), ms: 5000, ui_language: UiLanguage::Vi, gemini: false, replace: false }
     }
 }
 
@@ -143,7 +145,7 @@ fn open(translate_now: bool) {
     }
     *SOURCE.lock() = source;
     if translate_now {
-        perform(app, &cfg, "translate");
+        perform(app, &cfg, "translate", false);
     } else {
         set_view(&cfg, "menu", String::new());
         show(app, false);
@@ -152,7 +154,8 @@ fn open(translate_now: bool) {
 }
 
 /// Runs action `id` on the captured selection and shows the result. The `translate_action` setting applies to it.
-fn perform(app: &AppHandle, cfg: &Settings, id: &str) {
+/// `from_menu`: started from the action menu, so the result button replaces the selection.
+fn perform(app: &AppHandle, cfg: &Settings, id: &str, from_menu: bool) {
     let source = SOURCE.lock().clone();
     // While loading, the view text is the action id, so the panel can say what it is doing.
     set_view(cfg, "loading", id.to_string());
@@ -160,8 +163,14 @@ fn perform(app: &AppHandle, cfg: &Settings, id: &str) {
     match compute(id, &source, cfg.translate_provider) {
         Ok(result) => {
             set_view(cfg, "ok", result.clone());
+            VIEW.lock().replace = from_menu;
             show(app, true);
-            apply(cfg.translate_action, &result);
+            // Pasting outside an editable field does nothing and the clipboard is put back, so copy instead.
+            let action = match cfg.translate_action {
+                TranslateAction::Replace if !from_menu && !crate::secure_input_win::editable_focused() => TranslateAction::Copy,
+                a => a,
+            };
+            apply(action, &result);
         }
         Err(e) => fail(app, cfg, e),
     }
@@ -182,7 +191,7 @@ fn compute(id: &str, source: &str, provider: TranslateProvider) -> Result<String
 
 fn set_view(cfg: &Settings, status: &'static str, text: String) {
     let gemini = status == "menu" && crate::secret::gemini_key().is_some();
-    *VIEW.lock() = View { status, text, ms: cfg.translate_popup_ms, ui_language: cfg.ui_language, gemini };
+    *VIEW.lock() = View { status, text, ms: cfg.translate_popup_ms, ui_language: cfg.ui_language, gemini, replace: false };
 }
 
 /// Shows `message` as an error in the panel.
@@ -248,9 +257,14 @@ fn google(text: &str, to: &str) -> Result<(String, String), String> {
         .query("dt", "t")
         .query("q", text)
         .call()
-        .map_err(|e| e.to_string())?
+        .map_err(|e| match e {
+            // Never show ureq's message: it holds the URL, which holds the selected text.
+            ureq::Error::Status(429, _) => tr("Google tạm chặn dịch, thử lại sau hoặc chuyển sang Gemini", "Google is limiting requests, try again later or switch to Gemini").to_string(),
+            ureq::Error::Status(code, _) => format!("{}: HTTP {code}", tr("Lỗi Google Dịch", "Google Translate error")),
+            ureq::Error::Transport(_) => tr("Không kết nối được Google Dịch, kiểm tra mạng", "Could not reach Google Translate, check your network").to_string(),
+        })?
         .into_json()
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| tr("Phản hồi dịch không hợp lệ.", "The translation response was not understood.").to_string())?;
     parse_response(&json).ok_or_else(|| tr("Phản hồi dịch không hợp lệ.", "The translation response was not understood.").into())
 }
 
@@ -271,7 +285,7 @@ pub fn actions_run(action: String) {
         return;
     }
     std::thread::spawn(move || {
-        perform(&app, &load_settings(), &action);
+        perform(&app, &load_settings(), &action, true);
         BUSY.store(false, Ordering::SeqCst);
     });
 }
@@ -298,6 +312,14 @@ pub fn actions_keep() {
 pub fn actions_copy(app: AppHandle) {
     clipboard::set_text(&VIEW.lock().text);
     actions_close(app);
+}
+
+/// Replace button on a menu result: hides the panel and pastes the result over the selection in the focused app.
+#[tauri::command]
+pub fn actions_replace(app: AppHandle) {
+    let text = VIEW.lock().text.clone();
+    actions_close(app);
+    std::thread::spawn(move || apply(TranslateAction::Replace, &text));
 }
 
 /// From the hook thread: Esc (`point` None) or a click at `point` (physical pixels) outside the open menu closes it.

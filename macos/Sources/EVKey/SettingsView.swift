@@ -88,13 +88,6 @@ struct SettingsView: View {
                         Text(tab.title)
                             .lineLimit(1)
                             .truncationMode(.tail)
-                        if tab == .translate {
-                            Text("Beta")
-                                .font(.system(size: 9, weight: .semibold))
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(Color.accentColor.opacity(0.18), in: Capsule())
-                        }
                     }
                     .font(.system(size: 13))
                     .frame(maxWidth: .infinity, alignment: .leading)

@@ -86,6 +86,7 @@ const STRINGS = {
   "actions.rewrite_shorter": { vi: "Ngắn gọn", en: "Shorter" },
   "actions.rewrite_friendly": { vi: "Thân thiện", en: "Friendly" },
   "actions.copy": { vi: "Sao chép", en: "Copy" },
+  "actions.replace": { vi: "Thay thế", en: "Replace" },
   "actions.loading.translate": { vi: "Đang dịch…", en: "Translating…" },
   "actions.loading.add_diacritics": { vi: "Đang thêm dấu…", en: "Adding diacritics…" },
   "actions.loading.fix_spelling": { vi: "Đang sửa chính tả…", en: "Fixing spelling…" },

@@ -38,7 +38,10 @@ async function render() {
   text.className = "tr-text " + (loading ? "loading" : v.status === "error" ? "error" : "");
   const copy = $("ac-copy");
   copy.hidden = v.status !== "ok";
-  copy.title = t("actions.copy");
+  copy.title = t(v.replace ? "actions.replace" : "actions.copy");
+  copy.dataset.cmd = v.replace ? "actions_replace" : "actions_copy";
+  $("ac-copy-icon").hidden = v.replace;
+  $("ac-replace-icon").hidden = !v.replace;
   // The countdown bar starts when the panel is shown and runs for the configured time.
   fill?.cancel();
   // Hidden while loading and when the panel never closes by itself; it keeps its space so the content does not jump.
@@ -48,10 +51,10 @@ async function render() {
   requestAnimationFrame(() => invoke("actions_fit", { height: Math.ceil($("panel").getBoundingClientRect().height) }));
 }
 
-// Copies the result and hides the panel.
+// Copies the result (translate hotkey) or replaces the selection with it (action menu), then hides the panel.
 $("ac-copy").onclick = (e) => {
   e.stopPropagation();
-  invoke("actions_copy");
+  invoke(e.currentTarget.dataset.cmd);
 };
 
 // The panel never takes focus, so there is no Esc. The x button closes it; a plain click on it does too.

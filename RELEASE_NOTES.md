@@ -1,5 +1,12 @@
 # Release notes
 
+## v3.0.1
+
+- Bảng hành động: kết quả từ menu Ctrl+Alt+A có nút **Thay thế** (dán đè lên đoạn đã bôi đen) thay cho nút sao chép. Phím tắt dịch vẫn giữ nút sao chép.
+- Dịch bằng Google: lỗi mạng hoặc bị giới hạn (429) giờ hiện thông báo dễ hiểu, không còn hiện URL chứa văn bản đã bôi đen.
+- Chế độ "dán đè" khi dịch ngoài ô nhập (trang web, PDF) chuyển sang sao chép, bản dịch nằm sẵn trong clipboard.
+- Dịch thuật không còn là Beta.
+
 ## v3.0.0
 
 - Bỏ hẳn bộ gõ TSF: EVKey chỉ còn cơ chế bắt phím Hook (thay đổi lớn, vì vậy lên 3.0). Cấu hình cũ có `backend = "tsf"` vẫn đọc được.

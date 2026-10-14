@@ -739,7 +739,7 @@ dependencies = [
 
 [[package]]
 name = "evkey-app"
-version = "3.0.0"
+version = "3.0.1"
 dependencies = [
  "evkey-core",
  "evkey-engine",
@@ -755,7 +755,7 @@ dependencies = [
 
 [[package]]
 name = "evkey-core"
-version = "3.0.0"
+version = "3.0.1"
 dependencies = [
  "evkey-engine",
  "serde",
@@ -764,7 +764,7 @@ dependencies = [
 
 [[package]]
 name = "evkey-engine"
-version = "3.0.0"
+version = "3.0.1"
 dependencies = [
  "serde",
  "toml 1.1.8+spec-1.1.0",

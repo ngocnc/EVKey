@@ -1,7 +1,7 @@
 import EVKeyKit
 import SwiftUI
 
-/// "Dịch thuật" (Beta): the translate and action panel hotkeys, what happens after a result, how long the popup stays,
+/// "Dịch thuật": the translate and action panel hotkeys, what happens after a result, how long the popup stays,
 /// the translation service, and the Gemini key.
 struct SettingsTranslateTab: View {
     @ObservedObject private var state = AppState.shared
