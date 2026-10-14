@@ -237,6 +237,7 @@ pub fn on_window_event(window: &Window, event: &WindowEvent) {
             let _ = window.hide();
             *LAST_BLUR_HIDE.lock() = Some(Instant::now());
         }
+        WindowEvent::Moved(_) if window.label() == crate::actions::ACTIONS_WINDOW => crate::actions::moved(),
         _ => {}
     }
 }

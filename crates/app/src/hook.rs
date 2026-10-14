@@ -16,7 +16,7 @@ use evkey_engine::settings;
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     GetAsyncKeyState, GetKeyState, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
-    KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_BACK, VK_CAPITAL,
+    KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_BACK, VK_CAPITAL, VK_LEFT,
 };
 use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -150,13 +150,21 @@ impl State {
             for _ in 0..edit.backspaces {
                 input.extend([key(VK_BACK.0, false), key(VK_BACK.0, true)]);
             }
-            for unit in expand_vars(&edit.text).encode_utf16() {
+            let text = expand_vars(&edit.text);
+            let (text, back) = split_cursor(&text);
+            for unit in text.encode_utf16() {
                 input.extend(unicode(unit));
             }
             match edit.resend {
                 Some(Resend::Char(ch)) => input.extend(unicode(ch)),
                 Some(Resend::Vk(vk)) => input.extend([key(vk, false), key(vk, true)]),
                 None => {}
+            }
+            // `{cursor}`: step back over the text after it and the re-sent trigger key.
+            if let Some(back) = back {
+                for _ in 0..back + edit.resend.is_some() as usize {
+                    input.extend([key(VK_LEFT.0, false), key(VK_LEFT.0, true)]);
+                }
             }
         }
         if reaction.dummy_key {
@@ -197,6 +205,15 @@ fn fill_vars(text: &str, (d, mo, y, h, mi): (u16, u16, u16, u16, u16), clipboard
         out = out.replace("{clipboard}", &clipboard().unwrap_or_default());
     }
     out
+}
+
+/// Removes every `{cursor}` and returns the text plus how many characters follow the first one (`None` if absent).
+fn split_cursor(text: &str) -> (std::borrow::Cow<'_, str>, Option<usize>) {
+    const MARK: &str = "{cursor}";
+    let Some(at) = text.find(MARK) else { return (text.into(), None) };
+    let out = text.replace(MARK, "");
+    let back = text[at + MARK.len()..].replace(MARK, "").chars().count();
+    (out.into(), Some(back))
 }
 
 fn input(vk: u16, scan: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {
@@ -340,5 +357,12 @@ mod tests {
         let got = super::fill_vars("{date} {time} [{clipboard}] {x}", (4, 7, 2026, 9, 5), || Some("abc".into()));
         assert_eq!(got, "04/07/2026 09:05 [abc] {x}");
         assert_eq!(super::fill_vars("{clipboard}", (1, 1, 2026, 0, 0), || None), "");
+    }
+
+    #[test]
+    fn cursor_mark_is_removed_and_counts_chars_after_it() {
+        assert_eq!(super::split_cursor("log({cursor});"), ("log();".into(), Some(2)));
+        assert_eq!(super::split_cursor("a{cursor}bế{cursor}c"), ("abếc".into(), Some(3)));
+        assert_eq!(super::split_cursor("plain"), ("plain".into(), None));
     }
 }

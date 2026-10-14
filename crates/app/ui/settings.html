@@ -114,6 +114,10 @@
       <div class="glass group">
         <label class="item"><div class="text"><b data-i18n="smart.spell.title"></b><span data-i18n="smart.spell.desc"></span></div><span class="switch"><input type="checkbox" id="check_spelling"><i></i></span></label>
         <label class="item" data-when="check_spelling"><div class="text"><b data-i18n="smart.restore.title"></b><span data-i18n-html="smart.restore.desc"></span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
+        <label class="item"><div class="text"><b><span data-i18n="smart.english.title"></span> <span class="beta">Beta</span></b><span data-i18n="smart.english.desc"></span></div><span class="switch"><input type="checkbox" id="restore_english"><i></i></span></label>
+        <label class="item" data-when="restore_english"><div class="text"><b data-i18n="smart.english_undo.title"></b><span data-i18n="smart.english_undo.desc"></span></div><span class="switch"><input type="checkbox" id="undo_english_restore"><i></i></span></label>
+        <div class="item stack" data-when="restore_english"><div class="text"><b data-i18n="smart.english_extra.title"></b><span data-i18n="smart.english_extra.desc"></span></div><input type="text" id="english_words_extra" spellcheck="false" placeholder="rust react"></div>
+        <div class="item stack" data-when="restore_english"><div class="text"><b data-i18n="smart.english_excluded.title"></b><span data-i18n="smart.english_excluded.desc"></span></div><input type="text" id="english_words_excluded" spellcheck="false" placeholder="was"></div>
       </div>
       <div class="glass group">
         <label class="item">
@@ -263,6 +267,7 @@
           </div>
         </div>
         <label class="item"><div class="text"><b id="autostart-title" data-i18n="system.autostart.title"></b><span data-i18n="system.autostart.desc"></span></div><span class="switch"><input type="checkbox" id="autostart"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="system.admin.title"></b><span data-i18n="system.admin.desc"></span></div><span class="switch"><input type="checkbox" id="admin"><i></i></span></label>
       </div>
       <details class="advanced" data-adv="system">
         <summary data-i18n="common.advanced"></summary>

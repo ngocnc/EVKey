@@ -12,13 +12,13 @@ enum TextActions {
         return try await AppState.shared.runGemini(action, text: text)
     }
 
-    /// A panel entry: the local code table conversion, or the AI / translate action behind it.
+    /// A panel entry: a local text tool of the core, or the AI / translate action behind it.
     static func run(_ action: PanelAction, text: String) async throws -> String {
         switch action {
         case .ai(let ai):
             return try await run(ai, text: text)
-        case .convert:
-            guard let converted = CodeConvert.toUnicode(text) else { throw ConvertFailure() }
+        case .text(let id):
+            guard let converted = CodeConvert.transform(text, id: id) else { throw ConvertFailure() }
             return converted
         }
     }

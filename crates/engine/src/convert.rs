@@ -23,6 +23,9 @@ struct Maps {
     vni: Reverse,
     /// Precomposed Vietnamese letter -> plain ASCII letter of the same case.
     base: HashMap<char, char>,
+    /// Precomposed Vietnamese letter -> its TCVN3 / VNI-Windows glyphs (one or two chars).
+    tcvn3_enc: HashMap<char, String>,
+    vni_enc: HashMap<char, String>,
 }
 
 static MAPS: LazyLock<Maps> = LazyLock::new(build);
@@ -61,8 +64,10 @@ fn build() -> Maps {
                 if tcvn != 0 {
                     if mark != 0 && comp_base.is_ascii_alphabetic() {
                         m.tcvn3.pair.insert((comp_base as u32, tcvn), ch);
+                        m.tcvn3_enc.insert(ch, [comp_base, glyph(tcvn)].into_iter().collect());
                     } else {
                         single(&mut m.tcvn3, tcvn, ch);
+                        m.tcvn3_enc.insert(ch, glyph(tcvn).to_string());
                     }
                 }
 
@@ -71,8 +76,10 @@ fn build() -> Maps {
                 let (lo, hi) = (vni & 0xFF, vni >> 8);
                 if hi > 32 {
                     m.vni.pair.insert((lo, hi), ch);
-                } else {
+                    m.vni_enc.insert(ch, [glyph(lo), glyph(hi)].into_iter().collect());
+                } else if vni != 0 {
                     single(&mut m.vni, lo, ch);
+                    m.vni_enc.insert(ch, glyph(lo).to_string());
                 }
             }
         }
@@ -86,6 +93,11 @@ fn single(r: &mut Reverse, byte: u32, ch: char) {
     if byte >= 0x80 {
         r.single.entry(byte).or_insert(ch);
     }
+}
+
+/// A legacy code-table byte as the char a host types for it (U+0000-U+00FF).
+fn glyph(byte: u32) -> char {
+    char::from_u32(byte & 0xFF).unwrap_or('?')
 }
 
 /// Greedy longest-match rewrite. Returns the text, the number of replacements,
@@ -151,4 +163,46 @@ pub fn strip_marks(text: &str) -> String {
         .chars()
         .map(|c| MAPS.base.get(&c).copied().unwrap_or(c))
         .collect()
+}
+
+/// Converts `text` (any code table) to `to`. Unicode and Unicode compound targets give precomposed Unicode.
+pub fn convert(text: &str, to: CodeTable) -> String {
+    let unicode = to_unicode(text, detect(text));
+    let enc = match to {
+        CodeTable::Tcvn3 => &MAPS.tcvn3_enc,
+        CodeTable::VniWindows => &MAPS.vni_enc,
+        CodeTable::Unicode | CodeTable::UnicodeCompound => return unicode,
+    };
+    let mut out = String::with_capacity(unicode.len());
+    for c in unicode.chars() {
+        match enc.get(&c) {
+            Some(s) => out.push_str(s),
+            None => out.push(c),
+        }
+    }
+    out
+}
+
+/// Text tool `id` of the action panel applied to `text`; `None` for an unknown id. Case tools expect Unicode text.
+pub fn transform(id: &str, text: &str) -> Option<String> {
+    Some(match id {
+        "convert" => convert(text, CodeTable::Unicode),
+        "convert_tcvn3" => convert(text, CodeTable::Tcvn3),
+        "convert_vni" => convert(text, CodeTable::VniWindows),
+        "strip_marks" => strip_marks(&to_unicode(text, detect(text))),
+        "case_upper" => text.to_uppercase(),
+        "case_lower" => text.to_lowercase(),
+        "case_title" => {
+            let mut start = true;
+            text.chars()
+                .flat_map(|c| {
+                    let up = start;
+                    start = c.is_whitespace();
+                    let v: Vec<char> = if up { c.to_uppercase().collect() } else { c.to_lowercase().collect() };
+                    v
+                })
+                .collect()
+        }
+        _ => return None,
+    })
 }

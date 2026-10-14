@@ -32,6 +32,10 @@ pub fn is_enabled() -> bool {
 }
 
 pub fn set(on: bool) -> Result<(), String> {
+    // The elevated task already starts EVKey at sign-in; a Run value would start a non-elevated copy first.
+    if on && crate::admin::task_exists() {
+        return Ok(());
+    }
     let key = open_run_key(KEY_SET_VALUE).ok_or_else(|| crate::i18n::tr("Không mở được khóa Run", "Could not open the Run registry key").to_string())?;
     let rc = if on {
         let exe = std::env::current_exe().map_err(|e| e.to_string())?;

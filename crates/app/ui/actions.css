@@ -26,6 +26,9 @@
   background: var(--lg-sheen), var(--lg-fill);
   box-shadow: var(--lg-rim);
 }
+/* While dragging the native acrylic is off (it stutters when the window moves): an opaque fill stands in. */
+.tr-panel.dragging { background: var(--lg-sheen), rgb(240, 240, 244); }
+@media (prefers-color-scheme: dark) { .tr-panel.dragging { background: var(--lg-sheen), rgb(36, 36, 44); } }
 /* Time left before the panel hides: runs along the top edge and shrinks from full to empty. */
 .tr-bar { flex: none; height: 3px; background: transparent; }
 .tr-bar i { display: block; height: 100%; transform-origin: left; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }

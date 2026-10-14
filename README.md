@@ -68,6 +68,10 @@ code_table = "unicode"          # unicode | tcvn3 | vni_windows | unicode_compou
 free_mark = false               # đặt dấu tự do
 check_spelling = true
 restore_if_wrong_spelling = true
+restore_english = false        # Beta: trả lại ~770 từ tiếng Anh bị Telex biến đổi (sorry, wrong, was…)
+english_words_extra = []        # từ riêng cũng khôi phục, ví dụ ["rust", "react"]
+english_words_excluded = []     # không bao giờ khôi phục, ví dụ ["was"]
+undo_english_restore = true    # Backspace ngay sau khi khôi phục: trả lại chữ Telex
 quick_telex = false             # cc→ch gg→gi kk→kh nn→ng qq→qu pp→ph tt→th
 quick_start_consonant = false   # f→ph j→gi w→qu
 quick_end_consonant = false     # g→ng h→nh k→ch
@@ -89,11 +93,11 @@ vn = "Việt Nam"
 
 - Chế độ Việt/Anh dùng chung cho mọi ứng dụng (hoặc nhớ theo từng ứng dụng). Mặc định là Việt. Chế độ Anh: phím đi thẳng tới ứng dụng, không bị biến đổi. Đổi từ dòng lệnh: `evkey --mode vietnamese|english|toggle`.
 - `toggle_hotkey` là tổ hợp phím chuyển chế độ. Cú pháp (không phân biệt hoa thường, nối bằng `+`, không có khoảng trắng): không hoặc nhiều trong `ctrl|alt|shift|win`, kèm theo đúng một phím (`a`-`z`, `0`-`9`, `space`, `f1`-`f12`) hoặc không có phím nào. Ví dụ `alt+z`, `ctrl+shift`, `f8`. Tổ hợp không có phím (như `ctrl+shift`) kích hoạt khi nhả các phím bổ trợ mà không bấm phím nào khác ở giữa. `"none"` tắt phím tắt. Giá trị sai cú pháp làm việc nạp cấu hình báo lỗi.
-- EVKey nghe phím toàn cục và gõ lại bằng `SendInput`, không cần thêm bàn phím Windows và không cần DLL (ADR 0006). Bản cài mới tự gỡ bàn phím TSF của các bản 2.x. Hạn chế: cửa sổ chạy quyền admin chỉ gõ được nếu EVKey cũng chạy với quyền admin; Chrome/Electron có thể lệch dấu trong vài trường hợp (EVKey dùng cách chống autocomplete của OpenKey).
+- EVKey nghe phím toàn cục và gõ lại bằng `SendInput`, không cần thêm bàn phím Windows và không cần DLL (ADR 0006). Bản cài mới tự gỡ bàn phím TSF của các bản 2.x. Hạn chế: cửa sổ chạy quyền admin chỉ gõ được nếu EVKey cũng chạy với quyền admin (bật **Chạy với quyền quản trị** ở tab Hệ thống: EVKey tự chạy qua Task Scheduler, không hỏi UAC mỗi lần; `evkey --admin on|off`); Chrome/Electron có thể lệch dấu trong vài trường hợp (EVKey dùng cách chống autocomplete của OpenKey).
 - Đổi `toggle_hotkey` có hiệu lực trong khoảng 1 giây, không cần khởi động lại ứng dụng.
 - **Lưu ý**: phím tắt đổi bố cục của Windows (Ctrl+Shift, Alt+Shift) vẫn hoạt động độc lập; EVKey không xử lý chúng. Nếu đặt `toggle_hotkey` trùng với tổ hợp này, cả hai sẽ cùng chạy.
 
-## Trạng thái (v3.0.1)
+## Trạng thái (v3.1.0)
 
 - Windows 11 x64: engine so khớp từng sự kiện với OpenKey gốc; bộ gõ (hook), bộ cài, gỡ cài đã chạy thật trên máy tác giả.
 - Khay: bấm trái đổi Việt/Anh, bấm phải mở menu. Cửa sổ Cài đặt (liquid-glass, tự lưu) có các tab: Gõ tiếng Việt, Chính tả & gõ nhanh, Gõ tắt, Phím tắt, Ứng dụng loại trừ, Giao diện (sáng/tối, kiểu kính, màu phủ, màu chủ đạo, banner Secure Input), Hệ thống, Thông tin. Mọi lựa chọn ghi vào `config.toml`.
@@ -140,6 +144,12 @@ scripts/smoke_notepad.ps1 -Type "Vieejt Nam, hoaf dduowcj." -Expected "Việt Na
 ```
 
 Tạo lại dữ liệu golden: `tools/difftest/gen_golden.bat` (cần MSVC Build Tools).
+
+Tạo lại danh sách từ tiếng Anh cho `restore_english` (`crates/engine/data/english_words.txt`) từ danh sách tần suất [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (OpenSubtitles 2018, CC BY-SA 4.0), `content/2018/en/en_50k.txt` và `vi/vi_50k.txt`:
+
+```
+cargo run -p evkey-core --release --example gen_english_words -- en_50k.txt vi_50k.txt > crates/engine/data/english_words.txt
+```
 
 ### Phát hành
 

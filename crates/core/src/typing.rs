@@ -48,6 +48,7 @@ mod tests {
         for ch in keys.chars() {
             c.engine.key_event(false, ch.to_ascii_uppercase() as u16, 0, false);
             match edit_for(&c.engine.hook, c.engine.cfg.code_table) {
+                None if ch == '\u{8}' => drop(field.pop()),
                 None => field.push(ch),
                 Some(edit) => {
                     for _ in 0..edit.backspaces {
@@ -81,6 +82,27 @@ mod tests {
     fn macro_replaces_abbreviation_and_retypes_trigger() {
         let macros = BTreeMap::from([("bbc".to_string(), "BBC News".to_string())]);
         assert_eq!(type_keys(&loaded(macros), "bbc "), "BBC News ");
+    }
+
+    #[test]
+    fn english_restore_puts_listed_words_back_only_when_on() {
+        let mut on = loaded(BTreeMap::new());
+        on.settings.restore_english = true;
+        let text = "sorry was wrong, vieejt thi ";
+        assert_eq!(type_keys(&on, text), "sorry was wrong, việt thi ");
+        assert_eq!(type_keys(&loaded(BTreeMap::new()), text), "sory ứa ưởng, việt thi ");
+        // A listed word edited with backspace is left as Telex made it.
+        assert_eq!(type_keys(&on, "wass\u{8}s "), "ứa ");
+    }
+
+    #[test]
+    fn english_restore_own_words_add_and_exclude() {
+        let mut on = loaded(BTreeMap::new());
+        on.settings.restore_english = true;
+        assert_eq!(type_keys(&on, "rust "), "rút ");
+        on.settings.english_words_extra = vec!["Rust".into()];
+        on.settings.english_words_excluded = vec!["was".into()];
+        assert_eq!(type_keys(&on, "rust was sorry "), "rust ứa sorry ");
     }
 
     /// Types (vk, shift, char) triples with "capitalize sentence starts" on.

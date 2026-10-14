@@ -14,6 +14,8 @@ func runMiscChecks() {
     check(MacroVars.fill("a{clipboard}b{clipboard}", now: moment, clipboard: { "{date}" }) == "a{date}b{date}", "clipboard text is not expanded again")
     check(MacroVars.fill("{clipboard}", now: moment, clipboard: { nil }) == "", "empty clipboard gives empty text")
     check(MacroVars.expand(Array("xin chào".utf16)) == Array("xin chào".utf16), "text without { is untouched")
+    let split = MacroVars.splitCursor(Array("log({cursor});".utf16))
+    check(split.units == Array("log();".utf16) && split.back == 2, "{cursor} is removed and counts the chars after it")
 
     // TOML subset: encode then decode, plus hand-written variants Windows may produce.
     let tree: [String: ConfigValue] = [

@@ -33,8 +33,10 @@ async function render() {
   menu.hidden = !menuOpen;
   const text = $("tr-text");
   text.hidden = menuOpen;
-  // While loading, v.text is the action id (actions.rs perform).
-  text.textContent = loading ? t("actions.loading." + (v.text.startsWith("rewrite") ? "rewrite" : v.text)) : v.text;
+  // While loading, v.text is the action id (actions.rs perform); grouped ids share one loading text.
+  const group = /^(rewrite|convert|case|strip)/.exec(v.text)?.[1];
+  const loadingKey = group === "case" || group === "strip" ? "text" : group ?? v.text;
+  text.textContent = loading ? t("actions.loading." + loadingKey) : v.text;
   text.className = "tr-text " + (loading ? "loading" : v.status === "error" ? "error" : "");
   const copy = $("ac-copy");
   copy.hidden = v.status !== "ok";
@@ -64,8 +66,12 @@ let dragFrom = null;
 $("panel").addEventListener("mousedown", (e) => {
   if (e.button !== 0 || e.target.closest("button")) return;
   dragFrom = [window.screenX, window.screenY];
+  // The acrylic is off while dragging (actions.rs actions_drag_start); a solid fill stands in for it.
+  $("panel").classList.add("dragging");
+  invoke("actions_drag_start");
   win.startDragging().catch(console.error);
 });
+listen("actions-drag-end", () => $("panel").classList.remove("dragging"));
 document.addEventListener("click", (e) => {
   const moved = dragFrom && (window.screenX !== dragFrom[0] || window.screenY !== dragFrom[1]);
   dragFrom = null;

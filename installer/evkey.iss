@@ -74,6 +74,8 @@ Name: "{group}\{cm:SettingsShortcut}"; Filename: "{app}\evkey.exe"; Parameters: 
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 
 [Run]
+; Elevated (no runasoriginaluser): an existing "run as administrator" task is pointed at this version's exe.
+Filename: "{app}\evkey.exe"; Parameters: "--admin repoint"; Flags: runhidden waituntilterminated
 ; The per-user steps below run as the person who started the installer, so they write their own HKCU.
 Filename: "{app}\evkey.exe"; Parameters: "--autostart on"; StatusMsg: "{cm:TaskAutostart}"; Tasks: autostart; Flags: runasoriginaluser runhidden waituntilterminated
 Filename: "{app}\evkey.exe"; Parameters: "--hidden"; Description: "{cm:LaunchEVKey}"; Flags: runasoriginaluser nowait postinstall skipifsilent
@@ -83,6 +85,7 @@ Filename: "{app}\evkey.exe"; Parameters: "--hidden"; Check: RelaunchRequested; F
 [UninstallRun]
 ; runasoriginaluser is not available for uninstall entries: HKCU cleanup runs in the uninstaller's user context.
 Filename: "{sysnative}\taskkill.exe"; Parameters: "/F /IM evkey.exe"; Flags: runhidden waituntilterminated; RunOnceId: "KillEVKey"
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN EVKey /F"; Flags: runhidden waituntilterminated; RunOnceId: "DeleteAdminTask"
 Filename: "{app}\evkey.exe"; Parameters: "--autostart off"; Flags: runhidden waituntilterminated; RunOnceId: "AutostartOff"
 
 [Code]

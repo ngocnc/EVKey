@@ -92,6 +92,14 @@ pub struct Settings {
     pub check_spelling: bool,
     /// Restore the typed keys when the syllable is not valid Vietnamese (`window` stays `window`).
     pub restore_if_wrong_spelling: bool,
+    /// Beta: restore common English words Telex turned into a rare Vietnamese syllable (`sorry`, `wrong`, `was`).
+    pub restore_english: bool,
+    /// Own words for `restore_english` (`git`, `npm`): restored even if not in the built-in list.
+    pub english_words_extra: Vec<String>,
+    /// Words `restore_english` never restores (a Vietnamese word that was put back by mistake).
+    pub english_words_excluded: Vec<String>,
+    /// Backspace right after `restore_english` put a word back brings the Telex form back.
+    pub undo_english_restore: bool,
     /// `cc`→`ch`, `gg`→`gi`, `kk`→`kh`, `nn`→`ng`, `qq`→`qu`, `pp`→`ph`, `tt`→`th`.
     pub quick_telex: bool,
     /// `f`→`ph`, `j`→`gi`, `w`→`qu` at the start of a syllable.
@@ -167,6 +175,10 @@ impl Default for Settings {
             free_mark: false,
             check_spelling: true,
             restore_if_wrong_spelling: true,
+            restore_english: false,
+            english_words_extra: Vec::new(),
+            english_words_excluded: Vec::new(),
+            undo_english_restore: true,
             quick_telex: false,
             quick_start_consonant: false,
             quick_end_consonant: false,
@@ -209,6 +221,14 @@ fn is_letter(s: &str) -> bool {
     s.len() == 1 && s.bytes().all(|b| b.is_ascii_lowercase())
 }
 
+/// Lowercased entries; anything that is not plain `a`-`z` can never match typed keys, so it is dropped.
+fn english_words(list: &[String]) -> Vec<String> {
+    list.iter()
+        .map(|w| w.trim().to_ascii_lowercase())
+        .filter(|w| !w.is_empty() && w.bytes().all(|b| b.is_ascii_lowercase()))
+        .collect()
+}
+
 impl Settings {
     /// Engine configuration. `use_macro` is on iff there are macros.
     pub fn to_config(&self, has_macros: bool) -> Config {
@@ -221,6 +241,9 @@ impl Settings {
             use_modern_orthography: (self.tone_placement == TonePlacement::Old) as i32,
             quick_telex: self.quick_telex as i32,
             restore_if_wrong_spelling: self.restore_if_wrong_spelling as i32,
+            restore_english: self.restore_english as i32,
+            english_words_extra: english_words(&self.english_words_extra),
+            english_words_excluded: english_words(&self.english_words_excluded),
             use_macro: has_macros as i32,
             auto_caps_macro: self.auto_caps_macro as i32,
             upper_case_first_char: self.upper_case_first_char as i32,

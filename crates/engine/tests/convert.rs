@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use evkey_engine::convert::{detect, strip_marks, to_unicode};
+use evkey_engine::convert::{convert, detect, strip_marks, to_unicode, transform};
 use evkey_engine::settings::CodeTable;
 use evkey_engine::tables::tables;
 
@@ -132,4 +132,21 @@ fn detect_recognises_unicode_and_compound() {
 fn strip_marks_keeps_case_and_maps_d_stroke() {
     assert_eq!(strip_marks("Tieng Viet Đep"), "Tieng Viet Dep");
     assert_eq!(strip_marks("Đường Ăn Ớt ấ"), "Duong An Ot a");
+}
+
+#[test]
+fn unicode_round_trips_through_vni_and_tcvn3_lowercase() {
+    let text = "tiếng việt đẹp quá, người ơi ữ ặ";
+    assert_eq!(convert(&convert(text, CodeTable::VniWindows), CodeTable::Unicode), text);
+    assert_eq!(convert(&convert(text, CodeTable::Tcvn3), CodeTable::Unicode), text);
+    let upper = text.to_uppercase();
+    assert_eq!(convert(&convert(&upper, CodeTable::VniWindows), CodeTable::Unicode), upper);
+}
+
+#[test]
+fn text_tools() {
+    assert_eq!(transform("case_title", "tiếng VIỆT  nam").unwrap(), "Tiếng Việt  Nam");
+    assert_eq!(transform("case_upper", "đẹp").unwrap(), "ĐẸP");
+    assert_eq!(transform("strip_marks", "Đường xa").unwrap(), "Duong xa");
+    assert!(transform("nope", "x").is_none());
 }

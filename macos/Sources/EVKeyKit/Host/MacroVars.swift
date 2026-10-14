@@ -25,4 +25,14 @@ enum MacroVars {
         }
         return out
     }
+
+    /// Removes every `{cursor}`; returns the text and how many characters follow the first one (nil when absent),
+    /// so the injector can step the caret back there.
+    static func splitCursor(_ units: [UInt16]) -> (units: [UInt16], back: Int?) {
+        let mark = "{cursor}"
+        let text = String(decoding: units, as: UTF16.self)
+        guard let range = text.range(of: mark) else { return (units, nil) }
+        let after = text[range.upperBound...].replacingOccurrences(of: mark, with: "")
+        return (Array(text.replacingOccurrences(of: mark, with: "").utf16), after.count)
+    }
 }

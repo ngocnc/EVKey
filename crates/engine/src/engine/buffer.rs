@@ -34,6 +34,10 @@ impl Engine {
 
     pub(super) fn insert_state(&mut self, key_code: u16, is_caps: bool) {
         let v = key_code as u32 | if is_caps { CAPS_MASK } else { 0 };
+        if self.raw_len < RAW_MAX {
+            self.raw_keys[self.raw_len] = v;
+        }
+        self.raw_len = (self.raw_len + 1).min(RAW_MAX + 1);
         if self.state_index >= MAX_BUFF as i32 {
             self.key_states.copy_within(1..MAX_BUFF, 0);
             self.key_states[(self.state_index - 1) as usize] = v;
@@ -120,6 +124,7 @@ impl Engine {
         self.set_ncc(0);
         self.temp_disable_key = false;
         self.state_index = 0;
+        self.raw_len = 0;
         self.has_handled_macro = false;
         self.has_handle_quick_consonant = false;
         self.long_word_helper.clear();

@@ -73,6 +73,12 @@ pub struct Config {
     pub quick_end_consonant: i32,
     /// Letters allowed as a syllable start while `allow_consonant_zfwj` is on (key codes; only `f`, `w`, `z`, `j` need it).
     pub custom_consonants: Vec<u16>,
+    /// EVKey addition (beta): at a word end, a word typed with the keys of a common English word that Telex changed
+    /// (`mix` → `mĩ`) is put back as typed. The list is `data/english_words.txt`.
+    pub restore_english: i32,
+    /// The user's own words for `restore_english` (lowercase ASCII): `extra` are restored too, `excluded` never.
+    pub english_words_extra: Vec<String>,
+    pub english_words_excluded: Vec<String>,
 }
 
 impl Default for Config {
@@ -97,10 +103,16 @@ impl Default for Config {
             allow_consonant_zfwj: 0,
             quick_start_consonant: 0,
             quick_end_consonant: 0,
+            restore_english: 0,
+            english_words_extra: Vec::new(),
+            english_words_excluded: Vec::new(),
             custom_consonants: vec![KEY_Z, KEY_F, KEY_W, KEY_J],
         }
     }
 }
+
+/// Longest word `restore_english` looks at; every entry of `english_words.txt` is shorter.
+const RAW_MAX: usize = 24;
 
 const CHAR_KEY_CODE: [u16; 21] = [
     KEY_BACKQUOTE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS,
@@ -151,6 +163,15 @@ pub struct Engine {
     typing_states: VecDeque<Vec<u32>>,
     key_states: [u32; MAX_BUFF],
     state_index: i32,
+    /// Every key of the word in progress as typed (`key | CAPS_MASK`), unlike `key_states` which drops the second key
+    /// of a double-key undo (`rr`). `raw_len > RAW_MAX` means the word can no longer be matched (too long, or edited).
+    raw_keys: [u32; RAW_MAX],
+    raw_len: usize,
+    /// Output codes of the Telex form `restore_english` just replaced, for a Backspace right after
+    /// (`undo_english_restore`); `undo_restore_raw` is the restored word's length. Cleared by the next key event.
+    undo_restore: [u32; RAW_MAX],
+    undo_restore_len: usize,
+    undo_restore_raw: usize,
 
     temp_disable_key: bool,
     is_corect: bool,
@@ -193,6 +214,11 @@ impl Engine {
             typing_states: VecDeque::new(),
             key_states: [0; MAX_BUFF],
             state_index: 0,
+            raw_keys: [0; RAW_MAX],
+            raw_len: 0,
+            undo_restore: [0; RAW_MAX],
+            undo_restore_len: 0,
+            undo_restore_raw: 0,
             temp_disable_key: false,
             is_corect: false,
             is_changed: false,
@@ -219,6 +245,7 @@ impl Engine {
     pub fn init(&mut self) {
         self.index = 0;
         self.state_index = 0;
+        self.raw_len = 0;
         self.use_spell_checking_before = self.cfg.check_spelling != 0;
         self.typing_states.clear();
         self.long_word_helper.clear();

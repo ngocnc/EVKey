@@ -6,6 +6,7 @@ public struct KeyInjector {
     static let marker: Int64 = 0x4556_4B59
 
     private static let backspace: CGKeyCode = 0x33
+    private static let leftArrow: CGKeyCode = 0x7B
     /// EMPTY_CHAR of the core session: typed and deleted first so browser autocomplete cannot swallow the edit.
     private static let emptyChar: UInt16 = 0x202F
     private static let unicodeChunk = 20
@@ -13,14 +14,20 @@ public struct KeyInjector {
     func apply(_ edit: TextEdit) {
         if edit.prefixEmptyChar { typeUnits([Self.emptyChar]) }
         for _ in 0..<edit.backspaces { tapKey(Self.backspace) }
-        typeUnits(MacroVars.expand(edit.text))
+        let (units, back) = MacroVars.splitCursor(MacroVars.expand(edit.text))
+        typeUnits(units)
+        var resent = 1
         switch edit.resend {
         case .char(let unit)?:
             typeUnits([unit])
         case .vk(let vk)?:
             if let code = KeyMap.keycode(forVK: vk) { tapKey(code) }
         case nil:
-            break
+            resent = 0
+        }
+        // `{cursor}`: step back over the text after it and the re-sent trigger key.
+        if let back {
+            for _ in 0..<(back + resent) { tapKey(Self.leftArrow) }
         }
     }
 

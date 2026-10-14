@@ -18,6 +18,8 @@ const STRINGS = {
   "toast.macro_deleted": { vi: "Đã xóa gõ tắt", en: "Macro deleted" },
   "toast.macros_saved": { vi: "Đã lưu gõ tắt", en: "Macros saved" },
   "toast.autostart_ok": { vi: "Đã cập nhật tùy chọn tự chạy cùng Windows", en: "Start with Windows updated" },
+  "toast.admin_on": { vi: "EVKey đang mở lại với quyền quản trị…", en: "EVKey is restarting as administrator…" },
+  "toast.admin_off": { vi: "Đã tắt; có hiệu lực từ lần mở EVKey sau", en: "Turned off; applies the next time EVKey starts" },
   "toast.open_folder_ok": { vi: "Đã mở thư mục cấu hình", en: "Config folder opened" },
   "toast.open_github_ok": { vi: "Đã mở trang GitHub", en: "GitHub page opened" },
   "apps.none_recorded": {
@@ -92,7 +94,16 @@ const STRINGS = {
   "actions.loading.fix_spelling": { vi: "Đang sửa chính tả…", en: "Fixing spelling…" },
   "actions.loading.rewrite": { vi: "Đang viết lại…", en: "Rewriting…" },
   "actions.loading.convert": { vi: "Đang chuyển mã…", en: "Converting…" },
-  "actions.convert": { vi: "Chuyển mã sang Unicode", en: "Convert to Unicode" },
+  "actions.loading.text": { vi: "Đang xử lý…", en: "Working…" },
+  "actions.convert": { vi: "Chuyển mã", en: "Convert encoding" },
+  "actions.convert_unicode": { vi: "Unicode", en: "Unicode" },
+  "actions.convert_tcvn3": { vi: "TCVN3", en: "TCVN3" },
+  "actions.convert_vni": { vi: "VNI", en: "VNI" },
+  "actions.text": { vi: "Chữ", en: "Text" },
+  "actions.strip_marks": { vi: "Bỏ dấu", en: "Remove marks" },
+  "actions.case_upper": { vi: "HOA", en: "UPPER" },
+  "actions.case_lower": { vi: "thường", en: "lower" },
+  "actions.case_title": { vi: "Hoa Đầu Từ", en: "Title Case" },
   "actions.setup_gemini": { vi: "Thêm dấu, Sửa, Viết lại cần API key Gemini. Thiết lập…", en: "Add diacritics, Fix and Rewrite need a Gemini API key. Set up…" },
   "actions.hotkey.title": { vi: "Phím tắt bảng hành động", en: "Action panel hotkey" },
   "actions.hotkey.desc": {
@@ -171,6 +182,17 @@ const STRINGS = {
     vi: "Gõ <code>window</code> sẽ ra <code>window</code>, không bị đổi thành chữ lạ.",
     en: "Typing <code>window</code> gives <code>window</code>, not odd letters.",
   },
+  "smart.english.title": { vi: "Tự khôi phục từ tiếng Anh", en: "Restore English words" },
+  "smart.english.desc": {
+    vi: "Khoảng 770 từ tiếng Anh thông dụng bị Telex biến đổi (sorry, wrong, was…) được trả lại đúng như đã gõ khi kết thúc từ. Đang thử nghiệm: báo lại nếu một từ tiếng Việt bị đổi nhầm.",
+    en: "About 770 common English words Telex changes (sorry, wrong, was…) are put back as typed when the word ends. Experimental: report any Vietnamese word changed by mistake.",
+  },
+  "smart.english_undo.title": { vi: "Backspace để hoàn tác khôi phục", en: "Backspace undoes a restore" },
+  "smart.english_undo.desc": { vi: "Bấm Backspace ngay sau khi một từ được khôi phục sẽ trả lại chữ Telex (was → ứa).", en: "Pressing Backspace right after a word was restored brings the Telex text back (was → ứa)." },
+  "smart.english_extra.title": { vi: "Thêm từ của bạn", en: "Your own words" },
+  "smart.english_extra.desc": { vi: "Cũng được khôi phục, cách nhau bằng dấu cách. Ví dụ: rust react.", en: "Also restored, separated by spaces. Example: rust react." },
+  "smart.english_excluded.title": { vi: "Không bao giờ khôi phục", en: "Never restore" },
+  "smart.english_excluded.desc": { vi: "Từ trong danh sách có sẵn mà bạn muốn giữ kiểu Telex. Ví dụ: was (để gõ ra ứa).", en: "Built-in words you want Telex to keep converting. Example: was (to type ứa)." },
   "smart.quick.heading": { vi: "Gõ nhanh", en: "Quick typing" },
   "smart.quick_telex.title": { vi: "Telex nhanh", en: "Quick Telex" },
   "smart.quick_start.title": { vi: "Phụ âm đầu nhanh", en: "Quick initial consonants" },
@@ -232,8 +254,8 @@ const STRINGS = {
 
   // Macros pane
   "macro.note": {
-    vi: "Gõ từ viết tắt rồi bấm Space, EVKey sẽ thay bằng nội dung bên phải. Mỗi từ viết tắt chỉ dùng được một lần. Nội dung có thể chứa {date}, {time}, {clipboard}.",
-    en: "Type an abbreviation and press Space, and EVKey replaces it with the text on the right. Each abbreviation can be used only once. The text can contain {date}, {time}, {clipboard}.",
+    vi: "Gõ từ viết tắt rồi bấm Space, EVKey sẽ thay bằng nội dung bên phải. Mỗi từ viết tắt chỉ dùng được một lần. Nội dung có thể chứa {date}, {time}, {clipboard}, và {cursor} để đặt con trỏ tại đó.",
+    en: "Type an abbreviation and press Space, and EVKey replaces it with the text on the right. Each abbreviation can be used only once. The text can contain {date}, {time}, {clipboard}, and {cursor} to put the caret there.",
   },
   "macro.row_incomplete": {
     vi: "Dòng {n}: nhập cả từ viết tắt lẫn nội dung thay thế, hoặc xóa dòng này.",
@@ -304,6 +326,11 @@ const STRINGS = {
   },
   "system.autostart.title": { vi: "Tự chạy cùng Windows", en: "Start with Windows" },
   "system.autostart.desc": { vi: "EVKey tự mở và nằm ở khay hệ thống khi bạn đăng nhập.", en: "EVKey starts in the system tray when you sign in." },
+  "system.admin.title": { vi: "Chạy với quyền quản trị", en: "Run as administrator" },
+  "system.admin.desc": {
+    vi: "Gõ được tiếng Việt cả trong cửa sổ chạy quyền quản trị (Terminal admin, Task Manager…). EVKey tự chạy cùng Windows qua Task Scheduler, không hỏi UAC mỗi lần. Bật/tắt cần xác nhận UAC một lần.",
+    en: "Type Vietnamese in windows that run as administrator too (admin Terminal, Task Manager…). EVKey starts with Windows through Task Scheduler, without a UAC prompt each time. Turning it on or off asks UAC once.",
+  },
   "system.sound.title": { vi: "Phát tiếng khi đổi chế độ", en: "Sound when switching mode" },
   "system.sound.desc": {
     vi: "Phát một tiếng ngắn khi bạn bật hoặc tắt gõ tiếng Việt.",

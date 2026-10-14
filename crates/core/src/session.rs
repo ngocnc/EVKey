@@ -10,7 +10,7 @@ use evkey_engine::composer::Composer;
 use evkey_engine::consts::CAPS_MASK;
 use evkey_engine::engine::V_RESTORE_AND_START_NEW_SESSION;
 use evkey_engine::hotkey::Hotkey;
-use evkey_engine::keys::KEY_ESC;
+use evkey_engine::keys::{KEY_DELETE, KEY_ESC};
 use evkey_engine::settings::{self, Settings};
 use evkey_engine::tables::key_code_to_character;
 
@@ -194,8 +194,11 @@ impl Session {
         };
         let other_control = self.held[0] || self.held[1] || self.held[3];
         let engine = &mut self.composer.engine;
-        // Hoàn tác từ: Esc shows the raw keys of the word in progress; Esc itself is swallowed, so no resend.
-        if self.settings.undo_word && vk == KEY_ESC && !other_control && engine.undo_word() {
+        // Hoàn tác từ: Esc shows the raw keys of the word in progress. Backspace right after an English word was
+        // restored brings its Telex form back. The key itself is swallowed, so no resend.
+        let undone = (self.settings.undo_word && vk == KEY_ESC && !other_control && engine.undo_word())
+            || (self.settings.undo_english_restore && vk == KEY_DELETE && !other_control && engine.undo_english_restore());
+        if undone {
             let Some(edit) = edit_for(&engine.hook, engine.cfg.code_table) else {
                 return Reaction::default();
             };
@@ -442,6 +445,42 @@ mod tests {
         let mut s = Session::new(None);
         let r = s.on_key(key(KEY_ESC, true, mods(false, false, false)));
         assert!(!r.swallow && r.edit.is_none());
+    }
+
+    #[test]
+    fn backspace_right_after_english_restore_brings_telex_back() {
+        let run = |undo: bool, keys: &str| {
+            let name = if undo { "undo-en-on" } else { "undo-en-off" };
+            let dir = dir_with(name, Settings { restore_english: true, undo_english_restore: undo, ..Settings::default() });
+            let mut s = Session::new(Some(dir.clone()));
+            let mut field = String::new();
+            for ch in keys.chars() {
+                if ch == '\u{8}' {
+                    let r = s.on_key(key(KEY_DELETE, true, mods(false, false, false)));
+                    if r.edit.is_none() {
+                        field.pop();
+                    } else {
+                        let out = r.edit.unwrap();
+                        for _ in 0..out.backspaces - 1 {
+                            field.pop();
+                        }
+                        field.push_str(&out.text);
+                    }
+                } else if ch == ',' {
+                    press(&mut s, &mut field, 0xBC, ',');
+                } else {
+                    press(&mut s, &mut field, ch.to_ascii_uppercase() as u16, ch);
+                }
+            }
+            let _ = std::fs::remove_dir_all(dir);
+            field
+        };
+        assert_eq!(run(true, "sorry was "), "sorry was ");
+        assert_eq!(run(true, "sorry was \u{8}"), "sorry ứa");
+        assert_eq!(run(true, "was,\u{8}"), "ứa");
+        // Only right after: another key in between, or the switch off, makes Backspace a plain delete.
+        assert_eq!(run(true, "was x\u{8}"), "was ");
+        assert_eq!(run(false, "was \u{8}"), "was");
     }
 
     #[test]

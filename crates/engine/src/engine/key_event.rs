@@ -50,6 +50,7 @@ impl Engine {
     /// `vKeyHandleEvent` for a keyboard key-down (`is_mouse = false`) or a mouse event.
     pub fn key_event(&mut self, is_mouse: bool, data: u16, caps_status: u8, other_control_key: bool) {
         self.ended_word_len = -1;
+        self.undo_restore_len = 0;
         self.is_caps = caps_status == 1 || caps_status == 2;
         let is_caps = self.is_caps;
         if (is_number_key(data) && caps_status == 1)
@@ -84,6 +85,11 @@ impl Engine {
                 if self.temp_disable_key && !self.check_restore_if_wrong_spelling(V_RESTORE_AND_START_NEW_SESSION) {
                     self.hook.code = V_DO_NOTHING;
                 }
+            }
+            // EVKey addition (off by default, so OpenKey parity holds): a mouse click moved the caret, never retype then.
+            if self.hook.code == V_DO_NOTHING && !is_mouse && !other_control_key && !self.has_handled_macro {
+                // Punctuation comes back as one typed character; Enter, Tab or arrows do not, so no undo for them.
+                self.restore_english_word(V_RESTORE_AND_START_NEW_SESSION, CHAR_KEY_CODE.contains(&data));
             }
 
             let is_char_key_code = !is_mouse && CHAR_KEY_CODE.contains(&data);
@@ -162,6 +168,9 @@ impl Engine {
                 self.hook.code = V_DO_NOTHING;
                 self.space_count += 1;
             }
+            if self.hook.code == V_DO_NOTHING && !self.has_handled_macro {
+                self.restore_english_word(V_RESTORE, true);
+            }
             if self.cfg.use_macro != 0 {
                 self.hook.macro_key.clear();
             }
@@ -197,6 +206,8 @@ impl Engine {
                 if self.state_index > 0 {
                     self.state_index -= 1;
                 }
+                // An edited word no longer matches what was typed, so restore_english leaves it alone.
+                self.raw_len = RAW_MAX + 1;
                 if self.index > 0 {
                     self.index -= 1;
                     if let Some(back) = self.long_word_helper.pop() {
@@ -318,6 +329,7 @@ impl Engine {
                 self.index = 0;
                 self.temp_disable_key = false;
                 self.state_index = 0;
+                self.raw_len = 0;
                 self.hook.ext_code = 3;
                 self.special_char.push(data as u32 | if is_caps { CAPS_MASK } else { 0 });
             }

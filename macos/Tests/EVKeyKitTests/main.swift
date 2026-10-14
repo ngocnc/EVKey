@@ -145,11 +145,12 @@ check(!EditableField.isEditable(.init()), "no focused role is not editable")
 
 // Convert to Unicode through the core (pairs from crates/engine/tests/convert.rs). Scalars are compared because
 // Swift's == treats "e" + U+0301 and "é" as equal.
-let composedPair = CodeConvert.toUnicode("Tie\u{0301}ng")
+let composedPair = CodeConvert.transform("Tie\u{0301}ng", id: "convert")
 check(composedPair.map { Array($0.unicodeScalars) } == Array("Ti\u{00E9}ng".unicodeScalars), "compound text becomes precomposed")
-check(CodeConvert.toUnicode("Hello 123!") == "Hello 123!", "ASCII is untouched by the conversion")
-check(UIStrings.tr("actions.loading.convert") != "actions.loading.convert", "convert loading text exists in UIStrings")
-check(UIStrings.tr("actions.convert") == "Chuyển mã sang Unicode", "convert menu text")
+check(CodeConvert.transform("Hello 123!", id: "convert") == "Hello 123!", "ASCII is untouched by the conversion")
+check(CodeConvert.transform("Đường xa", id: "strip_marks") == "Duong xa", "strip marks through the core")
+check(CodeConvert.transform("x", id: "nope") == nil, "unknown text tool is rejected")
+check(UIStrings.tr("actions.loading.text") != "actions.loading.text", "text tool loading text exists in UIStrings")
 
 // New settings: defaults come from the core, and both fields survive a save.
 check(EVSettings.defaults.translateProvider == .google, "translate provider defaults to Google")

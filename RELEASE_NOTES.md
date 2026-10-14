@@ -1,5 +1,31 @@
 # Release notes
 
+## v3.1.0
+
+### Tính năng mới
+
+- **Bảng hành động (Ctrl+Alt+A) có thêm công cụ chữ**, chạy tại máy, không cần mạng hay Gemini:
+  - Nhóm **Chuyển mã**: Unicode / TCVN3 / VNI (tự đoán bảng mã nguồn).
+  - Nhóm **Chữ**: Bỏ dấu, HOA, thường, Hoa Đầu Từ.
+- **Chạy với quyền quản trị** (Windows, tab Hệ thống): gõ được tiếng Việt trong cửa sổ chạy quyền admin (Terminal admin, Task Manager…). EVKey tự chạy cùng Windows qua Task Scheduler, không hỏi UAC mỗi lần; chỉ hỏi UAC một lần khi bật/tắt.
+- **Tự khôi phục từ tiếng Anh** (Beta, mặc định tắt, tab Chính tả & gõ nhanh): khoảng 770 từ tiếng Anh thông dụng bị Telex biến đổi (`sorry` → `sory`, `wrong` → `ưởng`, `was` → `ứa`) được trả lại như đã gõ khi kết thúc từ. Đi kèm:
+  - **Thêm từ của bạn**: từ riêng cũng được khôi phục (ví dụ `rust` thay vì `rút`).
+  - **Không bao giờ khôi phục**: loại từ khỏi danh sách có sẵn (ví dụ `was` để gõ ra `ứa`).
+  - **Backspace để hoàn tác khôi phục** (mặc định bật): bấm Backspace ngay sau khi một từ được khôi phục thì chữ Telex quay lại.
+- **Gõ tắt có biến `{cursor}`**: đặt con trỏ tại chỗ đó sau khi bung, ví dụ `cl` → `console.log({cursor})` thì con trỏ nằm trong ngoặc.
+
+### Sửa lỗi & cải thiện
+
+- Cài đặt: bật/tắt một mục có mục con (ví dụ "Tự khôi phục từ tiếng Anh") không còn giật; hiệu ứng chỉ còn mờ dần, không co giãn chiều cao làm vẽ lại lớp kính mờ mỗi khung hình.
+- Bảng hành động: kéo di chuyển mượt hơn; hiệu ứng acrylic tạm tắt trong lúc kéo (acrylic của Windows làm cửa sổ giật khi di chuyển) rồi bật lại khi thả.
+- Nhãn **Beta** hiển thị đúng dạng viên nhỏ cạnh tiêu đề, không còn kéo dài hết dòng.
+- Lần mở EVKey thứ hai (hoặc `evkey --mode`) vẫn điều khiển được bản đang chạy kể cả khi bản đó chạy quyền admin.
+
+### Chưa kiểm chứng
+
+- Bản macOS của các thay đổi trên (đã viết, chưa build được).
+- Luồng UAC thật của "Chạy với quyền quản trị"; `{cursor}` và kéo bảng hành động chưa thử bằng thao tác tay.
+
 ## v3.0.1
 
 - Bảng hành động: kết quả từ menu Ctrl+Alt+A có nút **Thay thế** (dán đè lên đoạn đã bôi đen) thay cho nút sao chép. Phím tắt dịch vẫn giữ nút sao chép.

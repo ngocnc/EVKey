@@ -2,6 +2,7 @@
 #![windows_subsystem = "windows"]
 
 mod actions;
+mod admin;
 mod ai;
 mod autostart;
 mod banner;
@@ -32,6 +33,16 @@ fn main() {
             Some("off") => autostart::set(false),
             _ => Err(i18n::tr("cách dùng: evkey --autostart on|off", "usage: evkey --autostart on|off").into()),
         }),
+        // Run elevated: by the settings switch (UAC) or the installer (`repoint`).
+        "--admin" => match args.get(1).map(String::as_str) {
+            Some("on") => match admin::apply(true) {
+                Ok(()) => run(true),
+                Err(e) => exit_with(Err(e)),
+            },
+            Some("off") => exit_with(admin::apply(false)),
+            Some("repoint") => exit_with(admin::repoint()),
+            _ => exit_with(Err(i18n::tr("cách dùng: evkey --admin on|off|repoint", "usage: evkey --admin on|off|repoint").into())),
+        },
         "--mode" => {
             attach_console();
             // The mode lives inside the running app, so changes go through its pipe.
@@ -50,6 +61,17 @@ fn run(show_settings: bool) {
     if !ipc::acquire_single_instance() {
         exit_with(ipc::send_to_running_instance("settings"));
     }
+    // "Run as administrator" is on: this normal launch starts the elevated task instead. If the task cannot start,
+    // keep running without elevation rather than not at all.
+    if admin::should_hand_over() {
+        ipc::release_single_instance();
+        if admin::run_task().is_ok() {
+            std::process::exit(0);
+        }
+        if !ipc::acquire_single_instance() {
+            exit_with(ipc::send_to_running_instance("settings"));
+        }
+    }
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             settings_cmd::get_state,
@@ -60,6 +82,7 @@ fn run(show_settings: bool) {
             settings_cmd::export_config,
             settings_cmd::import_config,
             settings_cmd::set_autostart,
+            settings_cmd::set_admin,
             settings_cmd::open_config_dir,
             settings_cmd::open_github,
             settings_cmd::last_app,
@@ -68,6 +91,7 @@ fn run(show_settings: bool) {
             actions::actions_state,
             actions::actions_close,
             actions::actions_keep,
+            actions::actions_drag_start,
             actions::actions_copy,
             actions::actions_replace,
             actions::actions_fit,

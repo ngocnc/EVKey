@@ -45,6 +45,13 @@ public struct EVSettings: Codable, Equatable {
     public var freeMark: Bool
     public var checkSpelling: Bool
     public var restoreIfWrongSpelling: Bool
+    /// Beta: common English words Telex changed are put back as typed at the word end.
+    public var restoreEnglish: Bool
+    /// Own words also restored, and built-in words never restored, by `restoreEnglish`.
+    public var englishWordsExtra: [String]
+    public var englishWordsExcluded: [String]
+    /// Backspace right after a restore brings the Telex form back.
+    public var undoEnglishRestore: Bool
     public var quickTelex: Bool
     public var quickStartConsonant: Bool
     public var quickEndConsonant: Bool
@@ -104,6 +111,10 @@ public struct EVSettings: Codable, Equatable {
         case freeMark = "free_mark"
         case checkSpelling = "check_spelling"
         case restoreIfWrongSpelling = "restore_if_wrong_spelling"
+        case restoreEnglish = "restore_english"
+        case englishWordsExtra = "english_words_extra"
+        case englishWordsExcluded = "english_words_excluded"
+        case undoEnglishRestore = "undo_english_restore"
         case quickTelex = "quick_telex"
         case quickStartConsonant = "quick_start_consonant"
         case quickEndConsonant = "quick_end_consonant"

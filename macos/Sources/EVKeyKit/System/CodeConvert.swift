@@ -1,12 +1,13 @@
 import CEVKeyCore
 import Foundation
 
-/// Legacy Vietnamese code tables to Unicode, done by the Rust core (`crates/engine/src/convert.rs`).
+/// The action panel's local text tools, done by the Rust core (`convert::transform` in `crates/engine/src/convert.rs`).
 public enum CodeConvert {
-    /// Guesses the code table of `text` (TCVN3, VNI-Windows, Unicode compound) and returns precomposed Unicode.
-    /// Plain ASCII and text that is already Unicode come back unchanged. Nil when the core rejects the input.
-    public static func toUnicode(_ text: String) -> String? {
-        guard let converted = text.withCString({ evkey_convert_to_unicode($0) }) else { return nil }
+    /// Applies tool `id` (`convert`, `convert_tcvn3`, `convert_vni`, `strip_marks`, `case_upper`, `case_lower`,
+    /// `case_title`) to `text`. `convert` guesses the source code table and returns precomposed Unicode.
+    /// Nil when the core rejects the input or the id.
+    public static func transform(_ text: String, id: String) -> String? {
+        guard let converted = text.withCString({ t in id.withCString { evkey_text_transform(t, $0) } }) else { return nil }
         defer { evkey_string_free(converted) }
         return String(cString: converted)
     }

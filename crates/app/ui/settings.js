@@ -2,11 +2,13 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
 const BOOLS = [
-  "free_mark", "remember_app_mode", "undo_word", "check_spelling", "restore_if_wrong_spelling", "quick_telex",
+  "free_mark", "remember_app_mode", "undo_word", "check_spelling", "restore_if_wrong_spelling", "restore_english", "undo_english_restore", "quick_telex",
   "quick_start_consonant", "quick_end_consonant", "upper_case_first_char", "upper_case_after_punct",
   "upper_case_after_enter", "upper_case_first_letter",
   "allow_consonant_zfwj", "auto_caps_macro", "toggle_sound", "auto_check_updates",
 ];
+// Space- or comma-separated word lists of restore_english.
+const WORD_LISTS = ["english_words_extra", "english_words_excluded"];
 // Segments bound to a config field; `data-local` ones are look-only preferences kept in local storage.
 const SEGS = [...document.querySelectorAll(".seg:not([data-local])")];
 const ALL_SEGS = [...document.querySelectorAll(".seg")];
@@ -178,11 +180,15 @@ function fill() {
   for (const seg of SEGS) setSeg(seg, s[seg.dataset.key]);
   for (const dd of DDS) setDropdown(dd, s[dd.dataset.key]);
   $("excluded_apps").value = s.excluded_apps.join("\n");
+  for (const id of WORD_LISTS) $(id).value = s[id].join(" ");
   $("macro-rows").replaceChildren();
   for (const [k, v] of Object.entries(state.macros)) addMacroRow(k, v, k);
   addMacroRow();
   renderCustomConsonants(s.custom_consonants);
-  $("autostart").checked = state.autostart;
+  // The elevated sign-in task also does the autostart, so the plain switch shows on and is locked while it exists.
+  $("autostart").checked = state.autostart || state.admin;
+  $("autostart").disabled = state.admin;
+  $("admin").checked = state.admin;
   $("config-dir").textContent = state.config_dir;
   $("version").textContent = "v" + state.version;
   $("about-version").textContent = "v" + state.version;
@@ -224,6 +230,7 @@ function readForm() {
   for (const seg of SEGS) s[seg.dataset.key] = seg.querySelector(".active")?.dataset.value ?? s[seg.dataset.key];
   for (const dd of DDS) s[dd.dataset.key] = dd.value || s[dd.dataset.key];
   s.excluded_apps = lines($("excluded_apps").value);
+  for (const id of WORD_LISTS) s[id] = $(id).value.split(/[\s,]+/).filter(Boolean);
   s.banner_opacity = Number($("bn-opacity").value);
   s.banner_blur = Number($("bn-blur").value);
   s.banner_bg = $("bn-bg").value;
@@ -413,6 +420,7 @@ for (const seg of localSegs) {
 }
 for (const k of BOOLS) $(k).onchange = saveSettings;
 $("excluded_apps").onchange = saveSettings;
+for (const id of WORD_LISTS) $(id).onchange = saveSettings;
 $("save-macros").onclick = saveMacros;
 $("add-last-app").onclick = addLastApp;
 // A letter is added as soon as it is typed, so there is no add button or Enter handling.
@@ -441,6 +449,12 @@ $("pin").onclick = async () => {
 };
 $("autostart").onchange = () =>
   run(() => invoke("set_autostart", { on: $("autostart").checked }), t("toast.autostart_ok"));
+// Turning it on restarts EVKey elevated (this window closes and reopens); turning it off applies at the next start.
+$("admin").onchange = async () => {
+  const on = $("admin").checked;
+  const ok = await run(() => invoke("set_admin", { on }), t(on ? "toast.admin_on" : "toast.admin_off"));
+  if (!ok) $("admin").checked = !on;
+};
 $("open-folder").onclick = () => run(() => invoke("open_config_dir"), t("toast.open_folder_ok"));
 $("reset").onclick = resetConfig;
 for (const id of BANNER_FIELDS) {
@@ -778,25 +792,17 @@ function currentValue(key) {
 }
 
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
-// Animates a data-when item in or out; the first pass in updateVisibility sets it without animation.
+// Shows or hides a data-when item; the first pass in updateVisibility sets it without animation.
+// Only opacity and transform are animated: animating height relayouts the glass group every frame, and its
+// backdrop blur is then redrawn every frame too, which stutters on integrated GPUs. The height changes at once.
 function animateWhen(el, show) {
   el._anim?.cancel();
-  el.style.overflow = "";
-  if (reduceMotion.matches) {
-    el.hidden = !show;
-    return;
-  }
-  if (show) el.hidden = false;
-  const cs = getComputedStyle(el);
-  const full = { height: cs.height, paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, opacity: "1" };
-  const zero = { height: "0px", paddingTop: "0px", paddingBottom: "0px", opacity: "0" };
-  const [from, to] = show ? [zero, full] : [full, zero];
-  el.style.overflow = "hidden";
-  el._anim = el.animate([from, to], { duration: 260, easing: "cubic-bezier(0.22,1,0.36,1)" });
-  el._anim.onfinish = () => {
-    el.hidden = !show;
-    el.style.overflow = "";
-  };
+  el.hidden = !show;
+  if (!show || reduceMotion.matches) return;
+  el._anim = el.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 1, transform: "none" }], {
+    duration: 180,
+    easing: "ease-out",
+  });
 }
 
 function updateVisibility() {

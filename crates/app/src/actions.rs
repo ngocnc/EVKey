@@ -1,5 +1,5 @@
 //! Actions on the selected text, in one small panel that never takes focus. The translate hotkey translates at once;
-//! the action hotkey opens a menu (Dịch thuật, Thêm dấu, Sửa/viết lại, Chuyển mã). The selection is copied with Ctrl+C
+//! the action hotkey opens a menu (Dịch thuật, Thêm dấu, Sửa/viết lại, Chuyển mã, Bỏ dấu / đổi hoa thường). The selection is copied with Ctrl+C
 //! and the previous clipboard text is put back.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -66,10 +66,49 @@ impl View {
 pub fn init(app: &AppHandle) {
     let _ = APP.set(app.clone());
     if let Some(win) = app.get_webview_window(ACTIONS_WINDOW) {
-        let _ = win.set_effects(EffectsBuilder::new().effect(Effect::Acrylic).build());
+        set_acrylic(&win, true);
         // Never takes focus, so a Replace paste goes to the app the text was selected in.
         let _ = win.set_focusable(false);
     }
+}
+
+fn set_acrylic(win: &tauri::WebviewWindow, on: bool) {
+    let _ = win.set_effects(on.then(|| EffectsBuilder::new().effect(Effect::Acrylic).build()));
+}
+
+/// True from a drag start until the panel stops moving.
+static DRAGGING: AtomicBool = AtomicBool::new(false);
+/// Bumped on every move while dragging, so only the timer of the last move turns the acrylic back on.
+static DRAG_MOVES: AtomicU64 = AtomicU64::new(0);
+
+/// The panel is about to be dragged. Native acrylic makes a moving window stutter (documented by window-vibrancy for
+/// Windows 10 1903+ and 11), so it is off until the panel has not moved for a moment; the page shows a solid fill.
+#[tauri::command]
+pub fn actions_drag_start(app: AppHandle) {
+    DRAGGING.store(true, Ordering::SeqCst);
+    if let Some(win) = app.get_webview_window(ACTIONS_WINDOW) {
+        set_acrylic(&win, false);
+    }
+    moved();
+}
+
+/// `WindowEvent::Moved` of the panel.
+pub fn moved() {
+    if !DRAGGING.load(Ordering::SeqCst) {
+        return;
+    }
+    let id = DRAG_MOVES.fetch_add(1, Ordering::SeqCst) + 1;
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(250));
+        if DRAG_MOVES.load(Ordering::SeqCst) != id || !DRAGGING.swap(false, Ordering::SeqCst) {
+            return;
+        }
+        let Some(app) = APP.get() else { return };
+        if let Some(win) = app.get_webview_window(ACTIONS_WINDOW) {
+            set_acrylic(&win, true);
+        }
+        let _ = app.emit("actions-drag-end", ());
+    });
 }
 
 /// Called from the hook thread when an action hotkey fires; the work runs on its own thread.
@@ -179,9 +218,11 @@ fn perform(app: &AppHandle, cfg: &Settings, id: &str, from_menu: bool) {
 /// The text action `id` produces from `source`. Blocking: runs on the action thread.
 /// Translate goes to Google unless Gemini is chosen; then it takes the AI path like the other actions.
 fn compute(id: &str, source: &str, provider: TranslateProvider) -> Result<String, String> {
+    if let Some(text) = convert::transform(id, source) {
+        return Ok(text);
+    }
     match id {
         "translate" if provider == TranslateProvider::Google => translate_auto(source),
-        "convert" => Ok(convert::to_unicode(source, convert::detect(source))),
         _ => {
             let action = ai::AiAction::from_id(id).ok_or_else(|| tr("Thao tác không tồn tại", "Unknown action").to_string())?;
             ai::run(&action, source)

@@ -16,6 +16,24 @@ struct SettingsSmartTab: View {
                     SettingsToggleLine(
                         title: UIStrings.tr("smart.restore"), subtitle: UIStrings.tr("smart.restore.detail"),
                         isOn: state.binding(\.restoreIfWrongSpelling))
+                    SettingsDivider()
+                    SettingsToggleLine(
+                        title: UIStrings.tr("smart.english"), subtitle: UIStrings.tr("smart.english.detail"), beta: true,
+                        isOn: state.binding(\.restoreEnglish))
+                    if state.settings.restoreEnglish {
+                        SettingsDivider()
+                        SettingsToggleLine(
+                            title: UIStrings.tr("smart.englishUndo"), subtitle: UIStrings.tr("smart.englishUndo.detail"),
+                            isOn: state.binding(\.undoEnglishRestore))
+                        SettingsDivider()
+                        SettingsWordListLine(
+                            title: UIStrings.tr("smart.englishExtra"), subtitle: UIStrings.tr("smart.englishExtra.detail"),
+                            placeholder: "rust react", keyPath: \.englishWordsExtra)
+                        SettingsDivider()
+                        SettingsWordListLine(
+                            title: UIStrings.tr("smart.englishExcluded"), subtitle: UIStrings.tr("smart.englishExcluded.detail"),
+                            placeholder: "was", keyPath: \.englishWordsExcluded)
+                    }
                 }
             }
             SettingsGroup {

@@ -252,13 +252,16 @@ pub unsafe extern "C" fn evkey_settings_save_json(dir_utf8: *const c_char, json_
     })
 }
 
-/// Converts `text_utf8` to precomposed Unicode, guessing its code table (the action panel's Convert). `NULL` on bad
-/// input. Free with `evkey_string_free`.
+/// Applies the action panel's text tool `id_utf8` (`convert`, `convert_tcvn3`, `convert_vni`, `strip_marks`,
+/// `case_upper`, `case_lower`, `case_title`; see `convert::transform`) to `text_utf8`. `NULL` on bad input or an
+/// unknown id. Free with `evkey_string_free`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn evkey_convert_to_unicode(text_utf8: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn evkey_text_transform(text_utf8: *const c_char, id_utf8: *const c_char) -> *mut c_char {
     guard(std::ptr::null_mut(), || {
-        let Some(text) = (unsafe { str_arg(text_utf8) }) else { return std::ptr::null_mut() };
-        into_c_string(convert::to_unicode(text, convert::detect(text)))
+        let (Some(text), Some(id)) = (unsafe { str_arg(text_utf8) }, unsafe { str_arg(id_utf8) }) else {
+            return std::ptr::null_mut();
+        };
+        convert::transform(id, text).map_or(std::ptr::null_mut(), into_c_string)
     })
 }
 

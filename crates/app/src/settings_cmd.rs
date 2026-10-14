@@ -12,7 +12,7 @@ use evkey_engine::hotkey::parse_hotkey;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
-use crate::{autostart, foreground, tray};
+use crate::{admin, autostart, foreground, tray};
 use crate::keyboard::mode::{self, Mode};
 
 const GITHUB_URL: &str = "https://github.com/ngocnc/EVKey";
@@ -21,6 +21,10 @@ const GITHUB_URL: &str = "https://github.com/ngocnc/EVKey";
 pub struct State {
     mode: Mode,
     autostart: bool,
+    /// "Chạy với quyền quản trị": the elevated sign-in task exists.
+    admin: bool,
+    /// This process runs elevated.
+    elevated: bool,
     config_dir: String,
     /// Set when config.toml or macros.toml is malformed; `settings`/`macros` are then defaults.
     config_error: Option<String>,
@@ -117,6 +121,8 @@ pub fn get_state() -> Result<State, String> {
     Ok(State {
         mode: mode::get(),
         autostart: autostart::is_enabled(),
+        admin: admin::task_exists(),
+        elevated: admin::is_elevated(),
         config_dir: dir.display().to_string(),
         config_error,
         settings: cfg.settings,
@@ -172,6 +178,12 @@ pub fn import_config(app: AppHandle, content: String) -> Result<(), String> {
 #[tauri::command]
 pub fn set_autostart(on: bool) -> Result<(), String> {
     autostart::set(on)
+}
+
+/// Asks for UAC and turns the elevated sign-in task on or off. Turning it on restarts EVKey elevated.
+#[tauri::command]
+pub fn set_admin(on: bool) -> Result<(), String> {
+    admin::request(on)
 }
 
 #[tauri::command]

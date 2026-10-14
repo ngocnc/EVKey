@@ -129,7 +129,7 @@ h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacin
 .item.last { border-bottom: 0; }
 .item.stack { flex-direction: column; align-items: stretch; gap: 10px; }
 .text b { display: block; font-weight: 600; font-size: 13.5px; }
-.text span { display: block; color: color-mix(in srgb, var(--fg) 65%, transparent); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+.text > span { display: block; color: color-mix(in srgb, var(--fg) 65%, transparent); font-size: 12px; line-height: 1.4; margin-top: 2px; }
 label.item { cursor: pointer; }
 
 /* switch */
@@ -228,6 +228,17 @@ button.primary {
 button.primary:hover { filter: brightness(1.06); }
 button.ghost { background: transparent; border-color: transparent; }
 button.ghost:hover { background: var(--field); }
+.beta {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
 button.danger { color: var(--err); }
 button.danger:hover { background: color-mix(in srgb, var(--err) 12%, transparent); border-color: color-mix(in srgb, var(--err) 40%, transparent); }
 .seg button.active:hover { background: transparent; }
@@ -385,7 +396,7 @@ input::placeholder { color: var(--muted); }
   .switch i::after { background: #fff; }
   .switch input:checked + i::after { background: #fff; }
   /* White on the pink-peach accent is under 3:1; dark text reads clearly. */
-  button.primary { color: #3b0a18; }
+  button.primary, .beta { color: #3b0a18; }
   /* Same translucent grey controls as dark mode. */
   :root {
     --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.36));
