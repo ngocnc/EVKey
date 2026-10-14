@@ -28,6 +28,8 @@ typedef struct EvReaction {
     bool swallow;
     bool hotkey_toggled;
     bool dummy_key;
+    bool translate_requested;
+    bool actions_requested;
     bool has_edit;
     bool prefix_empty_char;
     uint32_t backspaces;
@@ -50,6 +52,7 @@ void evkey_session_toggle(EvSession *session);
 char *evkey_default_dir(void);
 char *evkey_settings_load_json(const char *dir_utf8);
 char *evkey_settings_save_json(const char *dir_utf8, const char *json_utf8);
+char *evkey_text_transform(const char *text_utf8, const char *id_utf8);
 void evkey_string_free(char *s);
 const char *evkey_version(void);
 

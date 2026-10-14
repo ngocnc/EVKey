@@ -9,13 +9,13 @@
 <body>
 <div class="panel" id="panel">
   <label class="row big">
-    <span class="grow">Gõ Tiếng Việt</span>
+    <span class="grow" data-i18n="popup.vi_typing"></span>
     <span class="switch"><input type="checkbox" id="mode"><i></i></span>
   </label>
 
   <div class="section" id="input-section">
     <button class="head" id="input-head">
-      <span>KIỂU GÕ</span>
+      <span data-i18n="popup.input_type"></span>
       <span class="value" id="input-value"></span>
       <span class="chev">›</span>
     </button>
@@ -24,7 +24,7 @@
 
   <div class="section" id="table-section">
     <button class="head" id="table-head">
-      <span>BẢNG MÃ</span>
+      <span data-i18n="popup.table"></span>
       <span class="value" id="table-value"></span>
       <span class="chev">›</span>
     </button>
@@ -35,19 +35,21 @@
 
   <button class="row" id="macro">
     <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 4h10M3 8h10M3 12h6"/></svg>
-    <span class="grow">Quản lý Macro…</span>
+    <span class="grow" data-i18n="popup.macro"></span>
   </button>
   <button class="row" id="settings">
     <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 4h6M12 4h2M2 12h2M8 12h6"/><circle cx="10" cy="4" r="1.6"/><circle cx="6" cy="12" r="1.6"/></svg>
-    <span class="grow">Bảng điều khiển…</span>
+    <span class="grow" data-i18n="popup.settings"></span>
   </button>
 
   <div class="sep"></div>
 
   <button class="row" id="quit">
-    <span class="grow">Thoát EVKey</span>
+    <span class="grow" data-i18n="popup.quit"></span>
   </button>
 </div>
+<script src="i18n.js"></script>
+<script src="glass.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

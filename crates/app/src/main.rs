@@ -1,19 +1,24 @@
 //! EVKey 2.0 app: CLI flags, single instance, tray icon and settings window.
 #![windows_subsystem = "windows"]
 
+mod actions;
+mod admin;
+mod ai;
 mod autostart;
 mod banner;
+mod clipboard;
 mod foreground;
 mod hook;
+mod i18n;
 mod ipc;
 mod keyboard;
 mod popup_cmd;
+mod secret;
 mod secure_input_win;
 mod settings_cmd;
 mod tray;
+mod updater;
 
-use evkey_engine::settings::{self, Backend};
-use keyboard::mode::{self, Mode};
 use windows::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};
 
 fn main() {
@@ -23,35 +28,32 @@ fn main() {
             attach_console();
             println!("{}", env!("CARGO_PKG_VERSION"));
         }
-        "--enable-keyboard" => exit_with(keyboard::set_enabled(true)),
-        "--disable-keyboard" => exit_with(keyboard::set_enabled(false)),
         "--autostart" => exit_with(match args.get(1).map(String::as_str) {
             Some("on") => autostart::set(true),
             Some("off") => autostart::set(false),
-            _ => Err("cách dùng: evkey --autostart on|off".into()),
+            _ => Err(i18n::tr("cách dùng: evkey --autostart on|off", "usage: evkey --autostart on|off").into()),
         }),
+        // Run elevated: by the settings switch (UAC) or the installer (`repoint`).
+        "--admin" => match args.get(1).map(String::as_str) {
+            Some("on") => match admin::apply(true) {
+                Ok(()) => run(true),
+                Err(e) => exit_with(Err(e)),
+            },
+            Some("off") => exit_with(admin::apply(false)),
+            Some("repoint") => exit_with(admin::repoint()),
+            _ => exit_with(Err(i18n::tr("cách dùng: evkey --admin on|off|repoint", "usage: evkey --admin on|off|repoint").into())),
+        },
         "--mode" => {
             attach_console();
-            let arg = args.get(1).map(String::as_str);
-            exit_with(if configured_backend() == Backend::Hook {
-                // The mode lives inside the running app, so changes go through its pipe.
-                match arg {
-                    Some(a @ ("vietnamese" | "english" | "toggle")) => ipc::send_to_running_instance(&format!("mode {a}")),
-                    _ => Err("backend hook: cách dùng evkey --mode vietnamese|english|toggle (không có get)".into()),
-                }
-            } else {
-                match arg {
-                    Some("get") => mode::get().map(|m| println!("{}", m.as_str())),
-                    Some("vietnamese") => mode::set(Mode::Vietnamese),
-                    Some("english") => mode::set(Mode::English),
-                    Some("toggle") => mode::toggle().map(|_| ()),
-                    _ => Err("cách dùng: evkey --mode get|vietnamese|english|toggle".into()),
-                }
+            // The mode lives inside the running app, so changes go through its pipe.
+            exit_with(match args.get(1).map(String::as_str) {
+                Some(a @ ("vietnamese" | "english" | "toggle")) => ipc::send_to_running_instance(&format!("mode {a}")),
+                _ => Err(i18n::tr("cách dùng: evkey --mode vietnamese|english|toggle", "usage: evkey --mode vietnamese|english|toggle").into()),
             })
         }
         "" | "--hidden" => run(false),
         "--settings" => run(true),
-        other => exit_with(Err(format!("tham số không hợp lệ: {other}"))),
+        other => exit_with(Err(format!("{}{other}", i18n::tr("tham số không hợp lệ: ", "invalid argument: ")))),
     }
 }
 
@@ -59,19 +61,46 @@ fn run(show_settings: bool) {
     if !ipc::acquire_single_instance() {
         exit_with(ipc::send_to_running_instance("settings"));
     }
+    // "Run as administrator" is on: this normal launch starts the elevated task instead. If the task cannot start,
+    // keep running without elevation rather than not at all.
+    if admin::should_hand_over() {
+        ipc::release_single_instance();
+        if admin::run_task().is_ok() {
+            std::process::exit(0);
+        }
+        if !ipc::acquire_single_instance() {
+            exit_with(ipc::send_to_running_instance("settings"));
+        }
+    }
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             settings_cmd::get_state,
-            settings_cmd::set_enabled,
             settings_cmd::save_settings,
             settings_cmd::save_macros,
             settings_cmd::reset_config,
+            settings_cmd::import_macros,
+            settings_cmd::export_config,
+            settings_cmd::import_config,
             settings_cmd::set_autostart,
+            settings_cmd::set_admin,
             settings_cmd::open_config_dir,
             settings_cmd::open_github,
             settings_cmd::last_app,
             settings_cmd::show_settings,
             settings_cmd::quit,
+            actions::actions_state,
+            actions::actions_close,
+            actions::actions_keep,
+            actions::actions_drag_start,
+            actions::actions_copy,
+            actions::actions_replace,
+            actions::actions_fit,
+            actions::actions_run,
+            updater::check_update_now,
+            updater::update_pending,
+            updater::update_skip,
+            updater::update_later,
+            updater::update_install,
             popup_cmd::popup_state,
             popup_cmd::popup_set_input,
             popup_cmd::popup_set_table,
@@ -81,14 +110,20 @@ fn run(show_settings: bool) {
             popup_cmd::popup_resize,
             banner::banner_state,
             banner::banner_defaults,
+            banner::banner_fit,
+            ai::gemini_key_status,
+            ai::gemini_key_set,
+            ai::gemini_key_delete,
+            ai::ai_run,
         ])
         .on_window_event(tray::on_window_event)
         .setup(move |app| {
-            if configured_backend() == Backend::Hook {
-                start_hook();
-            }
+            keyboard::remove_legacy_keyboard();
+            let _ = hook::start();
             tray::setup(app)?;
             banner::init(app.handle());
+            updater::start(app.handle().clone());
+            actions::init(app.handle());
             foreground::start();
             autostart::repoint_if_enabled();
             let serve = app.handle().clone();
@@ -105,21 +140,6 @@ fn run(show_settings: bool) {
         })
         .run(tauri::generate_context!())
         .expect("EVKey không chạy được");
-}
-
-/// Hook backend: take over typing and drop the TSF keyboard entry, which would otherwise process every key twice.
-fn start_hook() {
-    if keyboard::is_enabled().unwrap_or(false) {
-        let _ = keyboard::set_enabled(false);
-    }
-    let _ = hook::start();
-}
-
-fn configured_backend() -> Backend {
-    settings::default_dir()
-        .and_then(|d| settings::load(&d).ok())
-        .map(|l| l.settings.backend)
-        .unwrap_or_default()
 }
 
 fn attach_console() {

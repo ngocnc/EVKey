@@ -15,9 +15,9 @@ public extension AppState {
         var map: [String: String] = [:]
         for row in rows {
             let key = row.key.trimmingCharacters(in: .whitespacesAndNewlines)
-            if key.isEmpty { throw CoreError("Từ viết tắt không được để trống.") }
+            if key.isEmpty { throw CoreError(UIStrings.tr("error.macroEmpty")) }
             if map.updateValue(row.value, forKey: key) != nil {
-                throw CoreError("Từ viết tắt bị trùng: \(key)")
+                throw CoreError(UIStrings.tr("error.macroDuplicate", key))
             }
         }
         let current = try SettingsStore.load(directory: configDir)

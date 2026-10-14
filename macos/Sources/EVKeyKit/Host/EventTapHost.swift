@@ -1,4 +1,5 @@
 import ApplicationServices
+import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
 
@@ -9,6 +10,8 @@ final class EventTapHost {
     private let core: CoreSession
     private let secure: SecureInputMonitor
     private let onHotkeyToggle: () -> Void
+    private let onTranslate: () -> Void
+    private let onActions: () -> Void
     private let onAccessibility: (Bool) -> Void
     private let injector = KeyInjector()
     // Written once on the tap thread before the run loop starts; the watchdog captures its own copy.
@@ -19,11 +22,15 @@ final class EventTapHost {
         core: CoreSession,
         secure: SecureInputMonitor,
         onHotkeyToggle: @escaping () -> Void,
+        onTranslate: @escaping () -> Void,
+        onActions: @escaping () -> Void,
         onAccessibility: @escaping (Bool) -> Void
     ) {
         self.core = core
         self.secure = secure
         self.onHotkeyToggle = onHotkeyToggle
+        self.onTranslate = onTranslate
+        self.onActions = onActions
         self.onAccessibility = onAccessibility
     }
 
@@ -136,6 +143,15 @@ final class EventTapHost {
 
         let reaction = core.onKey(vk: vk, down: down, mods: mods, capsLock: capsLock)
         if reaction.hotkeyToggled { onHotkeyToggle() }
+        if reaction.translateRequested {
+            // Secure Input: the hotkey does nothing and the key goes through untouched.
+            if IsSecureEventInputEnabled() { return Unmanaged.passUnretained(event) }
+            onTranslate()
+        }
+        if reaction.actionsRequested {
+            if IsSecureEventInputEnabled() { return Unmanaged.passUnretained(event) }
+            onActions()
+        }
         if let edit = reaction.edit { injector.apply(edit) }
         return reaction.swallow || reaction.edit != nil ? nil : Unmanaged.passUnretained(event)
     }

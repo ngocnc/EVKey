@@ -10,8 +10,8 @@ struct SettingsAppsTab: View {
 
     var body: some View {
         SettingsPage(
-            title: "Ứng dụng loại trừ",
-            note: "EVKey không gõ tiếng Việt trong các ứng dụng này. Mỗi dòng một bundle ID, ví dụ com.apple.Safari."
+            title: UIStrings.tr("tab.apps"),
+            note: UIStrings.tr("apps.note")
         ) {
             SettingsGroup {
                 ZStack(alignment: .topLeading) {
@@ -34,15 +34,13 @@ struct SettingsAppsTab: View {
                 .padding(12)
                 .settingsBlock()
                 HStack(spacing: 10) {
-                    Menu("Thêm từ ứng dụng đang chạy") {
+                    Menu(UIStrings.tr("apps.addRunning")) {
                         ForEach(state.runningApps()) { app in
                             Button(app.name) { add(app.bundleID) }
                         }
                     }
-                        .pointerCursor()
                     .fixedSize()
-                    Button("Thêm ứng dụng vừa dùng", action: addLastApp)
-                        .pointerCursor()
+                    Button(UIStrings.tr("apps.addRecent"), action: addLastApp)
                     Spacer()
                 }
                 .padding(12)
@@ -80,7 +78,7 @@ struct SettingsAppsTab: View {
 
     private func addLastApp() {
         guard let app = state.lastApp else {
-            notice = "Chưa ghi nhận ứng dụng nào. Hãy chuyển sang ứng dụng cần loại trừ rồi thử lại."
+            notice = UIStrings.tr("apps.empty")
             return
         }
         notice = nil

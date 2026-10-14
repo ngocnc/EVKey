@@ -6,60 +6,98 @@ struct SettingsSmartTab: View {
     @ObservedObject private var state = AppState.shared
 
     var body: some View {
-        SettingsPage(title: "Chính tả & gõ nhanh") {
+        SettingsPage(title: UIStrings.tr("tab.smart")) {
             SettingsGroup {
                 SettingsCard {
                     SettingsToggleLine(
-                        title: "Kiểm tra chính tả", subtitle: "Chỉ biến đổi khi âm tiết hợp lệ.",
+                        title: UIStrings.tr("smart.spellCheck"), subtitle: UIStrings.tr("smart.spellCheck.detail"),
                         isOn: state.binding(\.checkSpelling))
                     SettingsDivider()
                     SettingsToggleLine(
-                        title: "Khôi phục khi sai chính tả", subtitle: "Gõ window thì giữ nguyên, không biến thành chữ lạ.",
+                        title: UIStrings.tr("smart.restore"), subtitle: UIStrings.tr("smart.restore.detail"),
                         isOn: state.binding(\.restoreIfWrongSpelling))
-                }
-            }
-
-            SettingsHeading("Gõ nhanh")
-            SettingsGroup {
-                SettingsToggleRow(
-                    title: "Telex nhanh", subtitle: "cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th",
-                    isOn: state.binding(\.quickTelex))
-                SettingsToggleRow(
-                    title: "Phụ âm đầu nhanh", subtitle: "f→ph, j→gi, w→qu",
-                    isOn: state.binding(\.quickStartConsonant))
-                SettingsToggleRow(
-                    title: "Phụ âm cuối nhanh", subtitle: "g→ng, h→nh, k→ch",
-                    isOn: state.binding(\.quickEndConsonant))
-                SettingsCard {
+                    SettingsDivider()
                     SettingsToggleLine(
-                        title: "Cho phép phụ âm tùy chỉnh (mặc định: Z,F,W,J)",
-                        isOn: state.binding(\.allowConsonantZfwj))
-                    if state.settings.allowConsonantZfwj {
+                        title: UIStrings.tr("smart.english"), subtitle: UIStrings.tr("smart.english.detail"), beta: true,
+                        isOn: state.binding(\.restoreEnglish))
+                    if state.settings.restoreEnglish {
                         SettingsDivider()
-                        SettingsConsonantChips()
+                        SettingsToggleLine(
+                            title: UIStrings.tr("smart.englishUndo"), subtitle: UIStrings.tr("smart.englishUndo.detail"),
+                            isOn: state.binding(\.undoEnglishRestore))
+                        SettingsDivider()
+                        SettingsWordListLine(
+                            title: UIStrings.tr("smart.englishExtra"), subtitle: UIStrings.tr("smart.englishExtra.detail"),
+                            placeholder: "rust react", keyPath: \.englishWordsExtra)
+                        SettingsDivider()
+                        SettingsWordListLine(
+                            title: UIStrings.tr("smart.englishExcluded"), subtitle: UIStrings.tr("smart.englishExcluded.detail"),
+                            placeholder: "was", keyPath: \.englishWordsExcluded)
                     }
                 }
             }
-
             SettingsGroup {
                 SettingsToggleRow(
-                    title: "Chế độ theo ứng dụng",
-                    subtitle: "Nhớ chế độ Việt/Anh của từng ứng dụng và khôi phục khi quay lại ứng dụng đó.",
+                    title: UIStrings.tr("smart.perApp"),
+                    subtitle: UIStrings.tr("smart.perApp.detail"),
                     isOn: state.binding(\.rememberAppMode))
                 SettingsToggleRow(
-                    title: "Hoàn tác từ bằng Esc",
-                    subtitle: "Khi đang gõ dở một từ, Esc trả về các phím đã gõ và tắt biến đổi cho từ đó.",
+                    title: UIStrings.tr("smart.escUndo"),
+                    subtitle: UIStrings.tr("smart.escUndo.detail"),
                     isOn: state.binding(\.undoWord))
             }
 
-            SettingsHeading("Viết hoa")
-            SettingsGroup {
-                SettingsToggleRow(
-                    title: "Tự viết hoa đầu câu", subtitle: "Viết hoa chữ cái đầu sau dấu chấm.",
-                    isOn: state.binding(\.upperCaseFirstChar))
-                SettingsToggleRow(
-                    title: "Gõ tắt theo kiểu chữ", subtitle: "Btw thành By the way, BTW thành BY THE WAY.",
-                    isOn: state.binding(\.autoCapsMacro))
+            SettingsAdvanced(pane: "smart") {
+                SettingsHeading(UIStrings.tr("smart.quickTyping"))
+                SettingsGroup {
+                    SettingsToggleRow(
+                        title: UIStrings.tr("smart.quickTelex"), subtitle: "cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th",
+                        isOn: state.binding(\.quickTelex))
+                    SettingsToggleRow(
+                        title: UIStrings.tr("smart.quickStart"), subtitle: "f→ph, j→gi, w→qu",
+                        isOn: state.binding(\.quickStartConsonant))
+                    SettingsToggleRow(
+                        title: UIStrings.tr("smart.quickEnd"), subtitle: "g→ng, h→nh, k→ch",
+                        isOn: state.binding(\.quickEndConsonant))
+                    SettingsCard {
+                        SettingsToggleLine(
+                            title: UIStrings.tr("smart.customConsonants"),
+                            isOn: state.binding(\.allowConsonantZfwj))
+                        if state.settings.allowConsonantZfwj {
+                            SettingsDivider()
+                            SettingsConsonantChips()
+                        }
+                    }
+                }
+
+                SettingsHeading(UIStrings.tr("smart.capitalize"))
+                SettingsGroup {
+                    SettingsCard {
+                        SettingsToggleLine(
+                            title: UIStrings.tr("smart.autoCapitalize"), subtitle: UIStrings.tr("smart.caps_first.desc"),
+                            isOn: state.binding(\.upperCaseFirstChar))
+                        if state.settings.upperCaseFirstChar {
+                            SettingsDivider()
+                            SettingsToggleLine(
+                                title: UIStrings.tr("smart.capsPunct"), subtitle: UIStrings.tr("smart.capsPunct.detail"),
+                                isOn: state.binding(\.upperCaseAfterPunct))
+                                .padding(.leading, 14)
+                            SettingsDivider()
+                            SettingsToggleLine(
+                                title: UIStrings.tr("smart.capsEnter"), subtitle: UIStrings.tr("smart.capsEnter.detail"),
+                                isOn: state.binding(\.upperCaseAfterEnter))
+                                .padding(.leading, 14)
+                            SettingsDivider()
+                            SettingsToggleLine(
+                                title: UIStrings.tr("smart.capsFirst"), subtitle: UIStrings.tr("smart.capsFirst.detail"),
+                                isOn: state.binding(\.upperCaseFirstLetter))
+                                .padding(.leading, 14)
+                        }
+                    }
+                    SettingsToggleRow(
+                        title: UIStrings.tr("smart.macroCase"), subtitle: UIStrings.tr("smart.macroCase.detail"),
+                        isOn: state.binding(\.autoCapsMacro))
+                }
             }
         }
     }

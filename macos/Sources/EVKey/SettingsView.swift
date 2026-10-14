@@ -5,6 +5,8 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var navigation: SettingsNavigation
     @ObservedObject private var state = AppState.shared
+    /// True on the very first open; closing the welcome card records it in UserDefaults.
+    @State private var showWelcome = !WelcomeView.seen
 
     var body: some View {
         HStack(spacing: 0) {
@@ -42,7 +44,18 @@ struct SettingsView: View {
                 .padding(.trailing, 12)
                 .ignoresSafeArea(edges: .top)
         }
+        .overlay {
+            if showWelcome {
+                WelcomeView(onClose: closeWelcome)
+                    .transition(.opacity)
+            }
+        }
         .noFocusRing()
+    }
+
+    private func closeWelcome() {
+        WelcomeView.seen = true
+        withAnimation(.easeOut(duration: 0.2)) { showWelcome = false }
     }
 
     /// Height of the titlebar zone (traffic lights and title) the scrolled content must not show through; the
@@ -71,13 +84,8 @@ struct SettingsView: View {
                     HStack(spacing: 8) {
                         Image(systemName: tab.systemImage).frame(width: 20)
                         Text(tab.title)
-                        if tab == .translate {
-                            Text("Beta")
-                                .font(.system(size: 9, weight: .semibold))
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(Color.accentColor.opacity(0.18), in: Capsule())
-                        }
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                     .font(.system(size: 13))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -104,12 +112,12 @@ struct SettingsView: View {
     private var notices: some View {
         if !state.accessibilityTrusted {
             SettingsNotice(
-                text: "EVKey cần quyền Trợ năng để gõ tiếng Việt. Bật EVKey trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Trợ năng.",
-                buttonTitle: "Mở cài đặt Trợ năng"
+                text: UIStrings.tr("settings.accessNotice"),
+                buttonTitle: UIStrings.tr("settings.openAccessibility")
             ) { state.openAccessibilitySettings() }
         }
         if let error = state.configError {
-            SettingsNotice(text: error, buttonTitle: "Đặt lại về mặc định") {
+            SettingsNotice(text: error, buttonTitle: UIStrings.tr("settings.reset")) {
                 if confirmResetConfig() { state.perform { try state.resetConfig() } }
             }
         }

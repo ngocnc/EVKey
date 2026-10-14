@@ -1,4 +1,5 @@
 import AppKit
+import EVKeyKit
 import SwiftUI
 
 /// Selected sidebar tab, shared between the window and callers that want a specific tab.
@@ -17,7 +18,6 @@ final class SettingsWindowController {
     private init() {
         let hosting = NSHostingController(rootView: SettingsView(navigation: navigation))
         window = NSWindow(contentViewController: hosting)
-        window.title = "Bảng điều khiển"
         window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
         window.isOpaque = false
@@ -31,6 +31,8 @@ final class SettingsWindowController {
     /// Shows the window, optionally jumping to a tab. `nil` keeps the current tab.
     func show(tab: SettingsTab?) {
         if let tab { navigation.tab = tab }
+        // Refreshed on every show so the title follows a live language change.
+        window.title = UIStrings.tr("window.title")
         NSApp.activate(ignoringOtherApps: true)
         let opening = !window.isVisible
         if opening { window.alphaValue = 0 }

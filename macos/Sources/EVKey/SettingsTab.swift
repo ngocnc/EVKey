@@ -1,3 +1,4 @@
+import EVKeyKit
 import Foundation
 
 /// Sidebar sections of Bảng điều khiển, in sidebar order.
@@ -8,15 +9,15 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .typing: "Gõ tiếng Việt"
-        case .smart: "Chính tả & gõ nhanh"
-        case .macro: "Gõ tắt"
-        case .keys: "Phím tắt"
-        case .apps: "Ứng dụng loại trừ"
-        case .appearance: "Giao diện"
-        case .system: "Hệ thống"
-        case .translate: "Dịch thuật"
-        case .info: "Thông tin"
+        case .typing: UIStrings.tr("tab.typing")
+        case .smart: UIStrings.tr("tab.smart")
+        case .macro: UIStrings.tr("tab.macro")
+        case .keys: UIStrings.tr("tab.keys")
+        case .apps: UIStrings.tr("tab.apps")
+        case .appearance: UIStrings.tr("tab.appearance")
+        case .system: UIStrings.tr("tab.system")
+        case .translate: UIStrings.tr("tab.translate")
+        case .info: UIStrings.tr("tab.info")
         }
     }
 

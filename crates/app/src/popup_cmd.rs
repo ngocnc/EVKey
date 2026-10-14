@@ -1,5 +1,5 @@
 //! Commands behind the tray popup window (ui/popup.html).
-use evkey_engine::settings::{self, CodeTable, InputKind, Settings};
+use evkey_engine::settings::{self, CodeTable, InputKind, Settings, UiLanguage};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, LogicalSize, Manager};
 
@@ -14,14 +14,16 @@ pub struct PopupState {
     mode: Mode,
     input_type: InputKind,
     code_table: CodeTable,
+    ui_language: UiLanguage,
 }
 
 fn snapshot() -> PopupState {
     let current = load_settings();
     PopupState {
-        mode: mode::get().unwrap_or(Mode::English),
+        mode: mode::get(),
         input_type: current.input_type,
         code_table: current.code_table,
+        ui_language: current.ui_language,
     }
 }
 
@@ -54,17 +56,16 @@ pub fn popup_set_table(app: AppHandle, table: CodeTable) {
 
 #[tauri::command]
 pub fn popup_toggle_mode(app: AppHandle) {
-    if let Ok(next) = mode::toggle() {
-        if load_settings().toggle_sound {
-            crate::keyboard::play_toggle_sound(next == Mode::English);
-        }
+    let next = mode::toggle();
+    if load_settings().toggle_sound {
+        crate::keyboard::play_toggle_sound(next == Mode::English);
     }
     changed(&app);
 }
 
 /// Opens the settings window, optionally on a given tab, and closes the popup.
 #[tauri::command]
-pub fn popup_open_settings(app: AppHandle, tab: Option<String>) {
+pub async fn popup_open_settings(app: AppHandle, tab: Option<String>) {
     tray::hide_popup(&app);
     match tab {
         Some(tab) => tray::show_settings_tab(&app, &tab),

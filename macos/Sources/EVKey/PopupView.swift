@@ -6,24 +6,28 @@ import SwiftUI
 struct PopupView: View {
     @ObservedObject private var state = AppState.shared
 
-    private static let inputChoices: [ChoiceOption<InputKind>] = [
-        ChoiceOption(value: .telex, label: "Telex"),
-        ChoiceOption(value: .vni, label: "VNI"),
-        ChoiceOption(value: .simpleTelex1, label: "Simple Telex 1"),
-        ChoiceOption(value: .simpleTelex2, label: "Simple Telex 2"),
-    ]
+    private static var inputChoices: [ChoiceOption<InputKind>] {
+        [
+            ChoiceOption(value: .telex, label: "Telex"),
+            ChoiceOption(value: .vni, label: "VNI"),
+            ChoiceOption(value: .simpleTelex1, label: "Simple Telex 1"),
+            ChoiceOption(value: .simpleTelex2, label: "Simple Telex 2"),
+        ]
+    }
 
-    private static let tableChoices: [ChoiceOption<CodeTable>] = [
-        ChoiceOption(value: .unicode, label: "Unicode"),
-        ChoiceOption(value: .tcvn3, label: "TCVN3 (ABC)"),
-        ChoiceOption(value: .vniWindows, label: "VNI Windows"),
-        ChoiceOption(value: .unicodeCompound, label: "Unicode tổ hợp"),
-    ]
+    private static var tableChoices: [ChoiceOption<CodeTable>] {
+        [
+            ChoiceOption(value: .unicode, label: "Unicode"),
+            ChoiceOption(value: .tcvn3, label: "TCVN3 (ABC)"),
+            ChoiceOption(value: .vniWindows, label: "VNI Windows"),
+            ChoiceOption(value: .unicodeCompound, label: UIStrings.tr("codeTable.unicodeCompound")),
+        ]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
-                Text("Gõ Tiếng Việt").font(.system(size: 15, weight: .semibold))
+                Text(UIStrings.tr("popup.header")).font(.system(size: 15, weight: .semibold))
                 Spacer(minLength: 8)
                 Toggle("", isOn: vietnameseBinding)
                     .labelsHidden()
@@ -32,21 +36,21 @@ struct PopupView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
 
-            PopupChoiceSection(title: "KIỂU GÕ", choices: Self.inputChoices, selected: state.settings.inputType) { kind in
+            PopupChoiceSection(title: UIStrings.tr("popup.inputMethod"), choices: Self.inputChoices, selected: state.settings.inputType) { kind in
                 state.updateSettings { $0.inputType = kind }
             }
-            PopupChoiceSection(title: "BẢNG MÃ", choices: Self.tableChoices, selected: state.settings.codeTable) { table in
+            PopupChoiceSection(title: UIStrings.tr("popup.codeTable"), choices: Self.tableChoices, selected: state.settings.codeTable) { table in
                 state.updateSettings { $0.codeTable = table }
             }
 
             Divider().padding(.vertical, 4)
 
-            PopupRow(title: "Quản lý Macro…", systemImage: "text.badge.plus") { openSettings(.macro) }
-            PopupRow(title: "Bảng điều khiển…", systemImage: "gearshape", hint: "⌘,") { openSettings(nil) }
+            PopupRow(title: UIStrings.tr("popup.macros"), systemImage: "text.badge.plus") { openSettings(.macro) }
+            PopupRow(title: UIStrings.tr("popup.controlPanel"), systemImage: "gearshape", hint: "⌘,") { openSettings(nil) }
 
             Divider().padding(.vertical, 4)
 
-            PopupRow(title: "Thoát EVKey", systemImage: "power", hint: "⌘Q") { NSApp.terminate(nil) }
+            PopupRow(title: UIStrings.tr("popup.quit"), systemImage: "power", hint: "⌘Q") { NSApp.terminate(nil) }
         }
         .padding(6)
         .frame(width: 308)

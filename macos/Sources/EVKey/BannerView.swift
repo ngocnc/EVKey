@@ -14,9 +14,9 @@ struct BannerView: View {
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(border)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Secure Input đang bật")
+                Text(UIStrings.tr("banner.title"))
                     .font(.system(size: 14, weight: .bold))
-                Text("\(appName) đang chặn EVKey xử lý Tiếng Việt")
+                Text(UIStrings.tr("banner.message", appName))
                     .font(.system(size: 12))
                     .opacity(0.75)
             }
@@ -61,7 +61,7 @@ struct BannerHost: View {
 
     var body: some View {
         let holder = state.secureHolder ?? (lastHolder.isEmpty ? DebugOptions.bannerApp : lastHolder) ?? ""
-        BannerView(settings: state.settings, appName: holder.isEmpty ? "Một ứng dụng" : holder)
+        BannerView(settings: state.settings, appName: holder.isEmpty ? UIStrings.tr("banner.anApp") : holder)
             .onReceive(state.$secureHolder) { if let h = $0 { lastHolder = h } }
     }
 }

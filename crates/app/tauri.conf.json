@@ -12,6 +12,7 @@
     "windows": [
       {
         "label": "settings",
+        "create": false,
         "title": "EVKey - Cài đặt",
         "url": "settings.html",
         "width": 980,
@@ -19,6 +20,22 @@
         "minWidth": 760,
         "minHeight": 480,
         "center": true,
+        "visible": false,
+        "transparent": true,
+        "windowEffects": { "effects": ["acrylic"], "color": [30, 24, 36, 0] }
+      },
+      {
+        "label": "update",
+        "create": false,
+        "title": "EVKey",
+        "url": "update.html",
+        "width": 480,
+        "height": 460,
+        "center": true,
+        "resizable": false,
+        "minimizable": false,
+        "maximizable": false,
+        "alwaysOnTop": true,
         "visible": false,
         "transparent": true,
         "windowEffects": { "effects": ["acrylic"], "color": [30, 24, 36, 0] }
@@ -36,6 +53,21 @@
         "resizable": false,
         "shadow": true,
         "focus": true,
+        "visible": false
+      },
+      {
+        "label": "actions",
+        "title": "EVKey",
+        "url": "actions.html",
+        "width": 340,
+        "height": 80,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": true,
+        "focus": false,
         "visible": false
       },
       {

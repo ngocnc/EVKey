@@ -6,6 +6,7 @@ use std::ffi::{c_char, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::PathBuf;
 
+use evkey_engine::convert;
 use evkey_engine::hotkey::parse_hotkey;
 use evkey_engine::settings::{self, Loaded, Settings};
 use serde::{Deserialize, Serialize};
@@ -23,6 +24,8 @@ pub struct EvReaction {
     pub swallow: bool,
     pub hotkey_toggled: bool,
     pub dummy_key: bool,
+    pub translate_requested: bool,
+    pub actions_requested: bool,
     pub has_edit: bool,
     pub prefix_empty_char: bool,
     pub backspaces: u32,
@@ -122,6 +125,8 @@ pub unsafe extern "C" fn evkey_session_on_key(
             swallow: r.swallow,
             hotkey_toggled: r.hotkey_toggled,
             dummy_key: r.dummy_key,
+            translate_requested: r.translate_requested,
+            actions_requested: r.actions_requested,
             has_edit,
             prefix_empty_char,
             backspaces,
@@ -247,6 +252,19 @@ pub unsafe extern "C" fn evkey_settings_save_json(dir_utf8: *const c_char, json_
     })
 }
 
+/// Applies the action panel's text tool `id_utf8` (`convert`, `convert_tcvn3`, `convert_vni`, `strip_marks`,
+/// `case_upper`, `case_lower`, `case_title`; see `convert::transform`) to `text_utf8`. `NULL` on bad input or an
+/// unknown id. Free with `evkey_string_free`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn evkey_text_transform(text_utf8: *const c_char, id_utf8: *const c_char) -> *mut c_char {
+    guard(std::ptr::null_mut(), || {
+        let (Some(text), Some(id)) = (unsafe { str_arg(text_utf8) }, unsafe { str_arg(id_utf8) }) else {
+            return std::ptr::null_mut();
+        };
+        convert::transform(id, text).map_or(std::ptr::null_mut(), into_c_string)
+    })
+}
+
 /// Releases a string returned by this library. `NULL` is a no-op.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn evkey_string_free(s: *mut c_char) {
@@ -326,6 +344,6 @@ mod tests {
             assert!(header.contains(&format!("{name}(")), "header is missing {name}");
             exported += 1;
         }
-        assert_eq!(exported, 14, "update the header test when adding or removing exports");
+        assert_eq!(exported, 15, "update the header test when adding or removing exports");
     }
 }

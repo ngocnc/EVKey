@@ -22,7 +22,9 @@ public final class AppState: ObservableObject {
     public static let shared = AppState()
 
     @Published public var isEnglish = false
-    @Published public var settings = EVSettings.defaults
+    @Published public var settings = EVSettings.defaults {
+        didSet { UIStrings.language = settings.uiLanguage }
+    }
     @Published public var macros: [String: String] = [:]
     @Published public var configError: String?
     @Published public var accessibilityTrusted = false
@@ -30,9 +32,15 @@ public final class AppState: ObservableObject {
     @Published public var secureHolder: String?
     @Published public var lastApp: RunningAppInfo?
     @Published public var autostart = LaunchAgent.isInstalled
+    /// A Gemini API key is saved in the Keychain (see `AppState+Gemini.swift`).
+    @Published public var geminiKeySaved = GeminiKeychain.exists()
 
     public var configDir: String { SettingsStore.defaultDirectory ?? "" }
     public var version: String { String(cString: evkey_version()) }
+    /// Set by the app target; runs the translate flow when the translate hotkey is pressed (on the main actor).
+    public var onTranslateHotkey: (() -> Void)?
+    /// Set by the app target; opens the action panel when the action hotkey is pressed (on the main actor).
+    public var onActionsHotkey: (() -> Void)?
 
     private var core: CoreSession?
     private var tapHost: EventTapHost?
@@ -61,6 +69,8 @@ public final class AppState: ObservableObject {
             core: session,
             secure: monitor,
             onHotkeyToggle: { Task { @MainActor in AppState.shared.syncMode(); AppState.shared.playToggleSound() } },
+            onTranslate: { Task { @MainActor in AppState.shared.onTranslateHotkey?() } },
+            onActions: { Task { @MainActor in AppState.shared.onActionsHotkey?() } },
             onAccessibility: { trusted in Task { @MainActor in AppState.shared.setTrusted(trusted) } }
         )
         tapHost = host

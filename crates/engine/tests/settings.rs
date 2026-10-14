@@ -68,3 +68,13 @@ fn toggle_hotkey_is_validated_on_load() {
     std::fs::write(d.join("config.toml"), "toggle_hotkey = \"ctrl+shift\"\n").unwrap();
     assert_eq!(load(&d).unwrap().settings.toggle_hotkey, "ctrl+shift");
 }
+
+#[test]
+fn config_from_2x_with_backend_key_still_loads_and_drops_it_on_save() {
+    let d = temp_dir("legacy-backend");
+    std::fs::write(d.join("config.toml"), "backend = \"tsf\"\nquick_telex = true\n").unwrap();
+    let l = load(&d).unwrap();
+    assert!(l.settings.quick_telex);
+    evkey_engine::settings::save(&d, &l).unwrap();
+    assert!(!std::fs::read_to_string(d.join("config.toml")).unwrap().contains("backend"));
+}

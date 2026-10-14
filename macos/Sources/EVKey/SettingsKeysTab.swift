@@ -7,11 +7,13 @@ struct SettingsKeysTab: View {
 
     private static let presetHotkeys = ["alt+z", "ctrl+shift", "alt+shift", "ctrl+alt+z", "cmd+shift", "cmd+alt", "cmd+ctrl"]
 
-    private static let tempOffChoices: [ChoiceOption<TempOffKey>] = [
-        ChoiceOption(value: .none, label: "Không dùng"),
-        ChoiceOption(value: .ctrl, label: "⌃"),
-        ChoiceOption(value: .alt, label: "⌥"),
-    ]
+    private static var tempOffChoices: [ChoiceOption<TempOffKey>] {
+        [
+            ChoiceOption(value: .none, label: UIStrings.tr("keys.tempOff.none")),
+            ChoiceOption(value: .ctrl, label: "⌃"),
+            ChoiceOption(value: .alt, label: "⌥"),
+        ]
+    }
 
     /// The presets plus the current value when it was written by hand in config.toml, so saving never drops it.
     private var hotkeyChoices: [ChoiceOption<String>] {
@@ -22,22 +24,26 @@ struct SettingsKeysTab: View {
     }
 
     var body: some View {
-        SettingsPage(title: "Phím tắt") {
+        SettingsPage(title: UIStrings.tr("tab.keys")) {
             SettingsGroup {
                 SettingsMenuRow(
-                    title: "Chuyển Việt / Anh", subtitle: "Tổ hợp phím bật tắt bộ gõ trong mọi ứng dụng.",
+                    title: UIStrings.tr("keys.toggle"), subtitle: UIStrings.tr("keys.toggle.detail"),
                     choices: hotkeyChoices, selection: state.binding(\.toggleHotkey))
-                SettingsChoiceRow(
-                    title: "Phím tạm tắt giữa từ",
-                    subtitle: "Nhấn phím này một lần giữa từ để phần còn lại của từ không bị biến đổi.",
-                    choices: Self.tempOffChoices, selection: state.binding(\.tempOffKey))
+            }
+            SettingsAdvanced(pane: "keys") {
+                SettingsGroup {
+                    SettingsChoiceRow(
+                        title: UIStrings.tr("keys.tempOff"),
+                        subtitle: UIStrings.tr("keys.tempOff.detail"),
+                        choices: Self.tempOffChoices, selection: state.binding(\.tempOffKey))
+                }
             }
         }
     }
 
     /// Symbols for a chord such as `ctrl+alt+z`; `none` reads as "Tắt".
-    private static func hotkeyLabel(_ chord: String) -> String {
-        if chord == "none" { return "Tắt" }
+    static func hotkeyLabel(_ chord: String) -> String {
+        if chord == "none" { return UIStrings.tr("keys.hotkey.none") }
         return chord.split(separator: "+").map { part -> String in
             switch part {
             case "ctrl": "⌃"

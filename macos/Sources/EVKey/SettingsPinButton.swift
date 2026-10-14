@@ -1,3 +1,4 @@
+import EVKeyKit
 import SwiftUI
 
 /// Pin toggle for the Bảng điều khiển corner: keeps that window above others. Session only; the window level is the source of truth.
@@ -20,7 +21,7 @@ struct SettingsPinButton: View {
             .pointerCursor()
         .buttonStyle(.plain)
         .frame(height: 28)
-        .help(pinned ? "Bỏ ghim" : "Ghim lên trên cùng")
+        .help(pinned ? UIStrings.tr("pin.unpin") : UIStrings.tr("pin.pin"))
         .animation(.easeInOut(duration: 0.15), value: pinned)
     }
 }

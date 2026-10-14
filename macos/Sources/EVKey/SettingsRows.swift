@@ -4,11 +4,12 @@ import SwiftUI
 struct SettingsToggleLine: View {
     let title: String
     var subtitle: String? = nil
+    var beta = false
     @Binding var isOn: Bool
 
     var body: some View {
         HStack(spacing: 12) {
-            SettingsRowLabel(title: title, subtitle: subtitle)
+            SettingsRowLabel(title: title, subtitle: subtitle, beta: beta)
             Spacer(minLength: 12)
             Toggle("", isOn: $isOn)
                 .labelsHidden()
@@ -73,11 +74,22 @@ struct SettingsChoiceRow<Value: Hashable>: View {
 struct SettingsRowLabel: View {
     let title: String
     var subtitle: String? = nil
+    /// Shows a "Beta" capsule after the title.
+    var beta = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                if beta {
+                    Text("Beta")
+                        .font(.system(size: 9, weight: .semibold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Color.accentColor.opacity(0.18), in: Capsule())
+                }
+            }
             if let subtitle {
                 Text(subtitle)
                     .font(.system(size: 11))

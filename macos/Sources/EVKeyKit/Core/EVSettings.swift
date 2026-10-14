@@ -32,6 +32,12 @@ public enum Backend: String, Codable, Equatable, CaseIterable {
     case tsf
 }
 
+/// Display language of every EVKey screen; not the V/E Chế độ.
+public enum UILanguage: String, Codable, Equatable, CaseIterable {
+    case vi
+    case en
+}
+
 public struct EVSettings: Codable, Equatable {
     public var inputType: InputKind
     public var tonePlacement: TonePlacement
@@ -39,10 +45,21 @@ public struct EVSettings: Codable, Equatable {
     public var freeMark: Bool
     public var checkSpelling: Bool
     public var restoreIfWrongSpelling: Bool
+    /// Beta: common English words Telex changed are put back as typed at the word end.
+    public var restoreEnglish: Bool
+    /// Own words also restored, and built-in words never restored, by `restoreEnglish`.
+    public var englishWordsExtra: [String]
+    public var englishWordsExcluded: [String]
+    /// Backspace right after a restore brings the Telex form back.
+    public var undoEnglishRestore: Bool
     public var quickTelex: Bool
     public var quickStartConsonant: Bool
     public var quickEndConsonant: Bool
     public var upperCaseFirstChar: Bool
+    /// Which places capitalize the next letter when `upperCaseFirstChar` is on.
+    public var upperCaseAfterPunct: Bool
+    public var upperCaseAfterEnter: Bool
+    public var upperCaseFirstLetter: Bool
     public var allowConsonantZfwj: Bool
     public var autoCapsMacro: Bool
     /// Esc while a word is composing restores the typed keys and stops conversion for that word.
@@ -69,6 +86,20 @@ public struct EVSettings: Codable, Equatable {
     public var bannerBgEnd: String
     public var bannerBorderEnd: String
     public var bannerTextEnd: String
+    public var uiLanguage: UILanguage
+    public var autoCheckUpdates: Bool
+    /// Version the user chose to skip; its update popup is not shown again.
+    public var skippedUpdate: String
+    /// Key chord (`ctrl+alt+t`; must end in a key, `none` disables) that translates the selected text.
+    public var translateHotkey: String
+    /// What the translate flow does after the popup shows the result.
+    public var translateAction: TranslateAction
+    /// Milliseconds the translate popup stays before closing; 0 keeps it until clicked.
+    public var translatePopupMs: Int
+    /// Service that translates (`translate_provider`); Gemini uses the key saved in the Keychain.
+    public var translateProvider: TranslateProvider
+    /// Key chord (`ctrl+alt+a`; `none` disables) that opens the action panel on the selected text.
+    public var actionHotkey: String
 
     /// Engine defaults, read from the core (the hotkey default depends on the platform).
     public static let defaults: EVSettings = SettingsStore.engineDefaults()
@@ -80,10 +111,17 @@ public struct EVSettings: Codable, Equatable {
         case freeMark = "free_mark"
         case checkSpelling = "check_spelling"
         case restoreIfWrongSpelling = "restore_if_wrong_spelling"
+        case restoreEnglish = "restore_english"
+        case englishWordsExtra = "english_words_extra"
+        case englishWordsExcluded = "english_words_excluded"
+        case undoEnglishRestore = "undo_english_restore"
         case quickTelex = "quick_telex"
         case quickStartConsonant = "quick_start_consonant"
         case quickEndConsonant = "quick_end_consonant"
         case upperCaseFirstChar = "upper_case_first_char"
+        case upperCaseAfterPunct = "upper_case_after_punct"
+        case upperCaseAfterEnter = "upper_case_after_enter"
+        case upperCaseFirstLetter = "upper_case_first_letter"
         case allowConsonantZfwj = "allow_consonant_zfwj"
         case autoCapsMacro = "auto_caps_macro"
         case undoWord = "undo_word"
@@ -103,5 +141,23 @@ public struct EVSettings: Codable, Equatable {
         case bannerBgEnd = "banner_bg_end"
         case bannerBorderEnd = "banner_border_end"
         case bannerTextEnd = "banner_text_end"
+        case uiLanguage = "ui_language"
+        case autoCheckUpdates = "auto_check_updates"
+        case skippedUpdate = "skipped_update"
+        case translateHotkey = "translate_hotkey"
+        case translateAction = "translate_action"
+        case translatePopupMs = "translate_popup_ms"
+        case translateProvider = "translate_provider"
+        case actionHotkey = "action_hotkey"
     }
+}
+
+/// What the translate flow does after the popup shows the result (`translate_action`).
+public enum TranslateAction: String, Codable, CaseIterable {
+    case show, copy, replace
+}
+
+/// Service that translates the selection (`translate_provider`).
+public enum TranslateProvider: String, Codable, CaseIterable {
+    case google, gemini
 }

@@ -48,6 +48,7 @@ unsafe extern "system" fn on_foreground(
     _thread: u32,
     _time: u32,
 ) {
+    crate::hook::foreground_changed();
     let Some(name) = exe_name(hwnd) else { return };
     if name.eq_ignore_ascii_case("evkey.exe") || name.eq_ignore_ascii_case("explorer.exe") {
         return;

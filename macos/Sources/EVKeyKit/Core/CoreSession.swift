@@ -5,6 +5,10 @@ import Foundation
 public struct KeyReaction: Equatable {
     public var swallow = false
     public var hotkeyToggled = false
+    /// The translate hotkey was pressed; the key is swallowed unless Secure Input is on.
+    public var translateRequested = false
+    /// The action panel hotkey was pressed; the key is swallowed unless Secure Input is on.
+    public var actionsRequested = false
     public var edit: TextEdit?
 }
 
@@ -47,7 +51,9 @@ public final class CoreSession {
         locked {
             var out = EvReaction()
             guard evkey_session_on_key(handle, vk, down, mods, capsLock, &out) else { return KeyReaction() }
-            var reaction = KeyReaction(swallow: out.swallow, hotkeyToggled: out.hotkey_toggled)
+            var reaction = KeyReaction(
+                swallow: out.swallow, hotkeyToggled: out.hotkey_toggled,
+                translateRequested: out.translate_requested, actionsRequested: out.actions_requested)
             if out.has_edit {
                 // The text buffer belongs to the session and is valid only until the next call: copy it now.
                 var text: [UInt16] = []

@@ -5,18 +5,28 @@
 <link rel="stylesheet" href="banner.css">
 <style>
   html, body { margin: 0; background: transparent; overflow: hidden; }
-  .sec-banner { box-sizing: border-box; width: 100vw; height: 100vh; border-radius: 14px; }
+  .sec-banner { box-sizing: border-box; width: 100vw; height: 100vh; border-radius: 8px; }
 </style>
 </head>
 <body>
 <div class="sec-banner" id="banner"></div>
+<script src="i18n.js"></script>
 <script src="banner-view.js"></script>
 <script>
+  // The overlay window itself fades in and out (banner.rs); the page draws and tells Rust how big the content is.
   const { invoke } = window.__TAURI__.core;
   const { listen } = window.__TAURI__.event;
   const el = document.getElementById("banner");
-  invoke("banner_state").then((s) => renderBanner(el, s));
-  listen("banner-state", (e) => renderBanner(el, e.payload));
+  function draw(s) {
+    setUiLanguage(s.ui_language);
+    renderBanner(el, s);
+    el.style.width = el.style.height = "max-content";
+    const { width, height } = el.getBoundingClientRect();
+    el.style.width = el.style.height = "";
+    invoke("banner_fit", { width, height });
+  }
+  invoke("banner_state").then(draw);
+  listen("banner-state", (e) => draw(e.payload));
 </script>
 </body>
 </html>

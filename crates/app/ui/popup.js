@@ -9,7 +9,9 @@ applyTheme();
 window.addEventListener("storage", (e) => e.key === "evkey-theme" && applyTheme());
 const $ = (id) => document.getElementById(id);
 const INPUTS = { telex: "Telex", vni: "VNI", simple_telex1: "Simple Telex 1", simple_telex2: "Simple Telex 2" };
-const TABLES = { unicode: "Unicode", tcvn3: "TCVN3 (ABC)", vni_windows: "VNI Windows", unicode_compound: "Unicode tổ hợp" };
+// Table labels are read per build, since the UI language can change while the popup lives.
+const tables = () => ({ unicode: "Unicode", tcvn3: "TCVN3 (ABC)", vni_windows: "VNI Windows", unicode_compound: t("table.unicode_compound") });
+let builtLang = null;
 
 // Runs a command, then re-reads the state so the popup reflects what the backend stored.
 async function act(command, args) {
@@ -21,9 +23,9 @@ async function act(command, args) {
   await refresh();
 }
 
-// Resizes the window to the panel (plus its 6px margin on each side); the Rust side keeps it anchored to the tray.
+// Resizes the window to the panel, which fills it edge to edge; the Rust side keeps it anchored to the tray.
 function fit() {
-  requestAnimationFrame(() => invoke("popup_resize", { height: $("panel").offsetHeight + 12 }).catch(console.error));
+  requestAnimationFrame(() => invoke("popup_resize", { height: $("panel").offsetHeight }).catch(console.error));
 }
 
 function buildChoices(listId, options, command, arg) {
@@ -41,12 +43,24 @@ function mark(listId, value) {
   for (const b of $(listId).children) b.classList.toggle("on", b.dataset.value === value);
 }
 
+// Rebuilds both choice lists in the given UI language; runs only when the language changes.
+function buildLists(lang) {
+  setUiLanguage(lang);
+  applyI18n();
+  $("input-list").replaceChildren();
+  $("table-list").replaceChildren();
+  buildChoices("input-list", INPUTS, "popup_set_input", "kind");
+  buildChoices("table-list", tables(), "popup_set_table", "table");
+  builtLang = lang;
+}
+
 async function refresh() {
   try {
     const s = await invoke("popup_state");
+    if (s.ui_language !== builtLang) buildLists(s.ui_language);
     $("mode").checked = s.mode === "vietnamese";
     $("input-value").textContent = INPUTS[s.input_type];
-    $("table-value").textContent = TABLES[s.code_table];
+    $("table-value").textContent = tables()[s.code_table];
     mark("input-list", s.input_type);
     mark("table-list", s.code_table);
     fit();
@@ -73,8 +87,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") invoke("popup_hide");
 });
 
-buildChoices("input-list", INPUTS, "popup_set_input", "kind");
-buildChoices("table-list", TABLES, "popup_set_table", "table");
 listen("popup-show", refresh);
 window.addEventListener("focus", refresh);
+applyI18n();
 refresh();

@@ -4,96 +4,28 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Instant, SystemTime};
 
 use evkey_engine::composer::Composer;
 use evkey_engine::consts::CAPS_MASK;
 use evkey_engine::engine::V_RESTORE_AND_START_NEW_SESSION;
-use evkey_engine::hotkey::{parse_hotkey, Hotkey};
-use evkey_engine::keys::KEY_ESC;
-use evkey_engine::settings::{self, Settings, TempOffKey};
+use evkey_engine::hotkey::Hotkey;
+use evkey_engine::keys::{KEY_DELETE, KEY_ESC};
+use evkey_engine::settings::{self, Settings};
 use evkey_engine::tables::key_code_to_character;
 
 use crate::typing::edit_for;
 
+mod chord;
+mod keys;
+mod modes;
+mod reload;
+
+pub use keys::{is_modifier_vk, KeyInput, Mods, Output, Reaction, Resend};
+use keys::{group, wanted, Groups};
+
 /// Zero-width-ish character typed and deleted first so browser autocomplete cannot swallow the edit (as OpenKey does).
 pub const EMPTY_CHAR: u16 = 0x202F;
-
-/// Modifier groups in `Hotkey` field order: ctrl, alt, shift, win.
-type Groups = [bool; 4];
-
-/// Physical modifier state at event time, supplied by the host.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Mods {
-    pub ctrl: bool,
-    pub alt: bool,
-    pub shift: bool,
-    pub win: bool,
-}
-
-impl Mods {
-    fn groups(self) -> Groups {
-        [self.ctrl, self.alt, self.shift, self.win]
-    }
-}
-
-/// One key event. `vk` is a Windows virtual-key code (hosts map their native codes).
-#[derive(Clone, Copy, Debug)]
-pub struct KeyInput {
-    pub vk: u16,
-    pub down: bool,
-    pub mods: Mods,
-    pub caps_lock: bool,
-}
-
-/// What the host must type when a key was converted: an optional [`EMPTY_CHAR`], `backspaces` backspaces, `text`
-/// as UTF-16 units, then the optional `resend`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Output {
-    pub prefix_empty_char: bool,
-    pub backspaces: usize,
-    pub text: String,
-    pub resend: Option<Resend>,
-}
-
-/// The trigger key typed again after the edit: a Unicode character, or the raw virtual key when it has none.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Resend {
-    Char(u16),
-    Vk(u16),
-}
-
-/// The host's instructions for one event.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Reaction {
-    /// Do not pass the key to the focused app.
-    pub swallow: bool,
-    pub edit: Option<Output>,
-    /// The Vietnamese/English mode flipped on this event.
-    pub hotkey_toggled: bool,
-    /// Alt-hotkey: inject a throwaway key (VK 0xFF down/up) so releasing Alt does not open the window menu.
-    pub dummy_key: bool,
-}
-
-/// Group index of a modifier virtual key (the hook reports the left/right variants); `None` for other keys.
-fn group(vk: u16) -> Option<usize> {
-    match vk {
-        0xA2 | 0xA3 | 0x11 => Some(0),
-        0xA4 | 0xA5 | 0x12 => Some(1),
-        0xA0 | 0xA1 | 0x10 => Some(2),
-        0x5B | 0x5C => Some(3),
-        _ => None,
-    }
-}
-
-/// True for the modifier virtual keys (either side). Hosts skip foreground and Secure Input checks for these.
-pub fn is_modifier_vk(vk: u16) -> bool {
-    group(vk).is_some()
-}
-
-fn wanted(hk: &Hotkey) -> Groups {
-    [hk.ctrl, hk.alt, hk.shift, hk.win]
-}
 
 pub struct Session {
     composer: Composer,
@@ -102,6 +34,8 @@ pub struct Session {
     stamp: Option<[Option<SystemTime>; 2]>,
     last_check: Option<Instant>,
     hotkey: Option<Hotkey>,
+    translate_hotkey: Option<Hotkey>,
+    action_hotkey: Option<Hotkey>,
     /// Modifier groups currently held, from the host's modifier state.
     held: Groups,
     /// Modifier-only chord (`ctrl+shift`): armed while exactly its modifiers are held and nothing else was pressed.
@@ -135,6 +69,8 @@ impl Session {
             stamp: None,
             last_check: None,
             hotkey: None,
+            translate_hotkey: None,
+            action_hotkey: None,
             held: [false; 4],
             chord_armed: false,
             tap_armed: false,
@@ -167,23 +103,11 @@ impl Session {
         }
     }
 
-    /// Records the current Mode for `app` when "remember_app_mode" is on. The file is written only on change.
-    fn remember_mode(&mut self, app: &str) {
-        let english = self.is_english();
-        if !self.settings.remember_app_mode || self.app_modes.get(app) == Some(&english) {
-            return;
-        }
-        self.app_modes.insert(app.to_owned(), english);
-        // ponytail: best-effort save; a failed write only loses the remembered Mode, not typing.
-        if let Some(dir) = &self.dir {
-            let _ = settings::save_app_modes(dir, &self.app_modes);
-        }
-    }
-
     /// Flips the mode and drops the word in progress.
     pub fn toggle(&mut self) {
         self.set_english(!self.is_english());
         self.composer.reset();
+        self.remember_current();
     }
 
     pub fn settings(&self) -> Settings {
@@ -193,11 +117,13 @@ impl Session {
     /// The host lost the composition (mouse click can move the caret): forget the word.
     pub fn on_mouse_click(&mut self) {
         self.composer.reset();
+        self.composer.engine.mark_sentence_start();
     }
 
     /// The frontmost app changed. `app_id` is the Windows exe name or macOS bundle ID; `None` when unknown.
     pub fn set_foreground(&mut self, app_id: Option<&str>) {
         self.composer.reset();
+        self.composer.engine.mark_sentence_start();
         let next = app_id.map(str::to_owned);
         if next != self.app_id && self.settings.remember_app_mode {
             if let Some(prev) = self.app_id.clone() {
@@ -236,6 +162,16 @@ impl Session {
         self.held = mods.groups();
         self.reload(false);
 
+        if let Some(hk) = self.translate_hotkey {
+            if hk.vk == Some(vk) && self.held == wanted(&hk) {
+                return Reaction { swallow: true, translate_requested: true, dummy_key: hk.alt, ..Reaction::default() };
+            }
+        }
+        if let Some(hk) = self.action_hotkey {
+            if hk.vk == Some(vk) && self.held == wanted(&hk) {
+                return Reaction { swallow: true, actions_requested: true, dummy_key: hk.alt, ..Reaction::default() };
+            }
+        }
         if let Some(hk) = self.hotkey {
             if hk.vk == Some(vk) && self.held == wanted(&hk) {
                 self.toggle();
@@ -258,8 +194,11 @@ impl Session {
         };
         let other_control = self.held[0] || self.held[1] || self.held[3];
         let engine = &mut self.composer.engine;
-        // Hoàn tác từ: Esc shows the raw keys of the word in progress; Esc itself is swallowed, so no resend.
-        if self.settings.undo_word && vk == KEY_ESC && !other_control && engine.undo_word() {
+        // Hoàn tác từ: Esc shows the raw keys of the word in progress. Backspace right after an English word was
+        // restored brings its Telex form back. The key itself is swallowed, so no resend.
+        let undone = (self.settings.undo_word && vk == KEY_ESC && !other_control && engine.undo_word())
+            || (self.settings.undo_english_restore && vk == KEY_DELETE && !other_control && engine.undo_english_restore());
+        if undone {
             let Some(edit) = edit_for(&engine.hook, engine.cfg.code_table) else {
                 return Reaction::default();
             };
@@ -297,76 +236,12 @@ impl Session {
             ..Reaction::default()
         }
     }
-
-    /// Returns whether this event toggled the mode (a modifier-only chord fires on release).
-    fn on_modifier(&mut self, g: usize, down: bool, mods: Mods) -> bool {
-        let hk = self.hotkey;
-        if down {
-            self.held[g] = true;
-            self.chord_armed = hk.is_some_and(|h| h.vk.is_none() && self.held == wanted(&h));
-            self.tap_armed = self.held.iter().filter(|&&h| h).count() == 1;
-            return false;
-        }
-        // The released group is forced up: the host may still report it as held.
-        self.held = mods.groups();
-        self.held[g] = false;
-        let mut toggled = false;
-        if let Some(h) = hk {
-            if h.vk.is_none() && self.chord_armed && wanted(&h)[g] {
-                self.chord_armed = false;
-                self.toggle();
-                toggled = true;
-            }
-        }
-        let temp_group = match self.settings.temp_off_key {
-            TempOffKey::Ctrl => Some(0),
-            TempOffKey::Alt => Some(1),
-            TempOffKey::None => None,
-        };
-        if self.tap_armed && temp_group == Some(g) {
-            self.tap_armed = false;
-            self.composer.engine.temp_off_engine(true);
-        }
-        toggled
-    }
-
-    /// Reloads `config.toml` / `macros.toml` when they changed (checked at most once a second). A malformed file
-    /// keeps the previous settings. Everything but the hotkey waits for a word boundary.
-    fn reload(&mut self, force: bool) {
-        let now = Instant::now();
-        if !force && self.last_check.is_some_and(|t| now.duration_since(t) < Duration::from_secs(1)) {
-            return;
-        }
-        self.last_check = Some(now);
-        let Some(dir) = self.dir.clone() else { return };
-        let stamp = settings::stamp(&dir);
-        if self.stamp == Some(stamp) {
-            return;
-        }
-        let Ok(loaded) = settings::load(&dir) else {
-            self.stamp = Some(stamp);
-            return;
-        };
-        if let Ok(hk) = parse_hotkey(&loaded.settings.toggle_hotkey) {
-            self.hotkey = hk;
-        }
-        if self.composer.is_composing() {
-            // Stamp stays stale, so the next check applies the rest after the word ends.
-            self.stamp = None;
-            return;
-        }
-        self.stamp = Some(stamp);
-        self.composer.apply(&loaded);
-        self.settings = loaded.settings;
-        // Re-evaluate the exclusion list for the current app under the new settings.
-        self.excluded = self.app_id.as_deref().is_some_and(|a| self.settings.is_excluded(a));
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use evkey_engine::settings::Loaded;
+    use evkey_engine::settings::{Loaded, TempOffKey};
     use std::collections::BTreeMap;
 
     const CTRL: u16 = 0xA2;
@@ -433,6 +308,32 @@ mod tests {
     }
 
     #[test]
+    fn translate_hotkey_is_swallowed_without_toggling_the_mode() {
+        let dir = dir_with("translate", Settings { translate_hotkey: "ctrl+alt+t".into(), ..Settings::default() });
+        let mut s = Session::new(Some(dir.clone()));
+        let t = 0x54;
+        let r = s.on_key(key(t, true, mods(true, true, false)));
+        assert!(r.swallow && r.translate_requested && !r.hotkey_toggled && r.dummy_key);
+        assert!(!s.is_english());
+        // The same key without the full chord is plain typing.
+        assert!(!s.on_key(key(t, true, mods(true, false, false))).translate_requested);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn action_hotkey_is_swallowed_without_toggling_the_mode() {
+        let dir = dir_with("actions", Settings { action_hotkey: "ctrl+alt+a".into(), ..Settings::default() });
+        let mut s = Session::new(Some(dir.clone()));
+        let a = 0x41;
+        let r = s.on_key(key(a, true, mods(true, true, false)));
+        assert!(r.swallow && r.actions_requested && !r.translate_requested && !r.hotkey_toggled && r.dummy_key);
+        assert!(!s.is_english());
+        // The same key without the full chord is plain typing.
+        assert!(!s.on_key(key(a, true, mods(true, false, false))).actions_requested);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn english_mode_passes_keys_through() {
         let mut s = Session::new(None);
         s.set_english(true);
@@ -490,7 +391,7 @@ mod tests {
             &Loaded { settings: Settings { toggle_hotkey: "alt+x".into(), input_type: settings::InputKind::Vni, ..Settings::default() }, macros: BTreeMap::new() },
         )
         .unwrap();
-        std::thread::sleep(Duration::from_millis(1100));
+        s.reload(true); // forced: skips the 1 s throttle and the mtime check, so the write above is always seen
         s.on_key(key(A, true, mods(false, false, false)));
         assert_eq!(s.settings().input_type, settings::InputKind::Telex, "deferred mid-word");
         assert_eq!(s.settings().toggle_hotkey, "ctrl+shift", "deferred mid-word");
@@ -498,7 +399,7 @@ mod tests {
         s.on_key(key(ALT, true, mods(false, true, false)));
         assert!(s.on_key(key(X, true, mods(false, true, false))).hotkey_toggled, "hotkey applies immediately");
         s.on_key(key(0x20, true, mods(false, false, false)));
-        std::thread::sleep(Duration::from_millis(1100));
+        s.reload(true);
         s.on_key(key(A, true, mods(false, false, false)));
         assert_eq!(s.settings().input_type, settings::InputKind::Vni);
         let _ = std::fs::remove_dir_all(dir);
@@ -544,6 +445,74 @@ mod tests {
         let mut s = Session::new(None);
         let r = s.on_key(key(KEY_ESC, true, mods(false, false, false)));
         assert!(!r.swallow && r.edit.is_none());
+    }
+
+    #[test]
+    fn backspace_right_after_english_restore_brings_telex_back() {
+        let run = |undo: bool, keys: &str| {
+            let name = if undo { "undo-en-on" } else { "undo-en-off" };
+            let dir = dir_with(name, Settings { restore_english: true, undo_english_restore: undo, ..Settings::default() });
+            let mut s = Session::new(Some(dir.clone()));
+            let mut field = String::new();
+            for ch in keys.chars() {
+                if ch == '\u{8}' {
+                    let r = s.on_key(key(KEY_DELETE, true, mods(false, false, false)));
+                    if r.edit.is_none() {
+                        field.pop();
+                    } else {
+                        let out = r.edit.unwrap();
+                        for _ in 0..out.backspaces - 1 {
+                            field.pop();
+                        }
+                        field.push_str(&out.text);
+                    }
+                } else if ch == ',' {
+                    press(&mut s, &mut field, 0xBC, ',');
+                } else {
+                    press(&mut s, &mut field, ch.to_ascii_uppercase() as u16, ch);
+                }
+            }
+            let _ = std::fs::remove_dir_all(dir);
+            field
+        };
+        assert_eq!(run(true, "sorry was "), "sorry was ");
+        assert_eq!(run(true, "sorry was \u{8}"), "sorry ứa");
+        assert_eq!(run(true, "was,\u{8}"), "ứa");
+        // Only right after: another key in between, or the switch off, makes Backspace a plain delete.
+        assert_eq!(run(true, "was x\u{8}"), "was ");
+        assert_eq!(run(false, "was \u{8}"), "was");
+    }
+
+    #[test]
+    fn a_toggle_is_remembered_at_once_without_leaving_the_app() {
+        let dir = dir_with("app-mode-toggle", Settings { remember_app_mode: true, ..Settings::default() });
+        let mut s = Session::new(Some(dir.clone()));
+        s.set_foreground(Some("notepad.exe"));
+        s.toggle();
+        let mut again = Session::new(Some(dir.clone()));
+        again.set_foreground(Some("notepad.exe"));
+        assert!(again.is_english(), "the toggle was saved when it happened, not only when leaving the app");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn first_letter_after_focus_change_or_click_is_capitalized_when_enabled() {
+        let typed = |first_letter: bool, click: bool| {
+            let settings = Settings { upper_case_first_char: true, upper_case_first_letter: first_letter, ..Settings::default() };
+            let dir = dir_with("first-letter", settings);
+            let mut s = Session::new(Some(dir.clone()));
+            if click {
+                s.on_mouse_click();
+            } else {
+                s.set_foreground(Some("notepad.exe"));
+            }
+            let edit = s.on_key(key(A, true, mods(false, false, false))).edit;
+            let _ = std::fs::remove_dir_all(dir);
+            edit.map(|e| e.text)
+        };
+        assert_eq!(typed(true, false).as_deref(), Some("A"));
+        assert_eq!(typed(true, true).as_deref(), Some("A"));
+        assert_eq!(typed(false, false), None);
     }
 
     #[test]

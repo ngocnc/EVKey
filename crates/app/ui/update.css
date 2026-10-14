@@ -1,0 +1,10 @@
+body.update { padding: 14px; }
+.update-card { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 18px; }
+.update-head { display: flex; align-items: center; gap: 12px; }
+.update-head b { display: block; font-size: 15px; }
+.update-head small { color: var(--muted); }
+.update-card h2 { margin: 4px 0 0; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.update-notes { flex: 1; margin: 0; padding: 10px 12px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; font: inherit; border-radius: 12px; background: var(--field); border: 1px solid var(--divider); }
+.update-card .note { margin: 0; }
+.note.err { color: var(--err); }
+.update-actions { display: flex; justify-content: flex-end; gap: 8px; }
