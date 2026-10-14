@@ -2,26 +2,35 @@ import AppKit
 import EVKeyKit
 import SwiftUI
 
-/// "Hệ thống": launch at login, config folder and the about section.
+/// "Hệ thống": UI language, launch at login, config folder and the about section.
 struct SettingsSystemTab: View {
     @ObservedObject private var state = AppState.shared
 
+    private static let languageChoices: [ChoiceOption<UILanguage>] = [
+        ChoiceOption(value: .vi, label: "Tiếng Việt"),
+        ChoiceOption(value: .en, label: "English"),
+    ]
+
     var body: some View {
-        SettingsPage(title: "Hệ thống") {
+        SettingsPage(title: UIStrings.tr("tab.system")) {
             SettingsGroup {
+                SettingsChoiceRow(
+                    title: UIStrings.tr("system.uiLanguage"),
+                    choices: Self.languageChoices,
+                    selection: state.binding(\.uiLanguage))
                 SettingsToggleRow(
-                    title: "Tự chạy khi đăng nhập",
-                    subtitle: "EVKey khởi động ẩn trên thanh menu.",
+                    title: UIStrings.tr("system.launchAtLogin"),
+                    subtitle: UIStrings.tr("system.launchAtLogin.detail"),
                     isOn: Binding(
                         get: { state.autostart },
                         set: { value in state.perform { try state.setAutostart(value) } }))
                 SettingsToggleRow(
-                    title: "Phát âm khi chuyển chế độ",
-                    subtitle: "Âm khác nhau cho Tiếng Việt và Tiếng Anh, chỉ khi bạn tự chuyển.",
+                    title: UIStrings.tr("system.speakOnSwitch"),
+                    subtitle: UIStrings.tr("system.speakOnSwitch.detail"),
                     isOn: state.binding(\.toggleSound))
             }
 
-            SettingsHeading("Tệp cấu hình")
+            SettingsHeading(UIStrings.tr("system.configFiles"))
             SettingsCard {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(state.configDir)
@@ -29,9 +38,9 @@ struct SettingsSystemTab: View {
                         .textSelection(.enabled)
                         .foregroundStyle(.secondary)
                     HStack {
-                        Button("Mở thư mục", action: state.openConfigDir)
+                        Button(UIStrings.tr("system.openFolder"), action: state.openConfigDir)
                         Spacer()
-                        Button("Đặt lại về mặc định", role: .destructive) {
+                        Button(UIStrings.tr("system.reset"), role: .destructive) {
                             if confirmResetConfig() { state.perform { try state.resetConfig() } }
                         }
                     }
@@ -46,10 +55,10 @@ struct SettingsSystemTab: View {
 @MainActor
 func confirmResetConfig() -> Bool {
     let alert = NSAlert()
-    alert.messageText = "Đặt lại cài đặt về mặc định?"
-    alert.informativeText = "Mọi tùy chỉnh hiện tại sẽ bị thay thế bằng giá trị mặc định."
+    alert.messageText = UIStrings.tr("system.reset.title")
+    alert.informativeText = UIStrings.tr("system.reset.message")
     alert.alertStyle = .warning
-    alert.addButton(withTitle: "Đặt lại")
-    alert.addButton(withTitle: "Hủy")
+    alert.addButton(withTitle: UIStrings.tr("system.reset.confirm"))
+    alert.addButton(withTitle: UIStrings.tr("common.cancel"))
     return alert.runModal() == .alertFirstButtonReturn
 }

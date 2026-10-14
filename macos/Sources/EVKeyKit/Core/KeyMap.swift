@@ -8,7 +8,7 @@ enum KeyMap {
         let deviceMask: UInt64
     }
 
-    /// Keys the engine models. Keycodes not listed (F-keys, Fn, Caps Lock, ...) end the current word.
+    /// Keys the engine models. Keycodes not listed (Fn, Caps Lock, ...) end the current word.
     static let vkByKeycode: [UInt16: UInt16] = [
         // Letters: Windows VK is the ASCII uppercase code.
         0: 0x41, 1: 0x53, 2: 0x44, 3: 0x46, 4: 0x48, 5: 0x47, 6: 0x5A, 7: 0x58, 8: 0x43, 9: 0x56,
@@ -23,6 +23,8 @@ enum KeyMap {
         36: 0x0D, 48: 0x09, 49: 0x20, 51: 0x08, 53: 0x1B, 117: 0x2E,
         // Navigation.
         115: 0x24, 116: 0x21, 119: 0x23, 121: 0x22, 123: 0x25, 124: 0x27, 125: 0x28, 126: 0x26,
+        // Function keys F1-F12 (VK_F1..VK_F12), bound by the translate hotkey.
+        122: 0x70, 120: 0x71, 99: 0x72, 118: 0x73, 96: 0x74, 97: 0x75, 98: 0x76, 100: 0x77, 101: 0x78, 109: 0x79, 103: 0x7A, 111: 0x7B,
     ]
 
     /// Windows VK -> macOS keycode, for resending a key that has no character.

@@ -22,7 +22,9 @@ public final class AppState: ObservableObject {
     public static let shared = AppState()
 
     @Published public var isEnglish = false
-    @Published public var settings = EVSettings.defaults
+    @Published public var settings = EVSettings.defaults {
+        didSet { UIStrings.language = settings.uiLanguage }
+    }
     @Published public var macros: [String: String] = [:]
     @Published public var configError: String?
     @Published public var accessibilityTrusted = false
@@ -33,6 +35,8 @@ public final class AppState: ObservableObject {
 
     public var configDir: String { SettingsStore.defaultDirectory ?? "" }
     public var version: String { String(cString: evkey_version()) }
+    /// Set by the app target; runs the translate flow when the translate hotkey is pressed (on the main actor).
+    public var onTranslateHotkey: (() -> Void)?
 
     private var core: CoreSession?
     private var tapHost: EventTapHost?
@@ -61,6 +65,7 @@ public final class AppState: ObservableObject {
             core: session,
             secure: monitor,
             onHotkeyToggle: { Task { @MainActor in AppState.shared.syncMode(); AppState.shared.playToggleSound() } },
+            onTranslate: { Task { @MainActor in AppState.shared.onTranslateHotkey?() } },
             onAccessibility: { trusted in Task { @MainActor in AppState.shared.setTrusted(trusted) } }
         )
         tapHost = host

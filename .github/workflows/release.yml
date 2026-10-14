@@ -60,7 +60,15 @@ jobs:
         run: |
           $exe = "dist/EVKey-Setup-${{ steps.version.outputs.version }}.exe"
           $hash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
-          "SHA256: ``$hash``" | Out-File -Encoding utf8 release-notes.md
+          # Release body = the version's section of RELEASE_NOTES.md (shown by the in-app updater) + the hash line.
+          $ver = "${{ steps.version.outputs.version }}"
+          $section = @(); $in = $false
+          foreach ($line in Get-Content RELEASE_NOTES.md -Encoding utf8) {
+            if ($line -match '^## v') { $in = ($line -eq "## v$ver"); continue }
+            if ($in) { $section += $line }
+          }
+          ($section -join "`n").Trim() | Out-File -Encoding utf8 release-notes.md
+          "`nSHA256: ``$hash``" | Out-File -Encoding utf8 -Append release-notes.md
           "SHA256 $hash" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Create GitHub Release

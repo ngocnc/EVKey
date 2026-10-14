@@ -82,4 +82,57 @@ mod tests {
         let macros = BTreeMap::from([("bbc".to_string(), "BBC News".to_string())]);
         assert_eq!(type_keys(&loaded(macros), "bbc "), "BBC News ");
     }
+
+    /// Types (vk, shift, char) triples with "capitalize sentence starts" on.
+    fn type_vks(settings: Settings, keys: &[(u16, bool, char)]) -> String {
+        let loaded = Loaded { settings, macros: BTreeMap::new() };
+        let mut c = Composer::new(Settings::default().to_config(false));
+        c.apply(&loaded);
+        let mut field = String::new();
+        for &(vk, shift, ch) in keys {
+            c.engine.key_event(false, vk, shift as u8, false);
+            match edit_for(&c.engine.hook, c.engine.cfg.code_table) {
+                None => field.push(ch),
+                Some(edit) => {
+                    for _ in 0..edit.backspaces {
+                        field.pop();
+                    }
+                    field.push_str(&edit.text);
+                    if edit.resend_key {
+                        field.push(ch);
+                    }
+                }
+            }
+        }
+        field
+    }
+
+    #[test]
+    fn each_capitalization_case_can_be_switched_off_on_its_own() {
+        let word = |s: &str| s.chars().map(|c| (c.to_ascii_uppercase() as u16, false, c)).collect::<Vec<_>>();
+        let after = |settings: Settings, end: (u16, bool, char), sep: Option<(u16, bool, char)>| {
+            let mut keys = word("xin");
+            keys.push(end);
+            keys.extend(sep);
+            keys.extend(word("chao"));
+            type_vks(settings, &keys)
+        };
+        let on = || Settings { upper_case_first_char: true, ..Settings::default() };
+        let (dot, question, exclaim, enter) = ((0xBE, false, '.'), (0xBF, true, '?'), (0x31, true, '!'), (0x0D, false, '\n'));
+        let space = Some((0x20, false, ' '));
+        assert_eq!(after(on(), dot, space), "xin. Chao");
+        assert_eq!(after(on(), question, space), "xin? Chao");
+        assert_eq!(after(on(), exclaim, space), "xin! Chao");
+        assert_eq!(after(on(), enter, None), "xin\nChao");
+        // A plain slash does not end a sentence.
+        assert_eq!(after(on(), (0xBF, false, '/'), space), "xin/ chao");
+        // One case off leaves the others working.
+        assert_eq!(after(Settings { upper_case_after_punct: false, ..on() }, dot, space), "xin. chao");
+        assert_eq!(after(Settings { upper_case_after_punct: false, ..on() }, question, space), "xin? chao");
+        assert_eq!(after(Settings { upper_case_after_punct: false, ..on() }, exclaim, space), "xin! chao");
+        assert_eq!(after(Settings { upper_case_after_punct: false, ..on() }, enter, None), "xin\nChao");
+        assert_eq!(after(Settings { upper_case_after_enter: false, ..on() }, enter, None), "xin\nchao");
+        // The master switch wins.
+        assert_eq!(after(Settings::default(), dot, space), "xin. chao");
+    }
 }

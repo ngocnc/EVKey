@@ -8,6 +8,7 @@ use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 
 use crate::engine::Config;
+use crate::hotkey::parse_hotkey;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -57,6 +58,28 @@ pub enum Backend {
  Tsf,
 }
 
+/// Display language of every EVKey screen. Not the V/E Chế độ.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum UiLanguage {
+    #[default]
+    Vi,
+    En,
+}
+
+/// What EVKey does with a translation besides showing it in the popup.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TranslateAction {
+    /// Only show the popup.
+    #[default]
+    Show,
+    /// Also put the translation on the clipboard.
+    Copy,
+    /// Also paste the translation over the selected text.
+    Replace,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
@@ -77,6 +100,11 @@ pub struct Settings {
     /// Letters (`a`-`z`) the engine accepts as a syllable start while `allow_consonant_zfwj` is on.
     pub custom_consonants: Vec<String>,
     pub upper_case_first_char: bool,
+    /// When `upper_case_first_char` is on: capitalize after `.`, `?` and `!`, after Enter, and the first letter typed
+    /// after a focus change or click.
+    pub upper_case_after_punct: bool,
+    pub upper_case_after_enter: bool,
+    pub upper_case_first_letter: bool,
     pub allow_consonant_zfwj: bool,
     /// `Btw` expands to `By the way`, `BTW` to `BY THE WAY`.
     pub auto_caps_macro: bool,
@@ -108,6 +136,18 @@ pub struct Settings {
     pub toggle_sound: bool,
     /// Esc while a word is composing restores its raw keys and leaves the rest of the word unconverted.
     pub undo_word: bool,
+    /// Display language of the settings window, popup, tray menu, banner and alerts.
+    pub ui_language: UiLanguage,
+    /// Check GitHub Releases for a newer EVKey at startup and every 24 hours.
+    pub auto_check_updates: bool,
+    /// Version (`2.3.0`) the user chose to skip; its update popup is not shown again.
+    pub skipped_update: String,
+    /// Key chord (`ctrl+alt+t`, must end in a key; `none` disables) that translates the selected text.
+    pub translate_hotkey: String,
+    /// What happens to the translation after it is shown.
+    pub translate_action: TranslateAction,
+    /// Milliseconds the translation popup stays on screen; 0 keeps it until it is clicked. Otherwise 100-600000.
+    pub translate_popup_ms: u32,
 }
 
 impl Default for Settings {
@@ -124,6 +164,9 @@ impl Default for Settings {
             quick_end_consonant: false,
             custom_consonants: ["z", "f", "w", "j"].map(String::from).to_vec(),
             upper_case_first_char: false,
+            upper_case_after_punct: true,
+            upper_case_after_enter: true,
+            upper_case_first_letter: false,
             allow_consonant_zfwj: false,
             auto_caps_macro: false,
             excluded_apps: Vec::new(),
@@ -142,6 +185,12 @@ impl Default for Settings {
             remember_app_mode: true,
             toggle_sound: false,
             undo_word: true,
+            ui_language: UiLanguage::Vi,
+            auto_check_updates: true,
+            skipped_update: String::new(),
+            translate_hotkey: "ctrl+alt+t".to_string(),
+            translate_action: TranslateAction::Show,
+            translate_popup_ms: 5000,
         }
     }
 }
@@ -165,6 +214,11 @@ impl Settings {
             use_macro: has_macros as i32,
             auto_caps_macro: self.auto_caps_macro as i32,
             upper_case_first_char: self.upper_case_first_char as i32,
+            upper_case_after_period: self.upper_case_after_punct as i32,
+            upper_case_after_question: self.upper_case_after_punct as i32,
+            upper_case_after_exclaim: self.upper_case_after_punct as i32,
+            upper_case_after_enter: self.upper_case_after_enter as i32,
+            upper_case_on_reset: self.upper_case_first_letter as i32,
             allow_consonant_zfwj: self.allow_consonant_zfwj as i32,
             quick_start_consonant: self.quick_start_consonant as i32,
             quick_end_consonant: self.quick_end_consonant as i32,
@@ -204,6 +258,14 @@ impl Settings {
         }
         if let Some(bad) = self.custom_consonants.iter().find(|s| !is_letter(s)) {
             return Err(format!("custom_consonants: mỗi phụ âm phải là 1 chữ cái a-z: {bad}"));
+        }
+        match parse_hotkey(&self.translate_hotkey) {
+            Ok(Some(hk)) if hk.vk.is_none() => return Err(format!("translate_hotkey phải kết thúc bằng một phím: {}", self.translate_hotkey)),
+            Err(e) => return Err(format!("translate_hotkey: {e}")),
+            _ => {}
+        }
+        if self.translate_popup_ms != 0 && !(100..=600_000).contains(&self.translate_popup_ms) {
+            return Err("translate_popup_ms phải là 0 (không tự đóng) hoặc từ 100 đến 600000".into());
         }
         Ok(())
     }
@@ -302,6 +364,21 @@ mod tests {
         assert!(!s.is_excluded_on(false, "com.apple.Terminal"));
         assert!(s.is_excluded_on(true, "com.apple.terminal"));
         assert!(!s.is_excluded_on(true, "game.exe"));
+    }
+
+    #[test]
+    fn translate_popup_time_is_validated_and_action_round_trips() {
+        let mut s = Settings { translate_popup_ms: 99, ..Settings::default() };
+        assert!(s.validate().is_err());
+        s.translate_popup_ms = 600_001;
+        assert!(s.validate().is_err());
+        s.translate_popup_ms = 0;
+        assert!(s.validate().is_ok());
+        s.translate_popup_ms = 30_000;
+        assert!(s.validate().is_ok());
+        let toml_text = toml::to_string(&Settings { translate_action: TranslateAction::Replace, ..Settings::default() }).unwrap();
+        assert!(toml_text.contains("translate_action = \"replace\""));
+        assert_eq!(toml::from_str::<Settings>(&toml_text).unwrap().translate_action, TranslateAction::Replace);
     }
 
     #[test]

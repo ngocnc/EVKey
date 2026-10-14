@@ -1,4 +1,5 @@
 import AppKit
+import EVKeyKit
 import SwiftUI
 
 /// Look-only preference for the Liquid Glass of the popup and Bảng điều khiển. Kept in UserDefaults, not config.toml
@@ -10,7 +11,7 @@ final class GlassAppearance: ObservableObject {
     enum Style: String, CaseIterable, Identifiable {
         case regular, clear
         var id: String { rawValue }
-        var label: String { self == .regular ? "Thường" : "Trong suốt" }
+        var label: String { UIStrings.tr(self == .regular ? "glass.style.regular" : "glass.style.clear") }
     }
 
     /// Colour theme of every EVKey window: follow macOS, or force light or dark.
@@ -19,9 +20,9 @@ final class GlassAppearance: ObservableObject {
         var id: String { rawValue }
         var label: String {
             switch self {
-            case .system: "Theo hệ thống"
-            case .light: "Sáng"
-            case .dark: "Tối"
+            case .system: UIStrings.tr("glass.theme.system")
+            case .light: UIStrings.tr("glass.theme.light")
+            case .dark: UIStrings.tr("glass.theme.dark")
             }
         }
         /// nil follows the system.

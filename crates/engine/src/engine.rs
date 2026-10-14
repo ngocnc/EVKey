@@ -47,6 +47,14 @@ pub struct Config {
     pub use_macro: i32,
     pub auto_caps_macro: i32,
     pub upper_case_first_char: i32,
+    /// Which sentence ends make `upper_case_first_char` capitalize the next word. OpenKey does the period and Enter,
+    /// so those default on and `?` / `!` (an EVKey addition) default off, which keeps the parity test exact.
+    pub upper_case_after_period: i32,
+    pub upper_case_after_question: i32,
+    pub upper_case_after_exclaim: i32,
+    pub upper_case_after_enter: i32,
+    /// EVKey addition: after the host lost the caret context (focus change, click), the next letter starts a sentence.
+    pub upper_case_on_reset: i32,
     pub allow_consonant_zfwj: i32,
     pub quick_start_consonant: i32,
     pub quick_end_consonant: i32,
@@ -68,6 +76,11 @@ impl Default for Config {
             use_macro: 0,
             auto_caps_macro: 0,
             upper_case_first_char: 0,
+            upper_case_after_period: 1,
+            upper_case_after_question: 0,
+            upper_case_after_exclaim: 0,
+            upper_case_after_enter: 1,
+            upper_case_on_reset: 0,
             allow_consonant_zfwj: 0,
             quick_start_consonant: 0,
             quick_end_consonant: 0,
@@ -675,6 +688,13 @@ impl Engine {
     }
 
     /// `startNewSession`.
+    /// The host lost the caret context (focus change, click): with `upper_case_on_reset` the next letter is capitalized.
+    pub fn mark_sentence_start(&mut self) {
+        if self.cfg.upper_case_first_char != 0 && self.cfg.upper_case_on_reset != 0 {
+            self.upper_case_status = 2;
+        }
+    }
+
     pub fn start_new_session(&mut self) {
         self.index = 0;
         self.set_bpc(0);
@@ -1706,9 +1726,15 @@ impl Engine {
             }
 
             if self.cfg.upper_case_first_char != 0 {
-                if data == KEY_DOT {
+                // A sentence ends at `.`, `?` (Shift+/) or `!` (Shift+1), and the next word is capitalized after a
+                // space; a new line (Enter) starts a sentence at once. Each case can be switched off.
+                let shift = caps_status == 1;
+                if (data == KEY_DOT && self.cfg.upper_case_after_period != 0)
+                    || (shift && data == KEY_SLASH && self.cfg.upper_case_after_question != 0)
+                    || (shift && data == KEY_1 && self.cfg.upper_case_after_exclaim != 0)
+                {
                     self.upper_case_status = 1;
-                } else if data == KEY_ENTER || data == KEY_RETURN {
+                } else if (data == KEY_ENTER || data == KEY_RETURN) && self.cfg.upper_case_after_enter != 0 {
                     self.upper_case_status = 2;
                 } else {
                     self.upper_case_status = 0;

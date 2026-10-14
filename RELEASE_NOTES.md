@@ -1,5 +1,16 @@
 # Release notes
 
+## v2.3.0
+
+- Ngôn ngữ giao diện: thêm English (Cài đặt, Popup, Banner Secure Input, thông báo lỗi). Chọn ở tab Hệ thống, đổi ngay không cần khởi động lại.
+- Cập nhật trong app: tự kiểm tra khi mở và mỗi 24 giờ (tắt được), có nút "Kiểm tra cập nhật" ở tab Thông tin. Khi có bản mới hiện release notes với "Cài đặt & mở lại", "Bỏ qua bản này", "Để sau". Windows hiện UAC khi cài.
+- Dịch thuật (Beta): bôi đen văn bản, bấm phím tắt (mặc định Ctrl+Alt+T, bấm vào ô rồi gõ phím bất kỳ để đổi) để dịch Việt ↔ Anh bằng Google Translate. Cửa sổ chỉ hiện bản dịch, có thanh thời gian chạy ngược phía trên, bấm vào để đóng. Cài đặt: việc làm thêm với bản dịch (chỉ hiện, sao chép, dán đè lên văn bản đã bôi đen) và thời gian hiển thị (ms hoặc giây, hoặc không tự đóng). Chỉ chạy với cơ chế bắt phím Hook.
+- Tự viết hoa đầu câu: chọn riêng từng trường hợp (sau dấu chấm, dấu hỏi, dấu chấm than, khi xuống dòng). Dấu hỏi và dấu chấm than là mới.
+- Sửa lỗi "Nhớ Việt/Anh theo ứng dụng" (Windows): đang ở chế độ Anh thì chuyển sang ứng dụng khác không được khôi phục chế độ của ứng dụng đó.
+- Menu thả xuống kiểu mới trong cài đặt (thay hộp chọn mặc định của hệ thống).
+- Viết lại chữ tiếng Việt và English trong cài đặt cho dễ hiểu hơn, kèm ví dụ; tab "Chính tả & gõ nhanh" tên tiếng Anh là "Smart typing" để không bị xuống dòng.
+- Chưa kiểm chứng: bản macOS của các tính năng trên (chưa build được).
+
 ## v2.2.3
 
 - Banner Secure Input: mờ dần cả cửa sổ (kể cả nền acrylic) thay vì hiệu ứng trượt gây giật; không áp lại acrylic mỗi lần hiện.

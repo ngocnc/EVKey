@@ -3,14 +3,18 @@
 
 mod autostart;
 mod banner;
+mod clipboard;
 mod foreground;
 mod hook;
+mod i18n;
 mod ipc;
 mod keyboard;
 mod popup_cmd;
 mod secure_input_win;
 mod settings_cmd;
 mod tray;
+mod translate;
+mod updater;
 
 use evkey_engine::settings::{self, Backend};
 use keyboard::mode::{self, Mode};
@@ -28,7 +32,7 @@ fn main() {
         "--autostart" => exit_with(match args.get(1).map(String::as_str) {
             Some("on") => autostart::set(true),
             Some("off") => autostart::set(false),
-            _ => Err("cách dùng: evkey --autostart on|off".into()),
+            _ => Err(i18n::tr("cách dùng: evkey --autostart on|off", "usage: evkey --autostart on|off").into()),
         }),
         "--mode" => {
             attach_console();
@@ -37,7 +41,7 @@ fn main() {
                 // The mode lives inside the running app, so changes go through its pipe.
                 match arg {
                     Some(a @ ("vietnamese" | "english" | "toggle")) => ipc::send_to_running_instance(&format!("mode {a}")),
-                    _ => Err("backend hook: cách dùng evkey --mode vietnamese|english|toggle (không có get)".into()),
+                    _ => Err(i18n::tr("cơ chế Hook: cách dùng evkey --mode vietnamese|english|toggle (không có get)", "Hook typing engine: usage evkey --mode vietnamese|english|toggle (get is not available)").into()),
                 }
             } else {
                 match arg {
@@ -45,13 +49,13 @@ fn main() {
                     Some("vietnamese") => mode::set(Mode::Vietnamese),
                     Some("english") => mode::set(Mode::English),
                     Some("toggle") => mode::toggle().map(|_| ()),
-                    _ => Err("cách dùng: evkey --mode get|vietnamese|english|toggle".into()),
+                    _ => Err(i18n::tr("cách dùng: evkey --mode get|vietnamese|english|toggle", "usage: evkey --mode get|vietnamese|english|toggle").into()),
                 }
             })
         }
         "" | "--hidden" => run(false),
         "--settings" => run(true),
-        other => exit_with(Err(format!("tham số không hợp lệ: {other}"))),
+        other => exit_with(Err(format!("{}{other}", i18n::tr("tham số không hợp lệ: ", "invalid argument: ")))),
     }
 }
 
@@ -72,6 +76,14 @@ fn run(show_settings: bool) {
             settings_cmd::last_app,
             settings_cmd::show_settings,
             settings_cmd::quit,
+            translate::translate_state,
+            translate::translate_close,
+            translate::translate_fit,
+            updater::check_update_now,
+            updater::update_pending,
+            updater::update_skip,
+            updater::update_later,
+            updater::update_install,
             popup_cmd::popup_state,
             popup_cmd::popup_set_input,
             popup_cmd::popup_set_table,
@@ -90,6 +102,8 @@ fn run(show_settings: bool) {
             }
             tray::setup(app)?;
             banner::init(app.handle());
+            updater::start(app.handle().clone());
+            translate::init(app.handle());
             foreground::start();
             autostart::repoint_if_enabled();
             let serve = app.handle().clone();

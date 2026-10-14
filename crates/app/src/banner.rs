@@ -6,7 +6,7 @@ use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWINDOWATTRIBUTE};
 use windows::Win32::UI::WindowsAndMessaging::{SetLayeredWindowAttributes, LWA_ALPHA};
 use std::sync::OnceLock;
 
-use evkey_engine::settings::{self, Settings};
+use evkey_engine::settings::{self, Settings, UiLanguage};
 use parking_lot::Mutex;
 use serde::Serialize;
 use tauri::window::{Effect, EffectsBuilder};
@@ -37,6 +37,7 @@ pub struct BannerState {
     bg: String,
     border: String,
     text: String,
+    ui_language: UiLanguage,
 }
 
 fn current_settings() -> Settings {
@@ -45,7 +46,7 @@ fn current_settings() -> Settings {
 
 fn state_for(holder: String) -> BannerState {
     let s = current_settings();
-    BannerState { app: holder, opacity: s.banner_opacity, blur: s.banner_blur, bg: s.banner_bg, border: s.banner_border, text: s.banner_text }
+    BannerState { app: holder, opacity: s.banner_opacity, blur: s.banner_blur, bg: s.banner_bg, border: s.banner_border, text: s.banner_text, ui_language: s.ui_language }
 }
 
 /// Makes the window click-through and unfocusable, and keeps the handle for `notify`.
@@ -184,5 +185,5 @@ pub fn banner_state() -> BannerState {
 #[tauri::command]
 pub fn banner_defaults() -> BannerState {
     let s = Settings::default();
-    BannerState { app: String::new(), opacity: s.banner_opacity, blur: s.banner_blur, bg: s.banner_bg, border: s.banner_border, text: s.banner_text }
+    BannerState { app: String::new(), opacity: s.banner_opacity, blur: s.banner_blur, bg: s.banner_bg, border: s.banner_border, text: s.banner_text, ui_language: s.ui_language }
 }

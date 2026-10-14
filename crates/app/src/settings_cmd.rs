@@ -37,12 +37,12 @@ pub struct MacroRow {
 }
 
 fn config_dir() -> Result<PathBuf, String> {
-    settings::default_dir().ok_or_else(|| "Không tìm thấy thư mục cấu hình".to_string())
+    settings::default_dir().ok_or_else(|| crate::i18n::tr("Không tìm thấy thư mục cấu hình", "Config folder not found").to_string())
 }
 
 /// Replaces the engine settings and keeps the macros already on disk.
 fn save_settings_in(dir: &Path, new_settings: Settings) -> Result<(), String> {
-    parse_hotkey(&new_settings.toggle_hotkey).map_err(|e| format!("Phím tắt không hợp lệ: {e}"))?;
+    parse_hotkey(&new_settings.toggle_hotkey).map_err(|e| format!("{}{e}", crate::i18n::tr("Phím tắt không hợp lệ: ", "Invalid hotkey: ")))?;
     let mut cfg = settings::load(dir)?;
     cfg.settings = new_settings;
     settings::save(dir, &cfg)
@@ -54,10 +54,10 @@ fn save_macros_in(dir: &Path, rows: Vec<MacroRow>) -> Result<(), String> {
     for row in rows {
         let key = row.key.trim().to_string();
         if key.is_empty() {
-            return Err("Từ viết tắt không được để trống.".into());
+            return Err(crate::i18n::tr("Từ viết tắt không được để trống.", "An abbreviation cannot be empty.").into());
         }
         if macros.insert(key.clone(), row.value).is_some() {
-            return Err(format!("Từ viết tắt bị trùng: {key}"));
+            return Err(format!("{}{key}", crate::i18n::tr("Từ viết tắt bị trùng: ", "Duplicate abbreviation: ")));
         }
     }
     let mut cfg = settings::load(dir)?;
@@ -143,7 +143,7 @@ pub fn last_app() -> Option<String> {
 }
 
 #[tauri::command]
-pub fn show_settings(app: AppHandle) {
+pub async fn show_settings(app: AppHandle) {
     tray::show_settings(&app);
 }
 

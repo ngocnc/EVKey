@@ -24,6 +24,7 @@ function applyGlassLook() {
   const clear = glassGet("style") === "clear";
   root.setProperty("--t", clear ? 1 : 0.5);
   root.setProperty("--blur", clear ? "10px" : "28px");
+  document.documentElement.classList.toggle("glass-clear", clear);
   const [from, to] = [glassGet("tint"), glassGet("tint-end")];
   root.setProperty("--tint", from ? (to ? `linear-gradient(135deg, ${from}, ${to})` : from) : "rgb(var(--base))");
   root.setProperty("--ts", glassGet("strength") / 100);

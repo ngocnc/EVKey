@@ -1,8 +1,10 @@
+import EVKeyKit
 import SwiftUI
 
 /// Liquid Glass look of the popup and Bảng điều khiển: style, tint colour and tint strength. Applies live.
 struct SettingsGlassSection: View {
     @ObservedObject private var glass = GlassAppearance.shared
+    @ObservedObject private var state = AppState.shared
     @Environment(\.colorScheme) private var scheme
 
     private var tintBinding: Binding<String> {
@@ -12,7 +14,7 @@ struct SettingsGlassSection: View {
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Chủ đề")
+                Text(UIStrings.tr("glass.theme"))
                     .font(.system(size: 13, weight: .semibold))
                 SettingsSegmented(
                     choices: GlassAppearance.Theme.allCases.map { ChoiceOption(value: $0, label: $0.label) },
@@ -22,13 +24,13 @@ struct SettingsGlassSection: View {
             .settingsBlock()
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Kiểu kính")
+                Text(UIStrings.tr("glass.style"))
                     .font(.system(size: 13, weight: .semibold))
                 SettingsSegmented(
                     choices: GlassAppearance.Style.allCases.map { ChoiceOption(value: $0, label: $0.label) },
                     selection: $glass.style)
                 if #unavailable(macOS 26.0) {
-                    Text("Liquid Glass cần macOS 26 trở lên; bản cũ dùng nền mờ.")
+                    Text(UIStrings.tr("glass.needsMacOS26"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -37,9 +39,9 @@ struct SettingsGlassSection: View {
             .settingsBlock()
 
             SettingsCard {
-                SettingsPercentRow(title: "Độ đậm màu phủ", value: $glass.tintStrength)
+                SettingsPercentRow(title: UIStrings.tr("glass.tintStrength"), value: $glass.tintStrength)
                 SettingsDivider()
-                SettingsColorRow(title: "Màu phủ", start: tintBinding, end: $glass.tintEndHex)
+                SettingsColorRow(title: UIStrings.tr("glass.tint"), start: tintBinding, end: $glass.tintEndHex)
             }
         }
     }

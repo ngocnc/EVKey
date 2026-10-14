@@ -1,7 +1,7 @@
 import CoreGraphics
 
 /// Types a `TextEdit` with CGEvents. Every posted event carries `marker`, so the tap ignores it.
-struct KeyInjector {
+public struct KeyInjector {
     /// "EVKY" in `eventSourceUserData`, marking events EVKey posted.
     static let marker: Int64 = 0x4556_4B59
 
@@ -39,9 +39,16 @@ struct KeyInjector {
         }
     }
 
-    private func tapKey(_ code: CGKeyCode) {
+    /// Presses Command plus the key at `keycode` (for Cmd+C and Cmd+V). The events carry `marker`, so the tap passes them through.
+    public static func commandKey(_ keycode: CGKeyCode) {
+        KeyInjector().tapKey(keycode, flags: .maskCommand)
+    }
+
+    /// Presses and releases `code`. `flags` replaces the modifier state of the events when given.
+    func tapKey(_ code: CGKeyCode, flags: CGEventFlags? = nil) {
         for down in [true, false] {
             if let event = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down) {
+                if let flags { event.flags = flags }
                 post(event)
             }
         }

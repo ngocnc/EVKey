@@ -65,26 +65,53 @@ impl State {
         State { session: Session::with_mode(settings::default_dir(), MODE.clone()), fg: HWND::default() }
     }
 
-    /// Gives the session the frontmost app and password-field state. Called only for keys that may be converted.
-    fn refresh_context(&mut self) {
+    /// Tells the session which app is frontmost (and so which remembered V/E mode applies). The app is looked up again
+    /// only when the foreground window changes, so this is cheap enough for every key press, in either mode.
+    fn refresh_foreground(&mut self) {
         let fg = unsafe { GetForegroundWindow() };
         if fg != self.fg {
             self.fg = fg;
             self.session.set_foreground(foreground::exe_name(fg).as_deref());
         }
-        // The UIA poll result is cached; the classic ES_PASSWORD check is a zero-latency fast path.
+    }
+
+    /// Runs a few times a second on the hook thread, so a switch to another app restores that app's remembered mode
+    /// at once (the tray icon follows) instead of at the next key press, and a mode changed from the tray is saved.
+    fn poll(&mut self) {
+        let fg = unsafe { GetForegroundWindow() };
+        if fg != self.fg {
+            let app = foreground::exe_name(fg);
+            // EVKey's own popup or settings window: the user is still typing in the app behind it.
+            if !app.as_deref().is_some_and(|a| a.eq_ignore_ascii_case("evkey.exe")) {
+                self.fg = fg;
+                self.session.set_foreground(app.as_deref());
+            }
+        }
+        self.session.remember_current();
+    }
+
+    /// Password-field state, needed only for keys that may be converted. The UIA poll result is cached; the classic
+    /// ES_PASSWORD check is a zero-latency fast path.
+    fn refresh_secure(&mut self) {
         self.session.set_secure(crate::secure_input_win::active() || crate::secure_input_win::classic_password_focused());
     }
 
     /// Handles one key event. Returns whether to swallow it, plus input to inject.
     fn on_key(&mut self, vk: u16, down: bool) -> (bool, Vec<INPUT>) {
-        if down && !is_modifier_vk(vk) && !self.session.is_english() {
-            self.refresh_context();
+        // Always, even in English mode: leaving an English app for a Vietnamese one must restore its remembered mode.
+        if down {
+            self.refresh_foreground();
+            if !is_modifier_vk(vk) && !self.session.is_english() {
+                self.refresh_secure();
+            }
         }
         let caps_lock = unsafe { GetKeyState(VK_CAPITAL.0 as i32) } & 1 != 0;
         let reaction = self.session.on_key(KeyInput { vk, down, mods: async_mods(), caps_lock });
         if reaction.hotkey_toggled && self.session.settings().toggle_sound {
             crate::keyboard::play_toggle_sound(self.session.is_english());
+        }
+        if reaction.translate_requested {
+            crate::translate::trigger();
         }
         let mut input = Vec::new();
         if let Some(edit) = reaction.edit {
@@ -108,6 +135,12 @@ impl State {
         }
         (reaction.swallow, input)
     }
+}
+
+/// Presses `modifier` + `vk` and releases both (e.g. Ctrl+C). Marked as ours, so the hook ignores it.
+pub fn send_combo(modifier: u16, vk: u16) {
+    let input = [key(modifier, false), key(vk, false), key(vk, true), key(modifier, true)];
+    unsafe { SendInput(&input, size_of::<INPUT>() as i32) };
 }
 
 fn key(vk: u16, up: bool) -> INPUT {
@@ -189,6 +222,7 @@ fn install() -> Result<(HHOOK, HHOOK), String> {
 
 const WM_TIMER: u32 = 0x113;
 const REINSTALL_EVERY_MS: u32 = 5000;
+const POLL_EVERY_MS: u32 = 250;
 
 /// Installs the hooks on a new thread and waits for the result. On failure the app keeps running without typing.
 pub fn start() -> Result<(), String> {
@@ -205,10 +239,20 @@ pub fn start() -> Result<(), String> {
         ACTIVE.store(true, Ordering::Relaxed);
         crate::secure_input_win::start();
         let _ = tx.send(Ok(()));
-        unsafe { SetTimer(None, 1, REINSTALL_EVERY_MS, None) };
+        // With no window the system picks the timer ids; WM_TIMER carries the id in wParam.
+        let reinstall_timer = unsafe { SetTimer(None, 0, REINSTALL_EVERY_MS, None) };
+        let poll_timer = unsafe { SetTimer(None, 0, POLL_EVERY_MS, None) };
         let mut msg = MSG::default();
         while unsafe { GetMessageW(&mut msg, None, 0, 0) }.as_bool() {
-            if msg.message == WM_TIMER {
+            if msg.message == WM_TIMER && msg.wParam.0 == poll_timer {
+                STATE.with(|s| {
+                    if let Some(state) = s.borrow_mut().as_mut() {
+                        state.poll();
+                    }
+                });
+                continue;
+            }
+            if msg.message == WM_TIMER && msg.wParam.0 == reinstall_timer {
                 // New hooks first, so there is never a moment without one.
                 if let Ok(fresh) = install() {
                     unsafe {

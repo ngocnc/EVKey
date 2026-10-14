@@ -85,6 +85,8 @@ Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Filename: "{app}\evkey.exe"; Parameters: "--enable-keyboard"; StatusMsg: "{cm:TaskKeyboard}"; Tasks: enablekbd; Flags: runasoriginaluser runhidden waituntilterminated
 Filename: "{app}\evkey.exe"; Parameters: "--autostart on"; StatusMsg: "{cm:TaskAutostart}"; Tasks: autostart; Flags: runasoriginaluser runhidden waituntilterminated
 Filename: "{app}\evkey.exe"; Parameters: "--hidden"; Description: "{cm:LaunchEVKey}"; Flags: runasoriginaluser nowait postinstall skipifsilent
+; Self-update (EVKey passes /relaunch=1 with /SILENT): the wizard page is skipped, so start the new version here.
+Filename: "{app}\evkey.exe"; Parameters: "--hidden"; Check: RelaunchRequested; Flags: runasoriginaluser nowait
 
 [UninstallRun]
 ; runasoriginaluser is not available for uninstall entries: HKCU cleanup runs in the uninstaller's user context.
@@ -94,6 +96,11 @@ Filename: "{app}\evkey.exe"; Parameters: "--autostart off"; Flags: runhidden wai
 Filename: "{sysnative}\regsvr32.exe"; Parameters: "/s /u ""{app}\evkey_tsf.dll"""; Flags: runhidden waituntilterminated; RunOnceId: "UnregisterTsf"
 
 [Code]
+function RelaunchRequested: Boolean;
+begin
+  Result := ExpandConstant('{param:relaunch|0}') = '1';
+end;
+
 const
   TsfInprocKey = 'SOFTWARE\Classes\CLSID\{#TsfClsid}\InprocServer32';
 

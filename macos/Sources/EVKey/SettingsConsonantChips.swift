@@ -17,10 +17,14 @@ struct SettingsConsonantChips: View {
             .animation(.easeInOut(duration: 0.2), value: state.settings.customConsonants)
 
             HStack(spacing: 8) {
-                TextField("Phụ âm", text: $draft)
+                TextField(UIStrings.tr("consonant.placeholder"), text: $draft)
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 80)
                     .onSubmit(add)
+                    // A letter is added as soon as it is typed; the + button and Return stay as a way to retry.
+                    .onChange(of: draft) {
+                        if draft.isEmpty { error = nil } else { add() }
+                    }
                 Button(action: add) {
                     Image(systemName: "plus")
                         .font(.system(size: 11, weight: .bold))
@@ -35,7 +39,7 @@ struct SettingsConsonantChips: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.red)
             }
-            Text("Các phụ âm này sẽ được phép sử dụng trong bộ gõ Tiếng Việt")
+            Text(UIStrings.tr("consonant.note"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         }

@@ -73,6 +73,8 @@ struct SettingsView: View {
                     HStack(spacing: 8) {
                         Image(systemName: tab.systemImage).frame(width: 20)
                         Text(tab.title)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                         if tab == .translate {
                             Text("Beta")
                                 .font(.system(size: 9, weight: .semibold))
@@ -105,12 +107,12 @@ struct SettingsView: View {
     private var notices: some View {
         if !state.accessibilityTrusted {
             SettingsNotice(
-                text: "EVKey cần quyền Trợ năng để gõ tiếng Việt. Bật EVKey trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Trợ năng.",
-                buttonTitle: "Mở cài đặt Trợ năng"
+                text: UIStrings.tr("settings.accessNotice"),
+                buttonTitle: UIStrings.tr("settings.openAccessibility")
             ) { state.openAccessibilitySettings() }
         }
         if let error = state.configError {
-            SettingsNotice(text: error, buttonTitle: "Đặt lại về mặc định") {
+            SettingsNotice(text: error, buttonTitle: UIStrings.tr("settings.reset")) {
                 if confirmResetConfig() { state.perform { try state.resetConfig() } }
             }
         }

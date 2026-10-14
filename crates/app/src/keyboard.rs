@@ -42,12 +42,12 @@ pub fn set_enabled(on: bool) -> Result<(), String> {
     unsafe {
         // InstallLayoutOrTip is not in the windows crate; input.dll exports it (undocumented but stable since Windows 7).
         let dll = LoadLibraryW(w!("input.dll")).map_err(|e| e.to_string())?;
-        let proc = GetProcAddress(dll, s!("InstallLayoutOrTip")).ok_or("input.dll thiếu InstallLayoutOrTip")?;
+        let proc = GetProcAddress(dll, s!("InstallLayoutOrTip")).ok_or(crate::i18n::tr("input.dll thiếu InstallLayoutOrTip", "input.dll is missing InstallLayoutOrTip"))?;
         let install: InstallLayoutOrTipFn = std::mem::transmute(proc);
         let flags = if on { 0 } else { ILOT_UNINSTALL };
         let profile = w!("0409:{B5F8D54F-6BAD-46D4-8DBB-FFE03BF4D2F4}{91566F64-0E09-4724-93DA-6C798B765C4E}");
         if install(profile, flags) == 0 {
-            return Err("InstallLayoutOrTip thất bại".into());
+            return Err(crate::i18n::tr("InstallLayoutOrTip thất bại", "InstallLayoutOrTip failed").into());
         }
     }
     Ok(())

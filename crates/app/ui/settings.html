@@ -3,38 +3,38 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EVKey - Cài đặt</title>
+  <title data-i18n="settings.title"></title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="banner.css">
   <script src="glass.js"></script>
 </head>
 <body class="settings">
-  <button id="pin" class="pin active" type="button" aria-pressed="true" title="Bỏ ghim"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg></button>
+  <button id="pin" class="pin active" type="button" aria-pressed="true" data-i18n-title="pin.unpin"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg></button>
 <div class="shell">
   <nav class="side glass">
     <div class="brand"><span class="logo">V</span><div><b>EVKey</b><small id="version"></small></div></div>
-    <button class="tab active" data-tab="typing"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg>Gõ tiếng Việt</button>
-    <button class="tab" data-tab="smart"><svg viewBox="0 0 24 24"><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/><path d="m16 20 2 2 4-4"/></svg>Chính tả &amp; gõ nhanh</button>
-    <button class="tab" data-tab="macro"><svg viewBox="0 0 24 24"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/></svg>Gõ tắt</button>
-    <button class="tab" data-tab="keys"><svg viewBox="0 0 24 24"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></svg>Phím tắt</button>
-    <button class="tab" data-tab="apps"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg>Ứng dụng loại trừ</button>
-    <button class="tab" data-tab="appearance"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Giao diện</button>
-    <button class="tab" data-tab="system"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Hệ thống</button>
-    <button class="tab" data-tab="translate"><svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>Dịch thuật <span class="beta">Beta</span></button>
-    <button class="tab" data-tab="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>Thông tin</button>
+    <button class="tab active" data-tab="typing"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg><span data-i18n="nav.typing"></span></button>
+    <button class="tab" data-tab="smart"><svg viewBox="0 0 24 24"><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/><path d="m16 20 2 2 4-4"/></svg><span data-i18n="nav.smart"></span></button>
+    <button class="tab" data-tab="macro"><svg viewBox="0 0 24 24"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/></svg><span data-i18n="nav.macro"></span></button>
+    <button class="tab" data-tab="keys"><svg viewBox="0 0 24 24"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></svg><span data-i18n="nav.keys"></span></button>
+    <button class="tab" data-tab="apps"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg><span data-i18n="nav.apps"></span></button>
+    <button class="tab" data-tab="appearance"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg><span data-i18n="nav.appearance"></span></button>
+    <button class="tab" data-tab="system"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="nav.system"></span></button>
+    <button class="tab" data-tab="translate"><svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-i18n="nav.translate"></span> <span class="beta">Beta</span></button>
+    <button class="tab" data-tab="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span data-i18n="nav.about"></span></button>
   </nav>
 
   <main>
     <div id="config-error" class="banner" hidden>
       <span id="config-error-text"></span>
-      <button id="reset-broken">Đặt lại về mặc định</button>
+      <button id="reset-broken" data-i18n="reset.defaults"></button>
     </div>
 
     <section class="pane" data-pane="typing">
-      <h1>Gõ tiếng Việt</h1>
+      <h1 data-i18n="nav.typing"></h1>
       <div class="glass group">
         <div class="item stack">
-          <div class="text"><b>Kiểu gõ</b><span>Cách gõ dấu và chữ đặc biệt.</span></div>
+          <div class="text"><b data-i18n="typing.input_type.title"></b><span data-i18n="typing.input_type.desc"></span></div>
           <div class="seg" data-key="input_type">
             <button data-value="telex">Telex</button>
             <button data-value="vni">VNI</button>
@@ -43,33 +43,33 @@
           </div>
         </div>
         <div class="item stack">
-          <div class="text"><b>Vị trí dấu</b><span>Dấu trên nguyên âm đôi như oa, oe, uy.</span></div>
+          <div class="text"><b data-i18n="typing.tone.title"></b><span data-i18n="typing.tone.desc"></span></div>
           <div class="seg" data-key="tone_placement">
-            <button data-value="new">Kiểu mới (hòa)</button>
-            <button data-value="old">Kiểu cũ (hoà)</button>
+            <button data-value="new" data-i18n="typing.tone.new"></button>
+            <button data-value="old" data-i18n="typing.tone.old"></button>
           </div>
         </div>
         <div class="item stack">
-          <div class="text"><b>Bảng mã</b><span>Unicode phù hợp với hầu hết ứng dụng.</span></div>
+          <div class="text"><b data-i18n="typing.table.title"></b><span data-i18n="typing.table.desc"></span></div>
           <div class="seg" data-key="code_table">
             <button data-value="unicode">Unicode</button>
             <button data-value="tcvn3">TCVN3</button>
             <button data-value="vni_windows">VNI Windows</button>
-            <button data-value="unicode_compound">Unicode tổ hợp</button>
+            <button data-value="unicode_compound" data-i18n="table.unicode_compound"></button>
           </div>
         </div>
         <label class="item">
-          <div class="text"><b>Đặt dấu tự do</b><span>Cho phép gõ dấu sau khi đã kết thúc âm tiết.</span></div>
+          <div class="text"><b data-i18n="typing.free_mark.title"></b><span data-i18n="typing.free_mark.desc"></span></div>
           <span class="switch"><input type="checkbox" id="free_mark"><i></i></span>
         </label>
       </div>
     </section>
 
     <section class="pane" data-pane="keys" hidden>
-      <h1>Phím tắt</h1>
+      <h1 data-i18n="nav.keys"></h1>
       <div class="glass group">
         <div class="item stack">
-          <div class="text"><b>Chuyển Việt / Anh</b><span>Tổ hợp phím bật tắt bộ gõ trong mọi ứng dụng.</span></div>
+          <div class="text"><b data-i18n="keys.toggle.title"></b><span data-i18n="keys.toggle.desc"></span></div>
           <div class="seg" data-key="toggle_hotkey" id="hotkey-seg">
             <button data-value="alt+z"><kbd>Alt</kbd><kbd>Z</kbd></button>
             <button data-value="ctrl+shift"><kbd>Ctrl</kbd><kbd>Shift</kbd></button>
@@ -78,101 +78,104 @@
           </div>
         </div>
         <div class="item stack">
-          <div class="text"><b>Phím tạm tắt giữa từ</b><span>Nhấn phím này một lần giữa từ để phần còn lại của từ không bị biến đổi.</span></div>
+          <div class="text"><b data-i18n="keys.temp_off.title"></b><span data-i18n="keys.temp_off.desc"></span></div>
           <div class="seg" data-key="temp_off_key">
-            <button data-value="none">Không dùng</button>
+            <button data-value="none" data-i18n="common.none"></button>
             <button data-value="ctrl"><kbd>Ctrl</kbd></button>
             <button data-value="alt"><kbd>Alt</kbd></button>
           </div>
         </div>
       </div>
-      <p class="note">Nếu bạn còn nhiều bàn phím trong Windows, phím <kbd>Ctrl</kbd><kbd>Shift</kbd> hoặc <kbd>Alt</kbd><kbd>Shift</kbd> của Windows vẫn đổi bàn phím riêng.</p>
+      <p class="note" data-i18n-html="keys.note"></p>
     </section>
 
     <section class="pane" data-pane="smart" hidden>
-      <h1>Chính tả &amp; gõ nhanh</h1>
+      <h1 data-i18n="nav.smart"></h1>
       <div class="glass group">
-        <label class="item"><div class="text"><b>Kiểm tra chính tả</b><span>Chỉ biến đổi khi âm tiết hợp lệ.</span></div><span class="switch"><input type="checkbox" id="check_spelling"><i></i></span></label>
-        <label class="item" data-when="check_spelling"><div class="text"><b>Khôi phục khi sai chính tả</b><span>Gõ <code>window</code> thì giữ nguyên, không biến thành chữ lạ.</span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="smart.spell.title"></b><span data-i18n="smart.spell.desc"></span></div><span class="switch"><input type="checkbox" id="check_spelling"><i></i></span></label>
+        <label class="item" data-when="check_spelling"><div class="text"><b data-i18n="smart.restore.title"></b><span data-i18n-html="smart.restore.desc"></span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
       </div>
-      <h2>Gõ nhanh</h2>
+      <h2 data-i18n="smart.quick.heading"></h2>
       <div class="glass group">
-        <label class="item" data-when="input_type!=vni"><div class="text"><b>Telex nhanh</b><span>cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</span></div><span class="switch"><input type="checkbox" id="quick_telex"><i></i></span></label>
-        <label class="item"><div class="text"><b>Phụ âm đầu nhanh</b><span>f→ph, j→gi, w→qu</span></div><span class="switch"><input type="checkbox" id="quick_start_consonant"><i></i></span></label>
-        <label class="item"><div class="text"><b>Phụ âm cuối nhanh</b><span>g→ng, h→nh, k→ch</span></div><span class="switch"><input type="checkbox" id="quick_end_consonant"><i></i></span></label>
-        <label class="item"><div class="text"><b>Cho phép phụ âm tùy chỉnh (mặc định: Z,F,W,J)</b><span>Dùng khi gõ từ mượn hoặc tên riêng.</span></div><span class="switch"><input type="checkbox" id="allow_consonant_zfwj"><i></i></span></label>
+        <label class="item" data-when="input_type!=vni"><div class="text"><b data-i18n="smart.quick_telex.title"></b><span>cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</span></div><span class="switch"><input type="checkbox" id="quick_telex"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="smart.quick_start.title"></b><span>f→ph, j→gi, w→qu</span></div><span class="switch"><input type="checkbox" id="quick_start_consonant"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="smart.quick_end.title"></b><span>g→ng, h→nh, k→ch</span></div><span class="switch"><input type="checkbox" id="quick_end_consonant"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="smart.custom.title"></b><span data-i18n="smart.custom.desc"></span></div><span class="switch"><input type="checkbox" id="allow_consonant_zfwj"><i></i></span></label>
         <div class="item stack" data-when="allow_consonant_zfwj">
           <div id="custom-consonants" class="chips"></div>
           <div class="chip-add">
             <input id="custom-consonant-input" type="text" maxlength="1" placeholder="a–z" autocomplete="off" spellcheck="false">
-            <button id="add-custom-consonant" class="round-add" aria-label="Thêm phụ âm"></button>
+            <button id="add-custom-consonant" class="round-add" data-i18n-aria-label="smart.custom.add_aria"></button>
           </div>
-          <span class="chip-caption">Các phụ âm này sẽ được phép sử dụng trong bộ gõ Tiếng Việt</span>
+          <span class="chip-caption field-error" id="custom-consonant-error" hidden></span>
+          <span class="chip-caption" data-i18n="smart.custom.caption"></span>
         </div>
       </div>
       <div class="glass group">
         <label class="item">
-          <div class="text"><b>Chế độ theo ứng dụng</b><span>Nhớ chế độ Việt/Anh của từng ứng dụng và khôi phục khi quay lại ứng dụng đó.</span></div>
+          <div class="text"><b data-i18n="smart.app_mode.title"></b><span data-i18n="smart.app_mode.desc"></span></div>
           <span class="switch"><input type="checkbox" id="remember_app_mode"><i></i></span>
         </label>
         <label class="item">
-          <div class="text"><b>Hoàn tác từ bằng Esc</b><span>Khi đang gõ dở một từ, Esc trả về các phím đã gõ và tắt biến đổi cho từ đó.</span></div>
+          <div class="text"><b data-i18n="smart.undo.title"></b><span data-i18n="smart.undo.desc"></span></div>
           <span class="switch"><input type="checkbox" id="undo_word"><i></i></span>
         </label>
       </div>
-      <h2>Viết hoa</h2>
+      <h2 data-i18n="smart.caps.heading"></h2>
       <div class="glass group">
-        <label class="item"><div class="text"><b>Tự viết hoa đầu câu</b><span>Viết hoa chữ cái đầu sau dấu chấm.</span></div><span class="switch"><input type="checkbox" id="upper_case_first_char"><i></i></span></label>
-        <label class="item"><div class="text"><b>Gõ tắt theo kiểu chữ</b><span>Btw thành By the way, BTW thành BY THE WAY.</span></div><span class="switch"><input type="checkbox" id="auto_caps_macro"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="smart.caps_first.title"></b><span data-i18n="smart.caps_first.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_first_char"><i></i></span></label>
+        <label class="item sub" data-when="upper_case_first_char"><div class="text"><b data-i18n="smart.caps_punct.title"></b><span data-i18n="smart.caps_punct.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_after_punct"><i></i></span></label>
+        <label class="item sub" data-when="upper_case_first_char"><div class="text"><b data-i18n="smart.caps_enter.title"></b><span data-i18n="smart.caps_enter.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_after_enter"><i></i></span></label>
+        <label class="item sub" data-when="upper_case_first_char"><div class="text"><b data-i18n="smart.caps_first_letter.title"></b><span data-i18n="smart.caps_first_letter.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_first_letter"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="smart.macro_case.title"></b><span data-i18n="smart.macro_case.desc"></span></div><span class="switch"><input type="checkbox" id="auto_caps_macro"><i></i></span></label>
       </div>
     </section>
 
     <section class="pane" data-pane="macro" hidden>
-      <h1>Gõ tắt</h1>
-      <p class="note">Từ viết tắt được thay bằng nội dung khi gõ. Không để trống và không được trùng nhau.</p>
+      <h1 data-i18n="nav.macro"></h1>
+      <p class="note" data-i18n="macro.note"></p>
       <div class="glass group pad">
         <div id="macro-rows"></div>
         <div class="actions">
-          <button id="add-macro" class="ghost">Thêm dòng</button>
-          <button id="save-macros" class="primary">Lưu gõ tắt</button>
+          <button id="save-macros" class="primary" data-i18n="macro.save"></button>
         </div>
       </div>
     </section>
 
     <section class="pane" data-pane="apps" hidden>
-      <h1>Ứng dụng loại trừ</h1>
-      <p class="note">EVKey không gõ tiếng Việt trong các ứng dụng này. Mỗi dòng một tên tệp, ví dụ <code>game.exe</code>.</p>
+      <h1 data-i18n="nav.apps"></h1>
+      <p class="note" data-i18n-html="apps.note"></p>
       <div class="glass group pad">
         <textarea id="excluded_apps" spellcheck="false" placeholder="game.exe"></textarea>
-        <div class="actions"><button id="add-last-app">Thêm ứng dụng vừa dùng</button></div>
+        <div class="actions"><button id="add-last-app" data-i18n="apps.add_last"></button></div>
       </div>
     </section>
 
     <section class="pane" data-pane="appearance" hidden>
-      <h1>Giao diện</h1>
+      <h1 data-i18n="nav.appearance"></h1>
       <h2>Liquid Glass</h2>
       <div class="glass group">
         <div class="item stack">
-          <div class="text"><b>Chủ đề</b><span>Sáng, tối hoặc theo Windows.</span></div>
+          <div class="text"><b data-i18n="look.theme.title"></b><span data-i18n="look.theme.desc"></span></div>
           <div class="seg" data-local="theme">
-            <button data-value="system">Theo hệ thống</button>
-            <button data-value="light">Sáng</button>
-            <button data-value="dark">Tối</button>
+            <button data-value="system" data-i18n="look.theme.system"></button>
+            <button data-value="light" data-i18n="look.theme.light"></button>
+            <button data-value="dark" data-i18n="look.theme.dark"></button>
           </div>
         </div>
         <div class="item stack">
-          <div class="text"><b>Kiểu kính</b><span>Thường làm mờ nền phía sau; Trong suốt để nhìn xuyên rõ hơn.</span></div>
+          <div class="text"><b data-i18n="look.glass.title"></b><span data-i18n="look.glass.desc"></span></div>
           <div class="seg" data-local="glass-style">
-            <button data-value="regular">Thường</button>
-            <button data-value="clear">Trong suốt</button>
+            <button data-value="regular" data-i18n="look.glass.regular"></button>
+            <button data-value="clear" data-i18n="look.glass.clear"></button>
           </div>
         </div>
         <div class="item inline">
-          <div class="text"><b>Độ đậm màu phủ</b><span>Lớp màu phủ lên nền cửa sổ; 0 để bỏ.</span></div>
+          <div class="text"><b data-i18n="look.strength.title"></b><span data-i18n="look.strength.desc"></span></div>
           <div class="range-row"><input type="range" id="glass-strength" min="0" max="100" step="1"><output id="glass-strength-value"></output></div>
         </div>
         <div class="item">
-          <div class="text"><b>Màu phủ</b></div>
+          <div class="text"><b data-i18n="look.tint"></b></div>
           <div class="colors">
             <small>Gradient</small>
             <span class="switch"><input type="checkbox" id="glass-gradient"><i></i></span>
@@ -181,89 +184,130 @@
           </div>
         </div>
         <div class="item">
-          <div class="text"><b>Màu chủ đạo</b><span>Logo, công tắc, thanh trượt và thanh cuộn.</span></div>
+          <div class="text"><b data-i18n="look.accent.title"></b><span data-i18n="look.accent.desc"></span></div>
           <div class="colors">
-            <button id="accent-default" type="button">Mặc định</button>
+            <button id="accent-default" type="button" data-i18n="look.default"></button>
             <input type="color" id="accent-color">
           </div>
         </div>
       </div>
-      <h2>Cảnh báo Secure Input</h2>
+      <h2 data-i18n="look.banner.heading"></h2>
       <div class="glass group">
         <div class="item inline">
-          <div class="text"><b>Độ đậm nền</b></div>
+          <div class="text"><b data-i18n="look.bn_opacity.title"></b></div>
           <div class="range-row"><input type="range" id="bn-opacity" min="0" max="100" step="1"><output id="bn-opacity-value"></output></div>
         </div>
         <div class="item inline">
-          <div class="text"><b>Độ mờ kính</b><span>0 để tắt hiệu ứng kính.</span></div>
+          <div class="text"><b data-i18n="look.bn_blur.title"></b><span data-i18n="look.bn_blur.desc"></span></div>
           <div class="range-row"><input type="range" id="bn-blur" min="0" max="100" step="1"><output id="bn-blur-value"></output></div>
         </div>
-        <div class="item"><div class="text"><b>Màu nền</b></div><input type="color" id="bn-bg"></div>
-        <div class="item"><div class="text"><b>Màu viền</b></div><input type="color" id="bn-border"></div>
-        <div class="item"><div class="text"><b>Màu chữ</b></div><input type="color" id="bn-text"></div>
+        <div class="item"><div class="text"><b data-i18n="look.bn_bg"></b></div><input type="color" id="bn-bg"></div>
+        <div class="item"><div class="text"><b data-i18n="look.bn_border"></b></div><input type="color" id="bn-border"></div>
+        <div class="item"><div class="text"><b data-i18n="look.bn_text"></b></div><input type="color" id="bn-text"></div>
         <div class="item preview last">
           <div class="sec-banner" id="bn-preview"></div>
-          <span class="hint">Hiện ở cạnh dưới màn hình khi EVKey tạm tắt trong ô mật khẩu.</span>
+          <span class="hint" data-i18n="look.bn_hint"></span>
         </div>
       </div>
-      <div class="actions"><button id="gl-reset" class="danger">Đặt lại giao diện</button></div>
+      <div class="actions"><button id="gl-reset" class="danger" data-i18n="look.reset"></button></div>
     </section>
 
     <section class="pane" data-pane="system" hidden>
-      <h1>Hệ thống</h1>
+      <h1 data-i18n="nav.system"></h1>
       <div class="glass group">
-        <label class="item"><div class="text"><b id="autostart-title">Tự chạy cùng Windows</b><span>EVKey khởi động ẩn ở khay hệ thống.</span></div><span class="switch"><input type="checkbox" id="autostart"><i></i></span></label>
-        <label class="item"><div class="text"><b>Phát âm khi chuyển Chế độ</b><span>Phát âm thanh khi bật hoặc tắt tiếng Việt.</span></div><span class="switch"><input type="checkbox" id="toggle_sound"><i></i></span></label>
         <div class="item stack">
-          <div class="text"><b>Cơ chế gõ</b><span>Hook như UniKey không cần thêm bàn phím. Đổi xong cần khởi động lại EVKey.</span></div>
+          <div class="text"><b data-i18n="system.ui_language.title"></b><span data-i18n="system.ui_language.desc"></span></div>
+          <div class="seg" data-key="ui_language">
+            <button data-value="vi">Tiếng Việt</button>
+            <button data-value="en">English</button>
+          </div>
+        </div>
+        <label class="item"><div class="text"><b id="autostart-title" data-i18n="system.autostart.title"></b><span data-i18n="system.autostart.desc"></span></div><span class="switch"><input type="checkbox" id="autostart"><i></i></span></label>
+        <label class="item"><div class="text"><b data-i18n="system.sound.title"></b><span data-i18n="system.sound.desc"></span></div><span class="switch"><input type="checkbox" id="toggle_sound"><i></i></span></label>
+        <div class="item stack">
+          <div class="text"><b data-i18n="system.backend.title"></b><span data-i18n="system.backend.desc"></span></div>
           <div class="seg" data-key="backend">
-            <button data-value="hook">Hook (như UniKey)</button>
-            <button data-value="tsf">TSF (bàn phím Windows)</button>
+            <button data-value="hook" data-i18n="system.backend.hook"></button>
+            <button data-value="tsf" data-i18n="system.backend.tsf"></button>
           </div>
         </div>
         <div class="item" data-when="backend=tsf">
-          <div class="text"><b>Bàn phím Windows</b><span>Thêm hoặc gỡ EVKey khỏi danh sách bàn phím Windows.</span></div>
+          <div class="text"><b data-i18n="system.keyboard.title"></b><span data-i18n="system.keyboard.desc"></span></div>
           <button id="toggle-keyboard"></button>
         </div>
       </div>
-      <h2>Tệp cấu hình</h2>
+      <h2 data-i18n="system.files.heading"></h2>
       <div class="glass group pad">
         <code id="config-dir" class="path"></code>
         <div class="actions">
-          <button id="open-folder">Mở thư mục</button>
-          <button id="reset" class="danger">Đặt lại về mặc định</button>
+          <button id="open-folder" data-i18n="system.open_folder"></button>
+          <button id="reset" class="danger" data-i18n="reset.defaults"></button>
         </div>
       </div>
     </section>
     <section class="pane" data-pane="translate" hidden>
-      <h1>Dịch thuật <span class="beta">Beta</span></h1>
-      <div class="glass group pad">
-        <p class="note">Đang phát triển</p>
+      <h1><span data-i18n="nav.translate"></span> <span class="beta">Beta</span></h1>
+      <div class="glass group">
+        <div class="item">
+          <div class="text"><b data-i18n="translate.hotkey.title"></b><span data-i18n="translate.hotkey.desc"></span></div>
+          <div class="hotkey-rec">
+            <button id="translate-hotkey-btn" class="rec" type="button"></button>
+            <button id="translate-hotkey-off" class="ghost" type="button" data-i18n="common.off"></button>
+          </div>
+        </div>
+        <div class="item stack">
+          <div class="text"><b data-i18n="translate.action.title"></b><span data-i18n="translate.action.desc"></span></div>
+          <div class="seg" data-key="translate_action">
+            <button data-value="show" data-i18n="translate.action.show"></button>
+            <button data-value="copy" data-i18n="translate.action.copy"></button>
+            <button data-value="replace" data-i18n="translate.action.replace"></button>
+          </div>
+        </div>
+        <div class="item">
+          <div class="text"><b data-i18n="translate.secs.title"></b><span data-i18n="translate.secs.desc"></span></div>
+          <div class="time-field">
+            <input type="text" inputmode="numeric" id="translate-time" size="6" autocomplete="off">
+            <div class="dd" id="translate-unit" data-value="s">
+              <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <ul class="dd-menu" role="listbox" hidden>
+                <li role="option" data-value="ms">ms</li>
+                <li role="option" data-value="s" data-i18n="translate.unit.s"></li>
+                <li role="option" data-value="never" data-i18n="translate.unit.never"></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="item last">
+          <div class="text"><b data-i18n="translate.provider.title"></b><span data-i18n="translate.provider.desc"></span></div>
+          <span class="pill">Google Translate</span>
+        </div>
       </div>
     </section>
     <section class="pane" data-pane="about" hidden>
-      <h1>Thông tin</h1>
+      <h1 data-i18n="nav.about"></h1>
       <div class="glass group about-hero">
         <span class="logo lg">V</span>
         <div class="about-name">EVKey <code id="about-version" class="pill"></code></div>
-        <p>Bộ gõ tiếng Việt cho Windows, engine port từ OpenKey (GPL-3.0).</p>
+        <p data-i18n="about.intro"></p>
       </div>
       <div class="glass group">
+        <label class="item"><div class="text"><b data-i18n="about.update.title"></b><span data-i18n="about.update.desc"></span></div><span class="switch"><input type="checkbox" id="auto_check_updates"><i></i></span></label>
         <div class="item">
-          <div class="text"><b>Kiểm tra cập nhật</b><span>Tự động kiểm tra phiên bản mới</span></div>
-          <span class="pill">Sắp có</span>
+          <div class="text"><b data-i18n="about.update.check"></b><span id="update-status"></span></div>
+          <button id="check-update" data-i18n="about.update.check"></button>
         </div>
         <div class="item last">
           <div class="text"><b>GitHub</b><span>ngocnc/EVKey</span></div>
-          <button id="open-github" class="primary">Mở trang GitHub</button>
+          <button id="open-github" class="primary" data-i18n="about.github"></button>
         </div>
       </div>
-      <p class="note about-foot">Phát triển bởi ChrisNguyen</p>
+      <p class="note about-foot" data-i18n="about.credit"></p>
     </section>
 
   </main>
   <p id="msg" class="toast" role="status"></p>
 </div>
+<script src="i18n.js"></script>
 <script src="banner-view.js"></script>
 <script src="settings.js"></script>
 </body>

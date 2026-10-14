@@ -12,31 +12,37 @@ struct SettingsTypingTab: View {
         ChoiceOption(value: .simpleTelex2, label: "Simple Telex 2"),
     ]
 
-    private static let toneChoices: [ChoiceOption<TonePlacement>] = [
-        ChoiceOption(value: .new, label: "Kiểu mới (hòa)"),
-        ChoiceOption(value: .old, label: "Kiểu cũ (hoà)"),
-    ]
+    private static var toneChoices: [ChoiceOption<TonePlacement>] {
+        [
+            ChoiceOption(value: .new, label: UIStrings.tr("typing.tone.modern")),
+            ChoiceOption(value: .old, label: UIStrings.tr("typing.tone.classic")),
+        ]
+    }
 
-    private static let tableChoices: [ChoiceOption<CodeTable>] = [
-        ChoiceOption(value: .unicode, label: "Unicode"),
-        ChoiceOption(value: .tcvn3, label: "TCVN3"),
-        ChoiceOption(value: .vniWindows, label: "VNI Windows"),
-        ChoiceOption(value: .unicodeCompound, label: "Unicode tổ hợp"),
-    ]
+    private static var tableChoices: [ChoiceOption<CodeTable>] {
+        [
+            ChoiceOption(value: .unicode, label: "Unicode"),
+            ChoiceOption(value: .tcvn3, label: "TCVN3"),
+            ChoiceOption(value: .vniWindows, label: "VNI Windows"),
+            ChoiceOption(value: .unicodeCompound, label: UIStrings.tr("codeTable.unicodeCompound")),
+        ]
+    }
 
     var body: some View {
-        SettingsPage(title: "Gõ tiếng Việt") {
+        SettingsPage(title: UIStrings.tr("tab.typing")) {
             SettingsGroup {
                 HStack(spacing: 12) {
                     Image(systemName: state.accessibilityTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                         .foregroundStyle(state.accessibilityTrusted ? Color.green : Color.orange)
                         .font(.system(size: 18))
                     SettingsRowLabel(
-                        title: state.accessibilityTrusted ? "Đã cấp quyền Trợ năng" : "Chưa cấp quyền Trợ năng",
-                        subtitle: state.accessibilityTrusted ? "EVKey đang xử lý phím gõ." : "Cần cấp quyền để EVKey gõ được tiếng Việt.")
+                        title: state.accessibilityTrusted
+                            ? UIStrings.tr("typing.access.granted") : UIStrings.tr("typing.access.missing"),
+                        subtitle: state.accessibilityTrusted
+                            ? UIStrings.tr("typing.access.grantedDetail") : UIStrings.tr("typing.access.missingDetail"))
                     Spacer(minLength: 12)
                     if !state.accessibilityTrusted {
-                        Button("Mở cài đặt", action: state.openAccessibilitySettings)
+                        Button(UIStrings.tr("common.openSettings"), action: state.openAccessibilitySettings)
                     }
                 }
                 .padding(.horizontal, 14)
@@ -45,16 +51,16 @@ struct SettingsTypingTab: View {
             }
             SettingsGroup {
                 SettingsChoiceRow(
-                    title: "Kiểu gõ", subtitle: "Cách gõ dấu và chữ đặc biệt.",
+                    title: UIStrings.tr("typing.inputMethod"), subtitle: UIStrings.tr("typing.inputMethod.detail"),
                     choices: Self.inputChoices, selection: state.binding(\.inputType))
                 SettingsChoiceRow(
-                    title: "Vị trí dấu", subtitle: "Dấu trên nguyên âm đôi như oa, oe, uy.",
+                    title: UIStrings.tr("typing.tonePlacement"), subtitle: UIStrings.tr("typing.tonePlacement.detail"),
                     choices: Self.toneChoices, selection: state.binding(\.tonePlacement))
                 SettingsChoiceRow(
-                    title: "Bảng mã", subtitle: "Unicode phù hợp với hầu hết ứng dụng.",
+                    title: UIStrings.tr("typing.codeTable"), subtitle: UIStrings.tr("typing.codeTable.detail"),
                     choices: Self.tableChoices, selection: state.binding(\.codeTable))
                 SettingsToggleRow(
-                    title: "Đặt dấu tự do", subtitle: "Cho phép gõ dấu sau khi đã kết thúc âm tiết.",
+                    title: UIStrings.tr("typing.freeTone"), subtitle: UIStrings.tr("typing.freeTone.detail"),
                     isOn: state.binding(\.freeMark))
             }
         }

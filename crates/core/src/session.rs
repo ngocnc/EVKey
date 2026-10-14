@@ -73,6 +73,8 @@ pub struct Reaction {
     pub hotkey_toggled: bool,
     /// Alt-hotkey: inject a throwaway key (VK 0xFF down/up) so releasing Alt does not open the window menu.
     pub dummy_key: bool,
+    /// The translate hotkey was pressed; the host translates the selected text.
+    pub translate_requested: bool,
 }
 
 /// Group index of a modifier virtual key (the hook reports the left/right variants); `None` for other keys.
@@ -102,6 +104,7 @@ pub struct Session {
     stamp: Option<[Option<SystemTime>; 2]>,
     last_check: Option<Instant>,
     hotkey: Option<Hotkey>,
+    translate_hotkey: Option<Hotkey>,
     /// Modifier groups currently held, from the host's modifier state.
     held: Groups,
     /// Modifier-only chord (`ctrl+shift`): armed while exactly its modifiers are held and nothing else was pressed.
@@ -135,6 +138,7 @@ impl Session {
             stamp: None,
             last_check: None,
             hotkey: None,
+            translate_hotkey: None,
             held: [false; 4],
             chord_armed: false,
             tap_armed: false,
@@ -184,6 +188,14 @@ impl Session {
     pub fn toggle(&mut self) {
         self.set_english(!self.is_english());
         self.composer.reset();
+        self.remember_current();
+    }
+
+    /// Saves the current Mode for the frontmost app, so a change made by any means (hotkey, tray) survives a restart.
+    pub fn remember_current(&mut self) {
+        if let Some(app) = self.app_id.clone() {
+            self.remember_mode(&app);
+        }
     }
 
     pub fn settings(&self) -> Settings {
@@ -193,11 +205,13 @@ impl Session {
     /// The host lost the composition (mouse click can move the caret): forget the word.
     pub fn on_mouse_click(&mut self) {
         self.composer.reset();
+        self.composer.engine.mark_sentence_start();
     }
 
     /// The frontmost app changed. `app_id` is the Windows exe name or macOS bundle ID; `None` when unknown.
     pub fn set_foreground(&mut self, app_id: Option<&str>) {
         self.composer.reset();
+        self.composer.engine.mark_sentence_start();
         let next = app_id.map(str::to_owned);
         if next != self.app_id && self.settings.remember_app_mode {
             if let Some(prev) = self.app_id.clone() {
@@ -236,6 +250,11 @@ impl Session {
         self.held = mods.groups();
         self.reload(false);
 
+        if let Some(hk) = self.translate_hotkey {
+            if hk.vk == Some(vk) && self.held == wanted(&hk) {
+                return Reaction { swallow: true, translate_requested: true, dummy_key: hk.alt, ..Reaction::default() };
+            }
+        }
         if let Some(hk) = self.hotkey {
             if hk.vk == Some(vk) && self.held == wanted(&hk) {
                 self.toggle();
@@ -350,6 +369,7 @@ impl Session {
         if let Ok(hk) = parse_hotkey(&loaded.settings.toggle_hotkey) {
             self.hotkey = hk;
         }
+        self.translate_hotkey = parse_hotkey(&loaded.settings.translate_hotkey).ok().flatten();
         if self.composer.is_composing() {
             // Stamp stays stale, so the next check applies the rest after the word ends.
             self.stamp = None;
@@ -429,6 +449,19 @@ mod tests {
         let r = s.on_key(key(Z, true, mods(false, true, false)));
         assert!(r.swallow && r.hotkey_toggled && r.dummy_key);
         assert!(s.is_english());
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn translate_hotkey_is_swallowed_without_toggling_the_mode() {
+        let dir = dir_with("translate", Settings { translate_hotkey: "ctrl+alt+t".into(), ..Settings::default() });
+        let mut s = Session::new(Some(dir.clone()));
+        let t = 0x54;
+        let r = s.on_key(key(t, true, mods(true, true, false)));
+        assert!(r.swallow && r.translate_requested && !r.hotkey_toggled && r.dummy_key);
+        assert!(!s.is_english());
+        // The same key without the full chord is plain typing.
+        assert!(!s.on_key(key(t, true, mods(true, false, false))).translate_requested);
         let _ = std::fs::remove_dir_all(dir);
     }
 
@@ -544,6 +577,38 @@ mod tests {
         let mut s = Session::new(None);
         let r = s.on_key(key(KEY_ESC, true, mods(false, false, false)));
         assert!(!r.swallow && r.edit.is_none());
+    }
+
+    #[test]
+    fn a_toggle_is_remembered_at_once_without_leaving_the_app() {
+        let dir = dir_with("app-mode-toggle", Settings { remember_app_mode: true, ..Settings::default() });
+        let mut s = Session::new(Some(dir.clone()));
+        s.set_foreground(Some("notepad.exe"));
+        s.toggle();
+        let mut again = Session::new(Some(dir.clone()));
+        again.set_foreground(Some("notepad.exe"));
+        assert!(again.is_english(), "the toggle was saved when it happened, not only when leaving the app");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn first_letter_after_focus_change_or_click_is_capitalized_when_enabled() {
+        let typed = |first_letter: bool, click: bool| {
+            let settings = Settings { upper_case_first_char: true, upper_case_first_letter: first_letter, ..Settings::default() };
+            let dir = dir_with("first-letter", settings);
+            let mut s = Session::new(Some(dir.clone()));
+            if click {
+                s.on_mouse_click();
+            } else {
+                s.set_foreground(Some("notepad.exe"));
+            }
+            let edit = s.on_key(key(A, true, mods(false, false, false))).edit;
+            let _ = std::fs::remove_dir_all(dir);
+            edit.map(|e| e.text)
+        };
+        assert_eq!(typed(true, false).as_deref(), Some("A"));
+        assert_eq!(typed(true, true).as_deref(), Some("A"));
+        assert_eq!(typed(false, false), None);
     }
 
     #[test]

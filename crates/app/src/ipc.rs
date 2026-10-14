@@ -35,7 +35,7 @@ pub fn send_to_running_instance(command: &str) -> Result<(), String> {
         }
         std::thread::sleep(Duration::from_millis(100));
     }
-    Err("EVKey đang chạy nhưng không phản hồi".into())
+    Err(crate::i18n::tr("EVKey đang chạy nhưng không phản hồi", "EVKey is running but not responding").into())
 }
 
 /// Serves "show settings" requests from second launches. Runs forever on its own thread.

@@ -7,14 +7,14 @@ struct SettingsBannerSection: View {
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 10) {
-            SettingsCard { SettingsPercentRow(title: "Độ đậm nền", value: state.binding(\.bannerOpacity)) }
-            SettingsCard { SettingsPercentRow(title: "Độ mờ kính", value: state.binding(\.bannerBlur)) }
-            colorRow("Màu nền", \.bannerBg, \.bannerBgEnd)
-            colorRow("Màu viền", \.bannerBorder, \.bannerBorderEnd)
-            colorRow("Màu chữ", \.bannerText, \.bannerTextEnd)
+            SettingsCard { SettingsPercentRow(title: UIStrings.tr("banner.opacity"), value: state.binding(\.bannerOpacity)) }
+            SettingsCard { SettingsPercentRow(title: UIStrings.tr("banner.blur"), value: state.binding(\.bannerBlur)) }
+            colorRow(UIStrings.tr("banner.background"), \.bannerBg, \.bannerBgEnd)
+            colorRow(UIStrings.tr("banner.border"), \.bannerBorder, \.bannerBorderEnd)
+            colorRow(UIStrings.tr("banner.text"), \.bannerText, \.bannerTextEnd)
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Xem trước")
+                Text(UIStrings.tr("banner.preview"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.secondary)
                 BannerView(settings: state.settings, appName: "Terminal")

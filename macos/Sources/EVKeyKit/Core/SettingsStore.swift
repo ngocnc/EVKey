@@ -51,7 +51,7 @@ enum SettingsStore {
     }
 
     private static func jsonString(_ pointer: UnsafeMutablePointer<CChar>?) throws -> String {
-        guard let json = takeString(pointer) else { throw CoreError("Không đọc được cấu hình") }
+        guard let json = takeString(pointer) else { throw CoreError(UIStrings.tr("error.configRead")) }
         return json
     }
 

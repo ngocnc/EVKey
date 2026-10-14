@@ -10,6 +10,7 @@
 </head>
 <body>
 <div class="sec-banner" id="banner"></div>
+<script src="i18n.js"></script>
 <script src="banner-view.js"></script>
 <script>
   // The overlay window itself fades in and out (banner.rs); the page draws and tells Rust how big the content is.
@@ -17,6 +18,7 @@
   const { listen } = window.__TAURI__.event;
   const el = document.getElementById("banner");
   function draw(s) {
+    setUiLanguage(s.ui_language);
     renderBanner(el, s);
     el.style.width = el.style.height = "max-content";
     const { width, height } = el.getBoundingClientRect();

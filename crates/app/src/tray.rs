@@ -7,7 +7,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::image::Image;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::window::{Effect, EffectsBuilder};
-use tauri::{App, AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Window, WindowEvent};
+use tauri::{App, AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow, WebviewWindowBuilder, Window, WindowEvent};
 
 use evkey_engine::settings::{self, Settings};
 
@@ -63,20 +63,43 @@ pub(crate) fn update_settings(f: impl FnOnce(&mut Settings)) {
     }
 }
 
+/// Windows with `"create": false` in tauri.conf.json: built on first show, destroyed on close so no WebView2 renderer idles in the background.
+const LAZY: [&str; 2] = ["settings", crate::updater::UPDATE_WINDOW];
+
+/// Returns the window `label`, building it from its config entry if needed; `init` runs in the page before its own scripts.
+pub fn lazy_window(app: &AppHandle, label: &str, init: &str) -> Option<WebviewWindow> {
+    if let Some(win) = app.get_webview_window(label) {
+        return Some(win);
+    }
+    let cfg = app.config().app.windows.iter().find(|w| w.label == label)?;
+    WebviewWindowBuilder::from_config(app, cfg).ok()?.initialization_script(init).build().ok()
+}
+
 pub fn show_settings(app: &AppHandle) {
-    let Some(win) = app.get_webview_window("settings") else {
+    open_settings(app, None);
+}
+
+fn open_settings(app: &AppHandle, tab: Option<&str>) {
+    let existed = app.get_webview_window("settings").is_some();
+    // A freshly built page has no listener yet, so it reads the tab from this global instead of the event.
+    let init = tab.map(|t| format!("window.__evkeyTab = {t:?};")).unwrap_or_default();
+    let Some(win) = lazy_window(app, "settings", &init) else {
         return;
     };
     let _ = win.show();
     let _ = win.unminimize();
     let _ = win.set_focus();
-    let _ = app.emit("settings-show", ());
+    if existed {
+        let _ = app.emit("settings-show", ());
+        if let Some(tab) = tab {
+            let _ = app.emit("settings-tab", tab);
+        }
+    }
 }
 
 /// Opens the settings window on `tab` (a `data-tab` name such as `macro`).
 pub fn show_settings_tab(app: &AppHandle, tab: &str) {
-    show_settings(app);
-    let _ = app.emit("settings-tab", tab);
+    open_settings(app, Some(tab));
 }
 
 /// EVKEY_DEBUG_SHOW=popup: opens the popup near the top-right of the primary monitor (for screenshots).
@@ -156,7 +179,7 @@ pub fn refresh_icon(app: &AppHandle) {
 
 fn tooltip(mode: Mode) -> String {
     match mode {
-        Mode::Vietnamese => "EVKey - Tieng Viet".into(),
+        Mode::Vietnamese => crate::i18n::tr("EVKey - Tiếng Việt", "EVKey - Vietnamese").into(),
         Mode::English => {
             let hotkey = settings::default_dir()
                 .and_then(|dir| settings::load(&dir).ok())
@@ -197,8 +220,8 @@ fn debug_dump(mode: Mode, tip: &str) {
 
 pub fn on_window_event(window: &Window, event: &WindowEvent) {
     match event {
-        // Closing only hides: the tray app keeps running and the windows are reused.
-        WindowEvent::CloseRequested { api, .. } => {
+        // Closing only hides: the tray app keeps running and the windows are reused. Lazy windows really close.
+        WindowEvent::CloseRequested { api, .. } if !LAZY.contains(&window.label()) => {
             api.prevent_close();
             let _ = window.hide();
         }

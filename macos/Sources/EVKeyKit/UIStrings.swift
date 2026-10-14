@@ -1,0 +1,216 @@
+import Foundation
+
+/// Every user-visible string of the macOS app, keyed by a stable id. To add a string, add one entry with both
+/// languages here and call `UIStrings.tr("key")` where it is shown. The `vi` value is the shipped Vietnamese text.
+/// Labels that read the same in both languages (Telex, VNI, Unicode, ⌘, ...) stay literal at the call site.
+public enum UIStrings {
+    /// Language the UI is drawn in. `AppState` keeps this in step with `EVSettings.uiLanguage`.
+    /// This is never the V/E typing mode.
+    public static var language: UILanguage = .vi
+
+    /// Returns the text for `key` in the current `language`. `args` fill `%@` placeholders in order.
+    public static func tr(_ key: String, _ args: CVarArg...) -> String {
+        guard let pair = table[key] else {
+            assertionFailure("Missing UI string: \(key)")
+            return key
+        }
+        let text = language == .en ? pair.en : pair.vi
+        return args.isEmpty ? text : String(format: text, arguments: args)
+    }
+
+    private static let table: [String: (vi: String, en: String)] = [
+        // Shared
+        "common.cancel": ("Hủy", "Cancel"),
+        "common.openSettings": ("Mở cài đặt", "Open settings"),
+
+        // Window and tabs
+        "window.title": ("EVKey - Cài đặt", "EVKey - Settings"),
+        "tab.typing": ("Gõ tiếng Việt", "Vietnamese typing"),
+        "tab.smart": ("Chính tả & gõ nhanh", "Smart typing"),
+        "tab.macro": ("Gõ tắt", "Macros"),
+        "tab.keys": ("Phím tắt", "Hotkeys"),
+        "tab.apps": ("Ứng dụng loại trừ", "Excluded apps"),
+        "tab.appearance": ("Giao diện", "Appearance"),
+        "tab.system": ("Hệ thống", "System"),
+        "tab.translate": ("Dịch thuật", "Translate"),
+        "tab.info": ("Thông tin", "About"),
+
+        // Menu bar popup
+        "popup.header": ("Gõ tiếng Việt", "Vietnamese typing"),
+        "popup.inputMethod": ("KIỂU GÕ", "INPUT METHOD"),
+        "popup.codeTable": ("BẢNG MÃ", "CODE TABLE"),
+        "popup.macros": ("Quản lý gõ tắt…", "Manage macros…"),
+        "popup.controlPanel": ("Mở cài đặt…", "Open settings…"),
+        "popup.quit": ("Thoát EVKey", "Quit EVKey"),
+        "codeTable.unicodeCompound": ("Unicode tổ hợp", "Unicode compound"),
+
+        // Typing tab
+        "typing.access.granted": ("Đã cấp quyền Trợ năng", "Accessibility access granted"),
+        "typing.access.missing": ("Chưa cấp quyền Trợ năng", "Accessibility access not granted"),
+        "typing.access.grantedDetail": ("EVKey đang xử lý phím gõ.", "EVKey is handling your keystrokes."),
+        "typing.access.missingDetail": ("EVKey cần quyền này để gõ tiếng Việt.", "EVKey needs this permission to type Vietnamese."),
+        "typing.inputMethod": ("Kiểu gõ", "Input method"),
+        "typing.inputMethod.detail": ("Chọn cách gõ dấu. Telex: as → á. VNI: a1 → á.", "How you type tone marks. Telex: as → á. VNI: a1 → á."),
+        "typing.tonePlacement": ("Vị trí đặt dấu", "Tone mark position"),
+        "typing.tonePlacement.detail": ("Với oa, oe, uy: kiểu mới đặt dấu ở chữ thứ hai (hòa), kiểu cũ ở chữ thứ nhất (hoà).", "For oa, oe and uy: the new style puts the mark on the second letter (hòa), the old style on the first (hoà)."),
+        "typing.tone.modern": ("Kiểu mới (hòa)", "New style (hòa)"),
+        "typing.tone.classic": ("Kiểu cũ (hoà)", "Old style (hoà)"),
+        "typing.codeTable": ("Bảng mã", "Text encoding"),
+        "typing.codeTable.detail": ("Cách lưu chữ có dấu. Nên giữ Unicode, trừ khi một ứng dụng cũ cần bảng mã khác.", "How accented letters are stored. Keep Unicode unless an old app needs another one."),
+        "typing.freeTone": ("Đặt dấu tự do", "Free tone placement"),
+        "typing.freeTone.detail": ("Cho phép gõ phím dấu sau khi đã gõ hết các chữ cái của từ.", "Lets you type the tone key after the rest of the word is already typed."),
+
+        // Shortcuts tab
+        "keys.toggle": ("Chuyển Việt / Anh", "Switch Vietnamese / English"),
+        "keys.toggle.detail": ("Bấm tổ hợp phím này để bật hoặc tắt gõ tiếng Việt, dùng được ở mọi ứng dụng.", "Press this to switch typing between Vietnamese and English in any app."),
+        "keys.tempOff": ("Phím tạm tắt trong từ", "Pause key"),
+        "keys.tempOff.detail": ("Bấm phím này giữa chừng một từ để phần còn lại của từ được gõ nguyên văn, không bỏ dấu.", "Press this key in the middle of a word and the rest of that word is typed exactly as you press it, with no accents."),
+        "keys.tempOff.none": ("Không dùng", "None"),
+        "keys.hotkey.none": ("Tắt", "Off"),
+
+        // Spelling and quick typing tab
+        "smart.spellCheck": ("Kiểm tra chính tả", "Spell check"),
+        "smart.spellCheck.detail": ("Chỉ thêm dấu khi chữ vừa gõ có thể là một từ tiếng Việt.", "Only adds accents when what you typed can be a Vietnamese word."),
+        "smart.restore": ("Giữ nguyên từ không phải tiếng Việt", "Keep non-Vietnamese words as typed"),
+        "smart.restore.detail": ("Gõ window sẽ ra window, không bị đổi thành chữ lạ.", "Typing window gives window, not odd letters."),
+        "smart.quickTyping": ("Gõ nhanh", "Quick typing"),
+        "smart.quickTelex": ("Telex nhanh", "Quick Telex"),
+        "smart.quickStart": ("Phụ âm đầu nhanh", "Quick initial consonants"),
+        "smart.quickEnd": ("Phụ âm cuối nhanh", "Quick final consonants"),
+        "smart.customConsonants": ("Phụ âm thêm (mặc định Z, F, W, J)", "Extra consonants (default Z, F, W, J)"),
+        "smart.perApp": ("Nhớ Việt/Anh theo ứng dụng", "Remember Vietnamese/English per app"),
+        "smart.perApp.detail": ("Mỗi ứng dụng nhớ riêng bạn đang gõ tiếng Việt hay tiếng Anh. Khi quay lại ứng dụng đó, EVKey tự chuyển về đúng chế độ.", "Each app remembers whether you were typing Vietnamese or English. When you come back to it, EVKey switches to that mode again."),
+        "smart.escUndo": ("Hoàn tác bằng Esc", "Undo with Esc"),
+        "smart.escUndo.detail": ("Đang gõ dở một từ, bấm Esc để trả từ đó về đúng các phím bạn đã bấm (vieejt thay vì việt).", "While typing a word, press Esc to get back the exact keys you pressed (vieejt instead of việt)."),
+        "smart.capitalize": ("Viết hoa", "Capitalization"),
+        "smart.autoCapitalize": ("Tự viết hoa đầu câu", "Capitalize sentences"),
+        "smart.caps_first.desc": ("Tự viết hoa chữ cái đầu tiên của câu. Chọn các trường hợp bên dưới.", "Capitalizes the first letter of a new sentence. Choose the cases below."),
+        "smart.capsPunct": ("Sau các dấu câu . ? !", "After . ? ! marks"),
+        "smart.capsPunct.detail": ("xong rồi. tôi đi → xong rồi. Tôi đi", "done. i go → done. I go"),
+        "smart.capsEnter": ("Sau khi bấm Enter", "After pressing Enter"),
+        "smart.capsEnter.detail": ("Chữ cái đầu tiên của dòng mới.", "The first letter of the new line."),
+        "smart.capsFirst": ("Chữ cái đầu tiên", "First letter"),
+        "smart.capsFirst.detail": ("Chữ cái đầu tiên bạn gõ sau khi chuyển ứng dụng hoặc bấm chuột vào ô nhập.", "The first letter you type after switching apps or clicking into a text box."),
+        "smart.macroCase": ("Gõ tắt theo kiểu chữ", "Match macro letter case"),
+        "smart.macroCase.detail": ("Nội dung thay thế viết hoa theo từ viết tắt: gõ Btw ra By the way, gõ BTW ra BY THE WAY.", "The replacement follows how you capitalize the abbreviation: Btw gives By the way, BTW gives BY THE WAY."),
+
+        // Macros tab
+        "macro.note": ("Gõ từ viết tắt rồi bấm Space, EVKey sẽ thay bằng nội dung bên phải. Mỗi từ viết tắt chỉ dùng được một lần.", "Type an abbreviation and press Space, and EVKey replaces it with the text on the right. Each abbreviation can be used only once."),
+        "macro.key": ("Từ viết tắt", "Abbreviation"),
+        "macro.value": ("Nội dung thay thế", "Replacement text"),
+        "macro.delete": ("Xóa", "Delete"),
+        "macro.rowIncomplete": ("Dòng %@: nhập cả từ viết tắt lẫn nội dung thay thế, hoặc xóa dòng này.", "Row %@: enter both the abbreviation and its replacement text, or delete the row."),
+        "macro.save": ("Lưu gõ tắt", "Save macros"),
+
+        // Excluded apps tab
+        "apps.note": ("EVKey sẽ không gõ tiếng Việt trong các ứng dụng này, ví dụ game. Mỗi dòng một bundle ID, như com.apple.Safari.", "EVKey will not type Vietnamese in these apps, for example games. Put one bundle ID per line, like com.apple.Safari."),
+        "apps.addRunning": ("Thêm từ ứng dụng đang chạy", "Add from running apps"),
+        "apps.addRecent": ("Thêm ứng dụng vừa dùng", "Add the app I used last"),
+        "apps.empty": ("Chưa ghi nhận ứng dụng nào. Hãy chuyển sang ứng dụng muốn loại trừ rồi thử lại.", "No app recorded yet. Switch to the app you want to exclude, then try again."),
+
+        // Consonant chips
+        "consonant.placeholder": ("Phụ âm", "Consonant"),
+        "consonant.note": ("Các phụ âm này được phép dùng khi gõ tiếng Việt.", "These consonants are allowed when typing Vietnamese."),
+        "consonant.error.invalid": ("Chỉ nhập một chữ cái a–z, không dấu. Nếu chữ bị đổi thành có dấu, hãy chuyển EVKey sang gõ tiếng Anh rồi thử lại.", "Enter a single letter a–z with no accent. If the letter turns into an accented one, switch EVKey to English and try again."),
+        "consonant.error.duplicate": ("Phụ âm \"%@\" đã có.", "The consonant \"%@\" is already in the list."),
+
+        // System tab
+        "system.uiLanguage": ("Ngôn ngữ", "Language"),
+        "system.launchAtLogin": ("Tự chạy khi đăng nhập", "Start at login"),
+        "system.launchAtLogin.detail": ("EVKey tự mở và nằm trên thanh menu khi bạn đăng nhập.", "EVKey starts in the menu bar when you sign in."),
+        "system.speakOnSwitch": ("Phát tiếng khi đổi chế độ", "Sound when switching mode"),
+        "system.speakOnSwitch.detail": ("Phát âm khác nhau cho tiếng Việt và tiếng Anh, chỉ khi bạn tự chuyển.", "Plays a different sound for Vietnamese and English, only when you switch yourself."),
+        "system.configFiles": ("Tệp cấu hình", "Config files"),
+        "system.openFolder": ("Mở thư mục", "Open folder"),
+        "system.reset": ("Đặt lại về mặc định", "Reset to defaults"),
+        "system.reset.title": ("Đặt lại toàn bộ cài đặt và gõ tắt về mặc định?", "Reset all settings and macros to their defaults?"),
+        "system.reset.message": ("Cài đặt và gõ tắt hiện có sẽ bị ghi đè.", "Your current settings and macros will be overwritten."),
+        "system.reset.confirm": ("Đặt lại", "Reset"),
+
+        // Appearance tab and Secure Input banner
+        "appearance.header": ("Giao diện", "Appearance"),
+        "appearance.liquidGlass": ("Liquid Glass", "Liquid Glass"),
+        "appearance.secureBanner": ("Cảnh báo Secure Input", "Secure Input warning"),
+        "appearance.reset": ("Đặt lại giao diện", "Reset appearance"),
+        "appearance.reset.title": ("Đặt lại giao diện về mặc định?", "Reset appearance to defaults?"),
+        "appearance.reset.message": ("Kiểu kính, màu phủ và màu cảnh báo Secure Input sẽ về mặc định.", "Glass style, tint and Secure Input warning colors will return to their defaults."),
+        "appearance.reset.confirm": ("Đặt lại", "Reset"),
+        "banner.opacity": ("Độ đậm nền", "Background opacity"),
+        "banner.blur": ("Độ mờ kính", "Glass blur"),
+        "banner.background": ("Màu nền", "Background color"),
+        "banner.border": ("Màu viền", "Border color"),
+        "banner.text": ("Màu chữ", "Text color"),
+        "banner.preview": ("Xem trước", "Preview"),
+        "banner.title": ("EVKey tạm tắt trong ô mật khẩu", "EVKey is paused in a password field"),
+        "banner.message": ("%@ đang chặn EVKey gõ tiếng Việt", "%@ is blocking EVKey from typing Vietnamese"),
+        "banner.anApp": ("Một ứng dụng", "An app"),
+        "glass.theme": ("Chủ đề", "Theme"),
+        "glass.style": ("Kiểu kính", "Glass style"),
+        "glass.needsMacOS26": ("Liquid Glass cần macOS 26 trở lên; bản cũ dùng nền mờ.", "Liquid Glass needs macOS 26 or later; older versions use a blurred background."),
+        "glass.tintStrength": ("Độ đậm màu phủ", "Tint strength"),
+        "glass.tint": ("Màu phủ", "Tint"),
+        "glass.theme.system": ("Theo macOS", "Same as macOS"),
+        "glass.theme.light": ("Sáng", "Light"),
+        "glass.theme.dark": ("Tối", "Dark"),
+        "glass.style.regular": ("Thường", "Regular"),
+        "glass.style.clear": ("Trong suốt", "Clear"),
+        "pin.unpin": ("Bỏ ghim", "Unpin"),
+        "pin.pin": ("Ghim lên trên cùng", "Keep on top"),
+
+        // About tab
+        "info.header": ("Thông tin", "About"),
+        "info.openGitHub": ("Mở trang GitHub", "Open GitHub page"),
+        "info.developedBy": ("Phát triển bởi ChrisNguyen", "Developed by ChrisNguyen"),
+
+        // Settings window notices
+        "settings.accessNotice": ("EVKey cần quyền Trợ năng để gõ tiếng Việt. Bật EVKey trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Trợ năng.", "EVKey needs Accessibility access to type Vietnamese. Turn on EVKey in System Settings > Privacy & Security > Accessibility."),
+        "settings.openAccessibility": ("Mở cài đặt Trợ năng", "Open Accessibility settings"),
+        "settings.reset": ("Đặt lại về mặc định", "Reset to defaults"),
+
+        // Errors
+        "alert.saveFailed": ("Không lưu được cài đặt", "Could not save settings"),
+        "error.configRead": ("Không đọc được cấu hình", "Could not read the configuration"),
+        "error.macroEmpty": ("Từ viết tắt không được để trống.", "An abbreviation cannot be empty."),
+        "error.macroDuplicate": ("Từ viết tắt bị trùng: %@", "Duplicate abbreviation: %@"),
+
+        // Updates
+        "update.title": ("Đã có bản EVKey mới", "A new version of EVKey is available"),
+        "update.version": ("Phiên bản %@", "Version %@"),
+        "update.notes": ("Có gì mới", "What's new"),
+        "update.noNotes": ("Bản này chưa có ghi chú phát hành.", "This release has no notes."),
+        "update.install": ("Cài đặt và mở lại", "Install and relaunch"),
+        "update.downloading": ("Đang tải…", "Downloading…"),
+        "update.skip": ("Bỏ qua bản này", "Skip this version"),
+        "update.later": ("Để sau", "Later"),
+        "update.checkNow": ("Kiểm tra cập nhật", "Check for updates"),
+        "update.latest": ("Bạn đang dùng bản mới nhất", "You are on the latest version"),
+        "update.error": ("Không kiểm tra được: %@", "Could not check: %@"),
+        "update.autoTitle": ("Tự động kiểm tra cập nhật", "Check for updates automatically"),
+        "update.autoDesc": ("Kiểm tra khi mở EVKey và mỗi 24 giờ.", "Checks when EVKey starts and every 24 hours."),
+        "update.failed": ("Không cài đặt được: %@", "Could not install: %@"),
+        "update.signature": ("Ứng dụng tải về không qua được kiểm tra chữ ký.", "The downloaded app failed its signature check."),
+        "update.notWritable": ("Không có quyền ghi vào %@", "No permission to write to %@"),
+        "translate.hotkey": ("Phím tắt dịch", "Translate hotkey"),
+        "translate.hotkey.detail": ("Bôi đen văn bản ở bất kỳ ứng dụng nào rồi bấm phím này. Tiếng Việt được dịch sang tiếng Anh, ngôn ngữ khác được dịch sang tiếng Việt.", "Select text in any app, then press this key. Vietnamese is translated to English; any other language is translated to Vietnamese."),
+        "translate.hotkey.recording": ("Bấm phím tắt mới… (Esc: hủy)", "Press the new hotkey… (Esc to cancel)"),
+        "translate.hotkey.unset": ("Chưa đặt – bấm để đặt", "Not set – click to set"),
+        "translate.hotkey.needModifier": ("Hãy giữ Control, Option, Shift hoặc Command cùng với một phím.", "Hold Control, Option, Shift or Command together with a key."),
+        "translate.hotkey.badKey": ("Chỉ nhận chữ cái, chữ số, Space và F1–F12.", "Only letters, digits, Space and F1–F12 can be used."),
+        "translate.action": ("Sau khi dịch", "After translating"),
+        "translate.action.detail": ("Bản dịch luôn hiện trong một cửa sổ nhỏ. EVKey có thể tự sao chép nó, hoặc dán đè lên đoạn văn bản bạn đã bôi đen.", "The translation always shows in a small popup. EVKey can also copy it, or paste it over the text you selected."),
+        "translate.action.show": ("Chỉ hiện", "Show only"),
+        "translate.action.copy": ("Sao chép", "Copy"),
+        "translate.action.replace": ("Dán đè lên văn bản", "Paste over selection"),
+        "translate.displayTime": ("Thời gian hiển thị", "Display time"),
+        "translate.displayTime.detail": ("Thời gian cửa sổ dịch hiện trước khi tự đóng (thanh phía trên chạy hết). Bấm vào cửa sổ để đóng ngay. Chọn Không tự đóng để giữ đến khi bạn bấm.", "How long the popup stays before closing; the bar at the top counts down. Click it to close it sooner. Choose Never close to keep it until you click."),
+        "translate.unit.ms": ("ms", "ms"),
+        "translate.unit.s": ("giây", "s"),
+        "translate.unit.never": ("Không tự đóng", "Never close"),
+        "translate.service": ("Dịch vụ dịch", "Translation service"),
+        "translate.service.detail": ("Văn bản bạn chọn được gửi tới Google qua internet mỗi lần dịch.", "The text you select is sent to Google over the internet each time you translate."),
+        "translate.loading": ("Đang dịch…", "Translating…"),
+        "translate.error.noSelection": ("Bạn chưa bôi đen văn bản nào.", "No text is selected."),
+        "translate.error.tooLong": ("Văn bản quá dài để dịch.", "The text is too long to translate."),
+        "translate.error.failed": ("Không dịch được: %@", "Could not translate: %@"),
+    ]
+}
