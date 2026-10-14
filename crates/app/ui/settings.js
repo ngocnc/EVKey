@@ -6,7 +6,9 @@ const BOOLS = [
   "quick_start_consonant", "quick_end_consonant", "upper_case_first_char",
   "allow_consonant_zfwj", "auto_caps_macro", "toggle_sound",
 ];
-const SEGS = [...document.querySelectorAll(".seg")];
+// Segments bound to a config field; `data-local` ones are look-only preferences kept in local storage.
+const SEGS = [...document.querySelectorAll(".seg:not([data-local])")];
+const ALL_SEGS = [...document.querySelectorAll(".seg")];
 let state = null;
 let toastTimer = 0;
 
@@ -233,6 +235,21 @@ for (const seg of SEGS) {
     saveSettings();
   };
 }
+// Colour theme of the settings and popup windows; "system" follows Windows. The popup reads the same local storage.
+const themeSeg = document.querySelector('.seg[data-local="theme"]');
+function applyTheme(theme) {
+  window.__TAURI__.window.getCurrentWindow().setTheme(theme === "system" ? null : theme).catch((e) => say(String(e), "err"));
+}
+const savedTheme = localStorage.getItem("evkey-theme") ?? "system";
+for (const b of themeSeg.querySelectorAll("button")) b.classList.toggle("active", b.dataset.value === savedTheme);
+applyTheme(savedTheme);
+themeSeg.onclick = (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  for (const x of themeSeg.querySelectorAll("button")) x.classList.toggle("active", x === b);
+  localStorage.setItem("evkey-theme", b.dataset.value);
+  applyTheme(b.dataset.value);
+};
 for (const k of BOOLS) $(k).onchange = saveSettings;
 $("excluded_apps").onchange = saveSettings;
 $("add-macro").onclick = () => addMacroRow();
@@ -318,7 +335,7 @@ function placeThumb(seg) {
   seg.classList.add("ready");
 }
 const thumbObserver = new ResizeObserver((entries) => entries.forEach((e) => placeThumb(e.target)));
-for (const seg of SEGS) {
+for (const seg of ALL_SEGS) {
   seg.prepend(Object.assign(document.createElement("i"), { className: "thumb" }));
   thumbObserver.observe(seg);
   seg.addEventListener("click", () => placeThumb(seg));

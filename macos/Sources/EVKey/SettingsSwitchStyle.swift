@@ -14,6 +14,7 @@ struct SettingsSwitchStyle: ToggleStyle {
 
     private struct Track: ButtonStyle {
         let isOn: Bool
+        @Environment(\.colorScheme) private var scheme
 
         func makeBody(configuration: Configuration) -> some View {
             let thumbWidth: CGFloat = configuration.isPressed ? 22 : 16
@@ -21,9 +22,10 @@ struct SettingsSwitchStyle: ToggleStyle {
             let travel: CGFloat = 34 - 4 - thumbWidth
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(isOn ? Color.accentColor : Color.primary.opacity(0.22))
+                    .fill(isOn ? Color.accentColor : Color.primary.opacity(scheme == .dark ? 0.22 : 0.32))
                 Capsule()
-                    .fill(Color(white: isOn ? 0.74 : 0.52))
+                    // Light mode: a bright thumb, else it vanishes against the grey off track.
+                    .fill(Color(white: scheme == .dark ? (isOn ? 0.74 : 0.52) : (isOn ? 0.96 : 0.99)))
                     .frame(width: thumbWidth, height: 16)
                     .offset(x: 2 + (isOn ? travel : 0))
             }

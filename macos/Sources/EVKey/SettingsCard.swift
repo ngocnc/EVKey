@@ -39,8 +39,20 @@ struct SettingsHeading: View {
 extension View {
     /// One separate block: a soft fill, so it reads clearly against the glass behind it.
     func settingsBlock() -> some View {
-        frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.primary.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        modifier(SettingsBlockStyle())
+    }
+}
+
+/// Dark mode: a soft light fill. Light mode: a milky white fill with a hairline edge, so blocks stand out from the glass.
+private struct SettingsBlockStyle: ViewModifier {
+    @Environment(\.colorScheme) private var scheme
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        content
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(scheme == .dark ? Color.primary.opacity(0.12) : Color.white.opacity(0.55), in: shape)
+            .overlay { if scheme == .light { shape.strokeBorder(Color.black.opacity(0.08), lineWidth: 0.5) } }
     }
 }
 

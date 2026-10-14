@@ -1,5 +1,12 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
+// Theme chosen in the settings window (same origin, so same local storage); "system" follows Windows.
+const applyTheme = () => {
+  const t = localStorage.getItem("evkey-theme") ?? "system";
+  window.__TAURI__.window.getCurrentWindow().setTheme(t === "system" ? null : t).catch(console.error);
+};
+applyTheme();
+window.addEventListener("storage", (e) => e.key === "evkey-theme" && applyTheme());
 const $ = (id) => document.getElementById(id);
 const INPUTS = { telex: "Telex", vni: "VNI", simple_telex1: "Simple Telex 1", simple_telex2: "Simple Telex 2" };
 const TABLES = { unicode: "Unicode", tcvn3: "TCVN3 (ABC)", vni_windows: "VNI Windows", unicode_compound: "Unicode tổ hợp" };

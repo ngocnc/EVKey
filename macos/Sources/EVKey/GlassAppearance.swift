@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Look-only preference for the Liquid Glass of the popup and Bảng điều khiển. Kept in UserDefaults, not config.toml
@@ -12,13 +13,42 @@ final class GlassAppearance: ObservableObject {
         var label: String { self == .regular ? "Thường" : "Trong suốt" }
     }
 
-    static let defaultTint = "#000000"
+    /// Colour theme of every EVKey window: follow macOS, or force light or dark.
+    enum Theme: String, CaseIterable, Identifiable {
+        case system, light, dark
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .system: "Theo hệ thống"
+            case .light: "Sáng"
+            case .dark: "Tối"
+            }
+        }
+        /// nil follows the system.
+        var appearance: NSAppearance? {
+            switch self {
+            case .system: nil
+            case .light: NSAppearance(named: .aqua)
+            case .dark: NSAppearance(named: .darkAqua)
+            }
+        }
+    }
+
+    /// Untinted glass lets whatever is behind the window show through; the default tint is dark in dark mode and white in
+    /// light mode, so the window never turns muddy grey in the light theme.
+    static func defaultTint(_ scheme: ColorScheme) -> String { scheme == .dark ? "#000000" : "#ffffff" }
     /// A light dark tint by default: untinted glass lets whatever is behind the window show through and hurts legibility.
     static let defaultStrength = 30
 
+    @Published var theme: Theme {
+        didSet {
+            defaults.set(theme.rawValue, forKey: "glass.theme")
+            NSApp.appearance = theme.appearance
+        }
+    }
     @Published var style: Style { didSet { defaults.set(style.rawValue, forKey: "glass.style") } }
-    /// "#rrggbb" tint laid over the glass.
-    @Published var tintHex: String { didSet { defaults.set(tintHex, forKey: "glass.tint") } }
+    /// "#rrggbb" tint the user picked; nil follows the theme (see `defaultTint`).
+    @Published var customTintHex: String? { didSet { defaults.set(customTintHex, forKey: "glass.tint") } }
     /// "#rrggbb" end colour of a gradient tint; empty keeps the tint a single colour.
     @Published var tintEndHex: String { didSet { defaults.set(tintEndHex, forKey: "glass.tintEnd") } }
     /// 0-100: how strongly the tint covers the glass; 0 leaves the glass untinted.
@@ -27,25 +57,32 @@ final class GlassAppearance: ObservableObject {
     private let defaults = UserDefaults.standard
 
     private init() {
+        theme = Theme(rawValue: defaults.string(forKey: "glass.theme") ?? "") ?? .system
         style = Style(rawValue: defaults.string(forKey: "glass.style") ?? "") ?? .regular
-        tintHex = defaults.string(forKey: "glass.tint") ?? Self.defaultTint
+        customTintHex = defaults.string(forKey: "glass.tint")
         tintEndHex = defaults.string(forKey: "glass.tintEnd") ?? ""
         tintStrength = defaults.object(forKey: "glass.strength") as? Int ?? Self.defaultStrength
     }
 
-    var tint: Color? {
-        tintStrength > 0 && tintEndHex.isEmpty ? ColorHex.color(tintHex).opacity(Double(tintStrength) / 100) : nil
+    func tintHex(_ scheme: ColorScheme) -> String { customTintHex ?? Self.defaultTint(scheme) }
+
+    func tint(_ scheme: ColorScheme) -> Color? {
+        tintStrength > 0 && tintEndHex.isEmpty ? ColorHex.color(tintHex(scheme)).opacity(Double(tintStrength) / 100) : nil
     }
 
     /// The tint as a gradient laid over the glass (Glass.tint takes a single colour only); nil unless a gradient is on.
-    var gradientTint: AnyShapeStyle? {
+    func gradientTint(_ scheme: ColorScheme) -> AnyShapeStyle? {
         tintStrength > 0 && !tintEndHex.isEmpty
-            ? ColorHex.style(tintHex, tintEndHex, opacity: Double(tintStrength) / 100) : nil
+            ? ColorHex.style(tintHex(scheme), tintEndHex, opacity: Double(tintStrength) / 100) : nil
     }
 
+    /// Applies the saved theme; call once at launch (the setter only runs on changes).
+    func applyTheme() { NSApp.appearance = theme.appearance }
+
     func reset() {
+        theme = .system
         style = .regular
-        tintHex = Self.defaultTint
+        customTintHex = nil
         tintEndHex = ""
         tintStrength = Self.defaultStrength
     }
@@ -54,11 +91,12 @@ final class GlassAppearance: ObservableObject {
 private struct GlassSurface<S: Shape>: ViewModifier {
     let shape: S
     @ObservedObject private var appearance = GlassAppearance.shared
+    @Environment(\.colorScheme) private var scheme
 
     init(shape: S) { self.shape = shape }
 
     @ViewBuilder private var gradientLayer: some View {
-        if let gradient = appearance.gradientTint {
+        if let gradient = appearance.gradientTint(scheme) {
             shape.fill(gradient).allowsHitTesting(false)
         }
     }
@@ -67,12 +105,12 @@ private struct GlassSurface<S: Shape>: ViewModifier {
         if #available(macOS 26.0, *) {
             let glass: Glass = appearance.style == .clear ? .clear : .regular
             content
-                .glassEffect(glass.tint(appearance.tint), in: shape)
+                .glassEffect(glass.tint(appearance.tint(scheme)), in: shape)
                 .overlay { gradientLayer }
         } else {
             content
                 .background(.ultraThinMaterial, in: shape)
-                .background(appearance.tint ?? .clear, in: shape)
+                .background(appearance.tint(scheme) ?? .clear, in: shape)
                 .overlay { gradientLayer }
         }
     }

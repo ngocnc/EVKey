@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        GlassAppearance.shared.applyTheme()
         AppState.shared.start()
         statusItem = StatusItemController()
         banner = BannerController()

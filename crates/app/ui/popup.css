@@ -98,3 +98,9 @@ button:focus-visible, label:focus-within { outline: 2px solid var(--accent); out
 .switch input:checked + i::after { transform: translateX(18px); background: #c3c8d2; }
 .switch input:active + i::after { width: 22px; }
 .switch input:checked:active + i::after { transform: translateX(12px); }
+
+/* Light mode: a bright thumb, else it vanishes against the grey track. */
+@media (prefers-color-scheme: light) {
+  .switch i::after { background: #fff; }
+  .switch input:checked + i::after { background: #fff; }
+}

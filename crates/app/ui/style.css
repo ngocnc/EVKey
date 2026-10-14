@@ -355,3 +355,9 @@ body::before {
   color: var(--fg); opacity: 0.7;
 }
 .pin.active { color: #fff; background: var(--accent); border-color: transparent; opacity: 1; }
+
+/* Light mode: a bright thumb, else it vanishes against the grey track. */
+@media (prefers-color-scheme: light) {
+  .switch i::after { background: #fff; }
+  .switch input:checked + i::after { background: #fff; }
+}

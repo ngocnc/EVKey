@@ -55,9 +55,13 @@ struct BannerView: View {
 /// Panel content: reads the live state so text and appearance update without rebuilding the panel.
 struct BannerHost: View {
     @ObservedObject private var state = AppState.shared
+    /// Last holder shown. While the banner fades out `secureHolder` is already nil; without this the text would flip to
+    /// the generic wording mid-fade and the banner would grow wider than its panel.
+    @State private var lastHolder = ""
 
     var body: some View {
-        let holder = state.secureHolder ?? DebugOptions.bannerApp ?? ""
+        let holder = state.secureHolder ?? (lastHolder.isEmpty ? DebugOptions.bannerApp : lastHolder) ?? ""
         BannerView(settings: state.settings, appName: holder.isEmpty ? "Một ứng dụng" : holder)
+            .onReceive(state.$secureHolder) { if let h = $0 { lastHolder = h } }
     }
 }

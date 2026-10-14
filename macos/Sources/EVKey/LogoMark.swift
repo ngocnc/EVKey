@@ -10,7 +10,7 @@ struct LogoMark: View {
     private var gradient: LinearGradient {
         let colors = glass.tintEndHex.isEmpty
             ? [Color(red: 0.39, green: 0.82, blue: 1.0), Color(red: 0.37, green: 0.36, blue: 0.9)]
-            : [ColorHex.color(glass.tintHex), ColorHex.color(glass.tintEndHex)]
+            : [ColorHex.color(glass.tintHex(.dark)), ColorHex.color(glass.tintEndHex)]
         return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 
