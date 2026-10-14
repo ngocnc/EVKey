@@ -58,7 +58,8 @@ plutil -lint "$app/Contents/Info.plist" >/dev/null
 # hash. Without it, fall back to ad-hoc ("-"), which loses the grant on every rebuild.
 xattr -cr "$app"
 identity="-"
-if security find-identity -v -p codesigning | grep -q "EVKey Local Signing"; then identity="EVKey Local Signing"; fi
+# No -v: on CI the imported self-signed certificate is not trusted, yet codesign signs with it fine.
+if security find-identity -p codesigning | grep -q "EVKey Local Signing"; then identity="EVKey Local Signing"; fi
 codesign --force --deep -s "$identity" -i com.chrisnguyen.evkey "$app"
 codesign --verify --deep --strict "$app"
 
