@@ -215,17 +215,74 @@ function showTab(name) {
 for (const tab of tabs) tab.onclick = () => showTab(tab.dataset.tab);
 listen("settings-tab", (e) => showTab(e.payload));
 
-// Glass transparency is a look-only preference, kept in the window's local storage rather than config.toml.
-const range = $("glass-range");
-function applyGlass(percent) {
-  document.documentElement.style.setProperty("--t", percent / 100);
-  $("glass-value").textContent = percent + "%";
+// Liquid glass look: look-only preferences in local storage (contract in glass.js); not saved to config.toml.
+const glassStrength = $("glass-strength");
+const glassTint = $("glass-tint");
+const glassTintEnd = $("glass-tint-end");
+const glassGradient = $("glass-gradient");
+const defaultTint = matchMedia("(prefers-color-scheme: dark)").matches ? "#000000" : "#ffffff";
+// Companion colour for the gradient's second stop: hue shifted slightly, saturation and brightness floored.
+function hsvToHex(h, s, v) {
+  const i = Math.floor(h * 6), f = h * 6 - i;
+  const p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
+  const [r, g, b] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6];
+  return "#" + [r, g, b].map((x) => Math.round(x * 255).toString(16).padStart(2, "0")).join("");
 }
-range.value = localStorage.getItem("evkey-glass") ?? "100";
-applyGlass(Number(range.value));
-range.oninput = () => {
-  applyGlass(Number(range.value));
-  localStorage.setItem("evkey-glass", range.value);
+function companionTint(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [n >> 16, n >> 8, n].map((x) => (x & 255) / 255);
+  const max = Math.max(r, g, b), d = max - Math.min(r, g, b);
+  let h = 0;
+  if (d) h = (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6;
+  return hsvToHex((h + 0.12) % 1, Math.max(max ? d / max : 0, 0.5), Math.max(max, 0.6));
+}
+function syncGlassControls() {
+  glassStrength.value = glassGet("strength");
+  $("glass-strength-value").textContent = glassStrength.value + "%";
+  glassTint.value = glassGet("tint") || defaultTint;
+  glassTintEnd.value = glassGet("tint-end") || companionTint(glassTint.value);
+  glassGradient.checked = glassGet("tint-end") !== "";
+  $("glass-tint-end-wrap").hidden = !glassGradient.checked;
+}
+syncGlassControls();
+glassStrength.oninput = () => {
+  localStorage.setItem("evkey-glass-strength", glassStrength.value);
+  $("glass-strength-value").textContent = glassStrength.value + "%";
+  applyGlassLook();
+};
+glassTint.oninput = () => {
+  localStorage.setItem("evkey-glass-tint", glassTint.value);
+  applyGlassLook();
+};
+glassGradient.onchange = () => {
+  const on = glassGradient.checked;
+  glassTintEnd.value = companionTint(glassTint.value);
+  localStorage.setItem("evkey-glass-tint-end", on ? glassTintEnd.value : "");
+  $("glass-tint-end-wrap").hidden = !on;
+  applyGlassLook();
+};
+glassTintEnd.oninput = () => {
+  localStorage.setItem("evkey-glass-tint-end", glassTintEnd.value);
+  applyGlassLook();
+};
+$("gl-reset").onclick = async () => {
+  for (const k of Object.keys(localStorage)) if (k.startsWith("evkey-glass-")) localStorage.removeItem(k);
+  localStorage.removeItem("evkey-theme");
+  syncGlassControls();
+  for (const seg of localSegs) {
+    paintLocalSeg(seg, LOCAL_SEG_DEFAULTS[seg.dataset.local]);
+    placeThumb(seg);
+  }
+  applyTheme("system");
+  applyGlassLook();
+  const d = await invoke("banner_defaults");
+  $("bn-opacity").value = d.opacity;
+  $("bn-blur").value = d.blur;
+  $("bn-bg").value = d.bg;
+  $("bn-border").value = d.border;
+  $("bn-text").value = d.text;
+  renderBannerPreview();
+  saveSettings();
 };
 for (const seg of SEGS) {
   seg.onclick = (e) => {
@@ -235,21 +292,29 @@ for (const seg of SEGS) {
     saveSettings();
   };
 }
-// Colour theme of the settings and popup windows; "system" follows Windows. The popup reads the same local storage.
-const themeSeg = document.querySelector('.seg[data-local="theme"]');
+// Look-only segmented controls (theme, glass style) persist in local storage; the popup reads the same keys.
+const LOCAL_SEG_DEFAULTS = { theme: "system", "glass-style": "regular" };
+const localSegs = [...document.querySelectorAll(".seg[data-local]")];
+const localKey = (seg) => "evkey-" + seg.dataset.local;
+function paintLocalSeg(seg, value) {
+  for (const b of seg.querySelectorAll("button")) b.classList.toggle("active", b.dataset.value === value);
+}
+// Colour theme of the settings and popup windows; "system" follows Windows.
 function applyTheme(theme) {
   window.__TAURI__.window.getCurrentWindow().setTheme(theme === "system" ? null : theme).catch((e) => say(String(e), "err"));
 }
-const savedTheme = localStorage.getItem("evkey-theme") ?? "system";
-for (const b of themeSeg.querySelectorAll("button")) b.classList.toggle("active", b.dataset.value === savedTheme);
-applyTheme(savedTheme);
-themeSeg.onclick = (e) => {
-  const b = e.target.closest("button");
-  if (!b) return;
-  for (const x of themeSeg.querySelectorAll("button")) x.classList.toggle("active", x === b);
-  localStorage.setItem("evkey-theme", b.dataset.value);
-  applyTheme(b.dataset.value);
-};
+for (const seg of localSegs) paintLocalSeg(seg, localStorage.getItem(localKey(seg)) ?? LOCAL_SEG_DEFAULTS[seg.dataset.local]);
+applyTheme(localStorage.getItem("evkey-theme") ?? "system");
+for (const seg of localSegs) {
+  seg.onclick = (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    paintLocalSeg(seg, b.dataset.value);
+    localStorage.setItem(localKey(seg), b.dataset.value);
+    if (seg.dataset.local === "theme") applyTheme(b.dataset.value);
+    else applyGlassLook();
+  };
+}
 for (const k of BOOLS) $(k).onchange = saveSettings;
 $("excluded_apps").onchange = saveSettings;
 $("add-macro").onclick = () => addMacroRow();
@@ -280,16 +345,6 @@ for (const id of BANNER_FIELDS) {
   $(id).oninput = () => renderBannerPreview();
   $(id).onchange = saveSettings;
 }
-$("bn-reset").onclick = async () => {
-  const d = await invoke("banner_defaults");
-  $("bn-opacity").value = d.opacity;
-  $("bn-blur").value = d.blur;
-  $("bn-bg").value = d.bg;
-  $("bn-border").value = d.border;
-  $("bn-text").value = d.text;
-  renderBannerPreview();
-  saveSettings();
-};
 $("reset-broken").onclick = resetConfig;
 $("open-github").onclick = () => run(() => invoke("open_github"), "Đã mở trang GitHub");
 $("toggle-keyboard").onclick = async () => {
@@ -306,6 +361,28 @@ function currentValue(key) {
   return $(key)?.checked;
 }
 
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+// Animates a data-when item in or out; the first pass in updateVisibility sets it without animation.
+function animateWhen(el, show) {
+  el._anim?.cancel();
+  el.style.overflow = "";
+  if (reduceMotion.matches) {
+    el.hidden = !show;
+    return;
+  }
+  if (show) el.hidden = false;
+  const cs = getComputedStyle(el);
+  const full = { height: cs.height, paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, opacity: "1" };
+  const zero = { height: "0px", paddingTop: "0px", paddingBottom: "0px", opacity: "0" };
+  const [from, to] = show ? [zero, full] : [full, zero];
+  el.style.overflow = "hidden";
+  el._anim = el.animate([from, to], { duration: 260, easing: "cubic-bezier(0.22,1,0.36,1)" });
+  el._anim.onfinish = () => {
+    el.hidden = !show;
+    el.style.overflow = "";
+  };
+}
+
 function updateVisibility() {
   for (const el of document.querySelectorAll("[data-platform], [data-when]")) {
     let hide = false;
@@ -314,10 +391,13 @@ function updateVisibility() {
       const value = currentValue(key);
       hide ||= op === "=" ? value !== want : op === "!=" ? value === want : !value;
     }
-    el.hidden = hide;
+    const show = !hide;
+    if (el.dataset.vis === undefined) el.hidden = hide;
+    else if (el.dataset.vis !== String(show)) animateWhen(el, show);
+    el.dataset.vis = String(show);
   }
   for (const group of document.querySelectorAll(".group")) {
-    const visible = [...group.querySelectorAll(".item")].filter((i) => !i.hidden);
+    const visible = [...group.querySelectorAll(".item")].filter((i) => !i.hidden && i.dataset.vis !== "false");
     for (const item of group.querySelectorAll(".item")) item.classList.toggle("last", item === visible.at(-1));
   }
 }
@@ -341,15 +421,10 @@ for (const seg of ALL_SEGS) {
   seg.addEventListener("click", () => placeThumb(seg));
 }
 
-// Backdrop transparency: a tint layer over the (always clearest) acrylic; 100 = fully clear.
-const backdrop = $("backdrop-range");
-function applyBackdrop() {
-  $("backdrop-value").textContent = backdrop.value + "%";
-  document.documentElement.style.setProperty("--bt", backdrop.value / 100);
-}
-backdrop.value = localStorage.getItem("evkey-backdrop") ?? "85";
-applyBackdrop();
-backdrop.oninput = () => {
-  localStorage.setItem("evkey-backdrop", backdrop.value);
-  applyBackdrop();
-};
+// Filled part of every range track (left of the thumb), via --p. Values are also set from code, so refresh on a short timer.
+// ponytail: 250 ms poll, a setter hook per range would be event-driven.
+const ranges = [...document.querySelectorAll('input[type="range"]')];
+const syncRanges = () => ranges.forEach((r) => r.style.setProperty("--p", ((r.value - r.min) / (r.max - r.min)) * 100 + "%"));
+setInterval(syncRanges, 250);
+document.addEventListener("input", syncRanges);
+syncRanges();

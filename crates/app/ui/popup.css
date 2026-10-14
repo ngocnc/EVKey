@@ -5,8 +5,8 @@
   --muted: rgba(22, 22, 26, 0.55);
   --accent: #ff6b8a;
   --accent-2: #ffa36b;
-  --panel: rgba(255, 255, 255, 0.72);
-  --border: rgba(255, 255, 255, 0.7);
+  --base: 255, 255, 255;
+  --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16));
   --hover: rgba(0, 0, 0, 0.06);
   --divider: rgba(0, 0, 0, 0.08);
   --track: rgba(0, 0, 0, 0.18);
@@ -19,8 +19,8 @@
     --muted: rgba(244, 244, 248, 0.55);
     --accent: #ff7d99;
     --accent-2: #ffb07c;
-    --panel: rgba(32, 32, 40, 0.72);
-    --border: rgba(255, 255, 255, 0.18);
+    --base: 32, 32, 40;
+    --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
     --hover: rgba(255, 255, 255, 0.08);
     --divider: rgba(255, 255, 255, 0.1);
     --track: rgba(255, 255, 255, 0.25);
@@ -34,13 +34,21 @@ body { color: var(--fg); user-select: none; -webkit-user-select: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: default; text-align: left; padding: 0; }
 button:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 
+/* The panel fills the whole window: the OS draws the rounded corners, border and shadow, so no margin or ring of its own. */
 .panel {
-  margin: 6px;
   padding: 6px;
-  border-radius: 14px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  background: var(--glass), rgba(var(--base), calc((1 - var(--t, 0.5)) * 0.92));
+}
+
+/* Tint over the acrylic, same layer as the settings window (see glass.js). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--tint, rgb(var(--base)));
+  opacity: var(--ts, 0.3);
 }
 
 .row, .head, .choice {

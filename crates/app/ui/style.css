@@ -7,14 +7,12 @@
   --ok: #15803d;
   --err: #c4291c;
   --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.16));
-  --glass-border: rgba(255, 255, 255, 0.7);
-  --glass-shadow: 0 10px 30px rgba(20, 30, 60, 0.12);
-  --shine: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(0, 0, 0, 0.12);
   --divider: rgba(0, 0, 0, 0.07);
-  --field: rgba(255, 255, 255, 0.32);
+  --field: rgba(0, 0, 0, 0.04);
   --track: rgba(0, 0, 0, 0.18);
   --base: 255, 255, 255;
-  --thumb: rgba(255, 255, 255, 0.45);
+  --thumb: rgba(255, 255, 255, 0.95);
   font: 13px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
 }
 
@@ -28,8 +26,6 @@
     --err: #ff8a80;
     --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
     --glass-border: rgba(255, 255, 255, 0.22);
-    --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    --shine: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
     --divider: rgba(255, 255, 255, 0.09);
     --field: rgba(255, 255, 255, 0.05);
     --track: rgba(255, 255, 255, 0.22);
@@ -61,17 +57,15 @@ kbd {
   border-radius: 6px;
   border: 1px solid var(--glass-border);
   background: var(--field);
-  box-shadow: 0 1px 0 var(--divider);
   font: 600 12px "Segoe UI", sans-serif;
   text-align: center;
 }
 
 .glass {
-  background: var(--glass), rgba(var(--base), calc((1 - var(--t, 1)) * 0.92));
+  background: var(--glass), rgba(var(--base), calc((1 - var(--t, 0.5)) * 0.92));
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shine), var(--glass-shadow);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(var(--blur, 28px)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur, 28px)) saturate(180%);
 }
 
 .shell { display: grid; grid-template-columns: 210px 1fr; gap: 14px; height: 100vh; padding: 14px; }
@@ -91,9 +85,11 @@ kbd {
   font-weight: 700;
   font-size: 18px;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 4px 12px rgba(255, 107, 138, 0.4);
 }
 .tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 9px 12px;
   border: 1px solid transparent;
   border-radius: 12px;
@@ -103,9 +99,9 @@ kbd {
   transition: background 0.15s, border-color 0.15s;
 }
 .tab:hover { background: var(--field); }
-.tab.active { background: var(--field); border-color: var(--glass-border); box-shadow: var(--shine); font-weight: 600; }
-.tab.with-icon { display: flex; align-items: center; gap: 8px; }
-.tab.with-icon svg { flex: none; }
+.tab.active { background: var(--field); border-color: var(--glass-border); font-weight: 600; }
+.tab svg { flex: none; width: 16px; height: 16px; opacity: 0.8; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tab .beta { margin-left: auto; }
 
 /* content */
 main { overflow-x: hidden; overflow-y: auto; padding: 0 8px 24px 4px; }
@@ -199,8 +195,14 @@ button {
   background: var(--field);
   cursor: pointer;
 }
-button:hover { filter: brightness(1.05); box-shadow: var(--shine); }
-button:disabled { opacity: 0.5; cursor: default; filter: none; box-shadow: none; }
+button:hover { filter: brightness(1.05); }
+button:disabled { opacity: 0.5; cursor: default; filter: none; }
+button:focus:not(:focus-visible) { outline: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg button:focus-visible { outline-offset: -2px; }
+input[type="color"] { width: 36px; height: 26px; padding: 0; border: 1px solid var(--glass-border); border-radius: 8px; background: none; cursor: pointer; }
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 7px; }
 button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; color: #fff; }
 button.ghost { background: transparent; }
 button.danger { color: var(--err); }
@@ -255,7 +257,6 @@ textarea { width: 100%; min-height: 150px; resize: vertical; font-family: "Casca
   border-radius: 999px;
   background: var(--glass);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shine), var(--glass-shadow);
   backdrop-filter: blur(24px) saturate(180%);
   opacity: 0;
   pointer-events: none;
@@ -276,7 +277,7 @@ textarea { width: 100%; min-height: 150px; resize: vertical; font-family: "Casca
 .range-row { display: flex; align-items: center; gap: 14px; }
 .range-row output { min-width: 40px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 input[type="range"] { flex: 1; height: 22px; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none; }
-input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--track); }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--accent) var(--p, 0%), var(--track) var(--p, 0%)); }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 20px;
@@ -284,7 +285,7 @@ input[type="range"]::-webkit-slider-thumb {
   margin-top: -7px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.14);
 }
 
 /* sliding highlight under the chosen segment */
@@ -296,7 +297,6 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--glass);
   background-color: var(--thumb);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--shine), 0 2px 8px rgba(0, 0, 0, 0.12);
   pointer-events: none;
 }
 .seg.ready .thumb { transition: transform 0.32s cubic-bezier(0.3, 1.25, 0.5, 1), width 0.32s cubic-bezier(0.3, 1.25, 0.5, 1), height 0.2s; }
@@ -304,14 +304,15 @@ input[type="range"]::-webkit-slider-thumb {
 .seg button:hover:not(.active) { background: var(--field); }
 .item > button { white-space: nowrap; flex: none; }
 
-/* backdrop tint, driven by the "Độ trong suốt của nền" slider */
+/* backdrop tint over the acrylic: colour or gradient and strength come from glass.js */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: rgba(var(--base), calc((1 - var(--bt, 0.85)) * 0.5));
+  background: var(--tint, rgb(var(--base)));
+  opacity: var(--ts, 0.3);
 }
 
 /* scrollbars in the accent colour */
@@ -343,18 +344,28 @@ body::before {
 }
 .chip-add { display: flex; gap: 8px; align-items: center; }
 .chip-add input { width: 80px; font-family: ui-monospace, monospace; }
+/* The plus is drawn with two bars so it is centred exactly, whatever the font's glyph metrics. */
 .round-add {
-  width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 0; color: #fff; font-size: 18px; line-height: 1;
-  background: var(--accent);
+  width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 0; flex: none;
+  background:
+    linear-gradient(#fff, #fff) center / 12px 2px no-repeat,
+    linear-gradient(#fff, #fff) center / 2px 12px no-repeat,
+    var(--accent);
 }
 .chip-caption { color: var(--muted); font-size: 12px; }
 
 .pin {
-  position: fixed; top: 14px; right: 16px; z-index: 10; width: 32px; height: 32px; padding: 0;
+  position: fixed; top: 12px; right: 30px; z-index: 10; width: 30px; height: 30px; padding: 0;
   border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  color: var(--fg); opacity: 0.7;
+  border-color: transparent; background: transparent; color: var(--fg); opacity: 0.7;
 }
-.pin.active { color: #fff; background: var(--accent); border-color: transparent; opacity: 1; }
+.pin svg { transition: transform 0.15s; }
+.pin.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); opacity: 1; }
+.pin.active svg { fill: currentColor; transform: rotate(45deg); }
+
+/* Colour rows: one or two colour pickers plus the gradient switch. */
+.colors { display: flex; align-items: center; gap: 10px; }
+.colors small { color: var(--muted); font-size: 11px; }
 
 /* Light mode: a bright thumb, else it vanishes against the grey track. */
 @media (prefers-color-scheme: light) {

@@ -21,9 +21,9 @@ async function act(command, args) {
   await refresh();
 }
 
-// Resizes the window to the panel (plus its 6px margin on each side); the Rust side keeps it anchored to the tray.
+// Resizes the window to the panel, which fills it edge to edge; the Rust side keeps it anchored to the tray.
 function fit() {
-  requestAnimationFrame(() => invoke("popup_resize", { height: $("panel").offsetHeight + 12 }).catch(console.error));
+  requestAnimationFrame(() => invoke("popup_resize", { height: $("panel").offsetHeight }).catch(console.error));
 }
 
 function buildChoices(listId, options, command, arg) {

@@ -6,21 +6,22 @@
   <title>EVKey - Cài đặt</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="banner.css">
+  <script src="glass.js"></script>
 </head>
 <body class="settings">
-  <button id="pin" class="pin active" type="button" aria-pressed="true" title="Bỏ ghim"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M5 9l2-4h10l2 4-3 4v4l-3 2v-6H8v6l-3-2v-4z"/></svg></button>
+  <button id="pin" class="pin active" type="button" aria-pressed="true" title="Bỏ ghim"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg></button>
 <div class="shell">
   <nav class="side glass">
     <div class="brand"><span class="logo">V</span><div><b>EVKey</b><small id="version"></small></div></div>
-    <button class="tab active" data-tab="typing">Gõ tiếng Việt</button>
-    <button class="tab" data-tab="smart">Chính tả &amp; gõ nhanh</button>
-    <button class="tab" data-tab="macro">Gõ tắt</button>
-    <button class="tab" data-tab="keys">Phím tắt</button>
-    <button class="tab" data-tab="apps">Ứng dụng loại trừ</button>
-    <button class="tab" data-tab="appearance">Giao diện</button>
-    <button class="tab" data-tab="system">Hệ thống</button>
-    <button class="tab" data-tab="translate">Dịch thuật <span class="beta">Beta</span></button>
-    <button class="tab with-icon" data-tab="about"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>Thông tin</button>
+    <button class="tab active" data-tab="typing"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg>Gõ tiếng Việt</button>
+    <button class="tab" data-tab="smart"><svg viewBox="0 0 24 24"><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/><path d="m16 20 2 2 4-4"/></svg>Chính tả &amp; gõ nhanh</button>
+    <button class="tab" data-tab="macro"><svg viewBox="0 0 24 24"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/></svg>Gõ tắt</button>
+    <button class="tab" data-tab="keys"><svg viewBox="0 0 24 24"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></svg>Phím tắt</button>
+    <button class="tab" data-tab="apps"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg>Ứng dụng loại trừ</button>
+    <button class="tab" data-tab="appearance"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Giao diện</button>
+    <button class="tab" data-tab="system"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Hệ thống</button>
+    <button class="tab" data-tab="translate"><svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>Dịch thuật <span class="beta">Beta</span></button>
+    <button class="tab" data-tab="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>Thông tin</button>
   </nav>
 
   <main>
@@ -61,14 +62,6 @@
           <div class="text"><b>Đặt dấu tự do</b><span>Cho phép gõ dấu sau khi đã kết thúc âm tiết.</span></div>
           <span class="switch"><input type="checkbox" id="free_mark"><i></i></span>
         </label>
-        <label class="item">
-          <div class="text"><b>Nhớ Chế độ theo ứng dụng</b><span>Mỗi ứng dụng nhớ chế độ Việt hoặc Anh riêng.</span></div>
-          <span class="switch"><input type="checkbox" id="remember_app_mode"><i></i></span>
-        </label>
-        <label class="item">
-          <div class="text"><b>Hoàn tác từ bằng Esc</b><span>Nhấn Esc ngay sau khi gõ để đưa từ về dạng phím gõ gốc.</span></div>
-          <span class="switch"><input type="checkbox" id="undo_word"><i></i></span>
-        </label>
       </div>
     </section>
 
@@ -98,7 +91,6 @@
 
     <section class="pane" data-pane="smart" hidden>
       <h1>Chính tả &amp; gõ nhanh</h1>
-      <h2>Chính tả</h2>
       <div class="glass group">
         <label class="item"><div class="text"><b>Kiểm tra chính tả</b><span>Chỉ biến đổi khi âm tiết hợp lệ.</span></div><span class="switch"><input type="checkbox" id="check_spelling"><i></i></span></label>
         <label class="item" data-when="check_spelling"><div class="text"><b>Khôi phục khi sai chính tả</b><span>Gõ <code>window</code> thì giữ nguyên, không biến thành chữ lạ.</span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
@@ -113,10 +105,20 @@
           <div id="custom-consonants" class="chips"></div>
           <div class="chip-add">
             <input id="custom-consonant-input" type="text" maxlength="1" placeholder="a–z" autocomplete="off" spellcheck="false">
-            <button id="add-custom-consonant" class="round-add" aria-label="Thêm phụ âm">+</button>
+            <button id="add-custom-consonant" class="round-add" aria-label="Thêm phụ âm"></button>
           </div>
           <span class="chip-caption">Các phụ âm này sẽ được phép sử dụng trong bộ gõ Tiếng Việt</span>
         </div>
+      </div>
+      <div class="glass group">
+        <label class="item">
+          <div class="text"><b>Chế độ theo ứng dụng</b><span>Nhớ chế độ Việt/Anh của từng ứng dụng và khôi phục khi quay lại ứng dụng đó.</span></div>
+          <span class="switch"><input type="checkbox" id="remember_app_mode"><i></i></span>
+        </label>
+        <label class="item">
+          <div class="text"><b>Hoàn tác từ bằng Esc</b><span>Khi đang gõ dở một từ, Esc trả về các phím đã gõ và tắt biến đổi cho từ đó.</span></div>
+          <span class="switch"><input type="checkbox" id="undo_word"><i></i></span>
+        </label>
       </div>
       <h2>Viết hoa</h2>
       <div class="glass group">
@@ -148,6 +150,7 @@
 
     <section class="pane" data-pane="appearance" hidden>
       <h1>Giao diện</h1>
+      <h2>Liquid Glass</h2>
       <div class="glass group">
         <div class="item stack">
           <div class="text"><b>Chủ đề</b><span>Sáng, tối hoặc theo Windows.</span></div>
@@ -158,33 +161,45 @@
           </div>
         </div>
         <div class="item stack">
-          <div class="text"><b>Độ trong suốt của kính</b><span>Các khối kính chứa nội dung. Kéo sang phải để trong hơn.</span></div>
-          <div class="range-row"><input type="range" id="glass-range" min="0" max="100" step="1"><output id="glass-value"></output></div>
+          <div class="text"><b>Kiểu kính</b><span>Thường làm mờ nền phía sau; Trong suốt để nhìn xuyên rõ hơn.</span></div>
+          <div class="seg" data-local="glass-style">
+            <button data-value="regular">Thường</button>
+            <button data-value="clear">Trong suốt</button>
+          </div>
         </div>
         <div class="item stack">
-          <div class="text"><b>Độ trong suốt của nền</b><span>Lớp mờ phía sau cửa sổ. Kéo sang phải để nhìn xuyên rõ hơn.</span></div>
-          <div class="range-row"><input type="range" id="backdrop-range" min="0" max="100" step="1"><output id="backdrop-value"></output></div>
+          <div class="text"><b>Độ đậm màu phủ</b><span>Lớp màu phủ lên nền cửa sổ; 0 để bỏ.</span></div>
+          <div class="range-row"><input type="range" id="glass-strength" min="0" max="100" step="1"><output id="glass-strength-value"></output></div>
+        </div>
+        <div class="item">
+          <div class="text"><b>Màu phủ</b></div>
+          <div class="colors">
+            <small>Gradient</small>
+            <span class="switch"><input type="checkbox" id="glass-gradient"><i></i></span>
+            <input type="color" id="glass-tint">
+            <span id="glass-tint-end-wrap" class="colors" hidden>→ <input type="color" id="glass-tint-end"></span>
+          </div>
         </div>
       </div>
-      <h2>Banner Secure Input</h2>
+      <h2>Cảnh báo Secure Input</h2>
       <div class="glass group">
         <div class="item stack">
-          <div class="text"><b>Xem trước</b><span>Hiện ở cạnh dưới màn hình khi EVKey tạm tắt trong ô mật khẩu.</span></div>
-          <div><div class="sec-banner" id="bn-preview"></div></div>
-        </div>
-        <div class="item stack">
-          <div class="text"><b>Độ trong suốt</b></div>
+          <div class="text"><b>Độ đậm nền</b></div>
           <div class="range-row"><input type="range" id="bn-opacity" min="0" max="100" step="1"><output id="bn-opacity-value"></output></div>
         </div>
         <div class="item stack">
-          <div class="text"><b>Độ mờ nền (kính)</b><span>0 để tắt hiệu ứng kính.</span></div>
+          <div class="text"><b>Độ mờ kính</b><span>0 để tắt hiệu ứng kính.</span></div>
           <div class="range-row"><input type="range" id="bn-blur" min="0" max="100" step="1"><output id="bn-blur-value"></output></div>
         </div>
         <div class="item"><div class="text"><b>Màu nền</b></div><input type="color" id="bn-bg"></div>
         <div class="item"><div class="text"><b>Màu viền</b></div><input type="color" id="bn-border"></div>
         <div class="item"><div class="text"><b>Màu chữ</b></div><input type="color" id="bn-text"></div>
-        <div class="item"><div class="text"><b>Đặt lại banner</b><span>Trả độ trong suốt, độ mờ và màu về mặc định.</span></div><button id="bn-reset">Đặt lại mặc định</button></div>
+        <div class="item stack">
+          <div class="text"><b>Xem trước</b><span>Hiện ở cạnh dưới màn hình khi EVKey tạm tắt trong ô mật khẩu.</span></div>
+          <div><div class="sec-banner" id="bn-preview"></div></div>
+        </div>
       </div>
+      <div class="actions"><button id="gl-reset" class="danger">Đặt lại giao diện</button></div>
     </section>
 
     <section class="pane" data-pane="system" hidden>

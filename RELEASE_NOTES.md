@@ -1,5 +1,17 @@
 # Release notes
 
+## v2.2.0
+
+**Backend hook mặc định, giao diện liquid-glass mới.**
+
+- Cơ chế gõ mặc định là hook bàn phím như UniKey (không cần thêm bàn phím Windows); TSF vẫn chọn được trong Hệ thống.
+- Khay: bấm trái đổi V/E, bấm phải mở menu (kiểu gõ, bảng mã, gõ tắt, cài đặt). Popup không còn viền thừa và bóng.
+- Cài đặt xếp lại giống bản macOS: icon cho từng tab, "Chế độ theo ứng dụng" và "Hoàn tác từ bằng Esc" chuyển sang tab Chính tả & gõ nhanh.
+- Giao diện: chủ đề sáng/tối, kiểu kính (Thường/Trong suốt), độ đậm và màu phủ (một màu hoặc gradient), viền và slider rõ hơn ở chế độ sáng, bỏ hết shadow.
+- Các mục phụ thuộc (ví dụ phụ âm tùy chỉnh) trượt vào/ra mượt, icon "+" căn giữa, icon ghim mới.
+- Banner Secure Input hạ thấp hơn.
+- Có thêm app macOS native (SwiftUI) dùng chung core.
+- Chưa kiểm chứng: hook trong Chrome/VS Code; chế độ tối của giao diện mới.
 ## v2.1.0
 
 **Chuyển Việt/Anh thật sự, có phím tắt.** Trước đây V/E không phải một trạng thái của bộ gõ: `Win+Space` chỉ đổi bàn phím Windows và icon khay không biết gì. Từ bản này EVKey có chế độ riêng, dùng chung cho mọi ứng dụng.
