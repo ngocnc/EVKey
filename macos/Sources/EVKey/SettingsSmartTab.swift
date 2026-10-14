@@ -12,10 +12,12 @@ struct SettingsSmartTab: View {
                     SettingsToggleLine(
                         title: UIStrings.tr("smart.spellCheck"), subtitle: UIStrings.tr("smart.spellCheck.detail"),
                         isOn: state.binding(\.checkSpelling))
-                    SettingsDivider()
-                    SettingsToggleLine(
-                        title: UIStrings.tr("smart.restore"), subtitle: UIStrings.tr("smart.restore.detail"),
-                        isOn: state.binding(\.restoreIfWrongSpelling))
+                    if state.settings.checkSpelling {
+                        SettingsDivider()
+                        SettingsToggleLine(
+                            title: UIStrings.tr("smart.restore"), subtitle: UIStrings.tr("smart.restore.detail"),
+                            isOn: state.binding(\.restoreIfWrongSpelling))
+                    }
                     SettingsDivider()
                     SettingsToggleLine(
                         title: UIStrings.tr("smart.english"), subtitle: UIStrings.tr("smart.english.detail"), beta: true,
@@ -50,9 +52,11 @@ struct SettingsSmartTab: View {
             SettingsAdvanced(pane: "smart") {
                 SettingsHeading(UIStrings.tr("smart.quickTyping"))
                 SettingsGroup {
-                    SettingsToggleRow(
-                        title: UIStrings.tr("smart.quickTelex"), subtitle: "cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th",
-                        isOn: state.binding(\.quickTelex))
+                    if state.settings.inputType != .vni {
+                        SettingsToggleRow(
+                            title: UIStrings.tr("smart.quickTelex"), subtitle: "cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th",
+                            isOn: state.binding(\.quickTelex))
+                    }
                     SettingsToggleRow(
                         title: UIStrings.tr("smart.quickStart"), subtitle: "f→ph, j→gi, w→qu",
                         isOn: state.binding(\.quickStartConsonant))

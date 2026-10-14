@@ -1,3 +1,4 @@
+import EVKeyKit
 import SwiftUI
 
 /// Label on the left (bold title, secondary subtitle) with a switch on the right. Draws no block, so several can share one `SettingsCard`.
@@ -58,11 +59,19 @@ struct SettingsChoiceRow<Value: Hashable>: View {
     var subtitle: String? = nil
     let choices: [ChoiceOption<Value>]
     @Binding var selection: Value
+    /// UIStrings key per option; the active one is shown under the control, as on Windows.
+    var hints: [Value: String] = [:]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             SettingsRowLabel(title: title, subtitle: subtitle)
             SettingsSegmented(choices: choices, selection: $selection)
+            if let key = hints[selection] {
+                Text(UIStrings.tr(key))
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

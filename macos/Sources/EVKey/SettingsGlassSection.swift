@@ -22,6 +22,10 @@ struct SettingsGlassSection: View {
                     SettingsSegmented(
                         choices: GlassAppearance.Theme.allCases.map { ChoiceOption(value: $0, label: $0.label) },
                         selection: $glass.theme)
+                    Text(UIStrings.tr("hint.local-theme.\(glass.theme.rawValue)"))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(14)
                 .settingsBlock()
@@ -34,6 +38,10 @@ struct SettingsGlassSection: View {
                     SettingsSegmented(
                         choices: GlassAppearance.Style.allCases.map { ChoiceOption(value: $0, label: $0.label) },
                         selection: $glass.style)
+                    Text(UIStrings.tr("hint.local-glass-style.\(glass.style.rawValue)"))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                     if #unavailable(macOS 26.0) {
                         Text(UIStrings.tr("glass.needsMacOS26"))
                             .font(.system(size: 11))

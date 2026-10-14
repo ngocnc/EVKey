@@ -15,7 +15,6 @@ extension UIStrings {
 
     private static let miscTable: [String: (vi: String, en: String)] = [
         "advanced": ("Nâng cao", "Advanced"),
-
         // Welcome screen
         "welcome.title": ("Chào mừng đến EVKey", "Welcome to EVKey"),
         "welcome.sub": (

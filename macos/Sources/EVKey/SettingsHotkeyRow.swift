@@ -11,6 +11,8 @@ struct SettingsHotkeyRow: View {
     let subtitle: String
     @Binding var chord: String
     @Binding var recorder: String?
+    /// Chords bound to other rows. A chord in this list is refused and recording continues.
+    var others: [String] = []
     @State private var message: String?
     /// Key-down monitor while recording; removed as soon as recording ends.
     @State private var monitor: Any?
@@ -95,6 +97,10 @@ struct SettingsHotkeyRow: View {
                 control: flags.contains(.control), option: flags.contains(.option),
                 shift: flags.contains(.shift), command: flags.contains(.command)) {
             case .chord(let captured):
+                if others.contains(captured) {
+                    self.message = UIStrings.tr("hotkey.taken")
+                    return nil
+                }
                 self.chord = captured
                 self.stopRecording()
             case .needsModifier:

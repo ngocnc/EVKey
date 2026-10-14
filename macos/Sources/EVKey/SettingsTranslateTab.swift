@@ -19,6 +19,12 @@ struct SettingsTranslateTab: View {
         ]
     }
 
+    private let actionHints: [TranslateAction: String] = [
+        .show: "hint.translate_action.show",
+        .copy: "hint.translate_action.copy",
+        .replace: "hint.translate_action.replace",
+    ]
+
     private let providerChoices: [ChoiceOption<TranslateProvider>] = [
         ChoiceOption(value: .google, label: "Google Translate"),
         ChoiceOption(value: .gemini, label: "Gemini"),
@@ -29,17 +35,22 @@ struct SettingsTranslateTab: View {
             SettingsGroup {
                 SettingsHotkeyRow(
                     id: "translate", title: UIStrings.tr("translate.hotkey"), subtitle: UIStrings.tr("translate.hotkey.detail"),
-                    chord: state.binding(\.translateHotkey), recorder: $recorder)
+                    chord: state.binding(\.translateHotkey), recorder: $recorder, others: [state.settings.actionHotkey])
                 SettingsHotkeyRow(
                     id: "actions", title: UIStrings.tr("actions.hotkey"), subtitle: UIStrings.tr("actions.hotkey.detail"),
-                    chord: state.binding(\.actionHotkey), recorder: $recorder)
+                    chord: state.binding(\.actionHotkey), recorder: $recorder, others: [state.settings.translateHotkey])
                 SettingsChoiceRow(
                     title: UIStrings.tr("translate.action"), subtitle: UIStrings.tr("translate.action.detail"),
-                    choices: actionChoices, selection: state.binding(\.translateAction))
-                displayTimeRow
-                SettingsChoiceRow(
-                    title: UIStrings.tr("translate.service"), subtitle: UIStrings.tr("translate.service.detail"),
-                    choices: providerChoices, selection: state.binding(\.translateProvider))
+                    choices: actionChoices, selection: state.binding(\.translateAction), hints: actionHints)
+            }
+
+            SettingsAdvanced(pane: "translate") {
+                SettingsGroup {
+                    displayTimeRow
+                    SettingsChoiceRow(
+                        title: UIStrings.tr("translate.service"), subtitle: UIStrings.tr("translate.service.detail"),
+                        choices: providerChoices, selection: state.binding(\.translateProvider))
+                }
             }
 
             SettingsHeading(UIStrings.tr("gemini.heading"))

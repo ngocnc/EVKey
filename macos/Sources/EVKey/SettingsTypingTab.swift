@@ -5,6 +5,22 @@ import SwiftUI
 struct SettingsTypingTab: View {
     @ObservedObject private var state = AppState.shared
 
+    private static let inputHints: [InputKind: String] = [
+        .telex: "hint.input_type.telex",
+        .vni: "hint.input_type.vni",
+        .simpleTelex1: "hint.input_type.simple_telex1",
+        .simpleTelex2: "hint.input_type.simple_telex2",
+    ]
+    private static let toneHints: [TonePlacement: String] = [
+        .new: "hint.tone_placement.new",
+        .old: "hint.tone_placement.old",
+    ]
+    private static let tableHints: [CodeTable: String] = [
+        .unicode: "hint.code_table.unicode",
+        .tcvn3: "hint.code_table.tcvn3",
+        .vniWindows: "hint.code_table.vni_windows",
+        .unicodeCompound: "hint.code_table.unicode_compound",
+    ]
     private static let inputChoices: [ChoiceOption<InputKind>] = [
         ChoiceOption(value: .telex, label: "Telex"),
         ChoiceOption(value: .vni, label: "VNI"),
@@ -52,16 +68,16 @@ struct SettingsTypingTab: View {
             SettingsGroup {
                 SettingsChoiceRow(
                     title: UIStrings.tr("typing.inputMethod"), subtitle: UIStrings.tr("typing.inputMethod.detail"),
-                    choices: Self.inputChoices, selection: state.binding(\.inputType))
+                    choices: Self.inputChoices, selection: state.binding(\.inputType), hints: Self.inputHints)
             }
             SettingsAdvanced(pane: "typing") {
                 SettingsGroup {
                     SettingsChoiceRow(
                         title: UIStrings.tr("typing.tonePlacement"), subtitle: UIStrings.tr("typing.tonePlacement.detail"),
-                        choices: Self.toneChoices, selection: state.binding(\.tonePlacement))
+                        choices: Self.toneChoices, selection: state.binding(\.tonePlacement), hints: Self.toneHints)
                     SettingsChoiceRow(
                         title: UIStrings.tr("typing.codeTable"), subtitle: UIStrings.tr("typing.codeTable.detail"),
-                        choices: Self.tableChoices, selection: state.binding(\.codeTable))
+                        choices: Self.tableChoices, selection: state.binding(\.codeTable), hints: Self.tableHints)
                     SettingsToggleRow(
                         title: UIStrings.tr("typing.freeTone"), subtitle: UIStrings.tr("typing.freeTone.detail"),
                         isOn: state.binding(\.freeMark))
