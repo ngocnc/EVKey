@@ -53,6 +53,10 @@ final class ActionPanelController {
     private var generation = 0
     /// Clicks and Esc outside the menu close it; installed only while the menu waits for a choice.
     private var dismissMonitors: [Any] = []
+    /// Set once the user drags the panel; later fits keep its top-left instead of jumping back to the pointer.
+    private var dragged = false
+    /// True while `fit` moves the panel, so only user drags set `dragged`.
+    private var placing = false
 
     private init() {
         let host = NSHostingController(rootView: ActionPanelView(model: model))
@@ -72,6 +76,11 @@ final class ActionPanelController {
         panel.hasShadow = false
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
+        panel.isMovableByWindowBackground = true
+        NotificationCenter.default.addObserver(forName: NSWindow.didMoveNotification, object: panel, queue: .main) {
+            [weak self] _ in
+            MainActor.assumeIsolated { if self?.placing == false { self?.dragged = true } }
+        }
     }
 
     /// Hotkey entry point. Secure Input is checked by the event tap before this runs. Outside an editable field it does
@@ -83,6 +92,7 @@ final class ActionPanelController {
         runID += 1
         stopDismissMonitors()
         anchor = NSEvent.mouseLocation
+        dragged = false
         let text = await TextSelection.capture()
         if text.isEmpty { return fail(UIStrings.tr("translate.error.noSelection")) }
         if text.count > Translate.maxChars { return fail(UIStrings.tr("actions.error.tooLong")) }
@@ -170,8 +180,13 @@ final class ActionPanelController {
     private func fit() {
         hosting.view.layoutSubtreeIfNeeded()
         let height = min(max(hosting.view.fittingSize.height, 1), Self.maxHeight)
-        panel.setFrame(
-            TextSelection.popupFrame(anchor: anchor, size: NSSize(width: Self.width, height: height)), display: true)
+        let size = NSSize(width: Self.width, height: height)
+        let frame = dragged
+            ? NSRect(origin: NSPoint(x: panel.frame.minX, y: panel.frame.maxY - height), size: size)
+            : TextSelection.popupFrame(anchor: anchor, size: size)
+        placing = true
+        panel.setFrame(frame, display: true)
+        placing = false
     }
 
     /// Esc or a click outside the menu closes it. The panel never takes focus, so the events come from the app below
