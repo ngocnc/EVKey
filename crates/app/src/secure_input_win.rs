@@ -65,8 +65,16 @@ fn check() {
     AUTOMATION.with(|a| {
         let holder = holder_app(a.borrow().as_ref());
         SECURE.store(holder.is_some(), Ordering::Relaxed);
-        banner::notify(holder);
+        // EVKey's own password field (the Gemini key) still blocks typing, but gets no banner: while EVKey is in
+        // front, showing the banner activates it, the focus event that follows hides it, and the loop repeats.
+        banner::notify(holder.filter(|_| !own_window_in_front()));
     });
+}
+
+fn own_window_in_front() -> bool {
+    let mut pid = 0;
+    unsafe { GetWindowThreadProcessId(GetForegroundWindow(), Some(&mut pid)) };
+    pid == std::process::id()
 }
 
 unsafe extern "system" fn on_focus_event(
