@@ -1,6 +1,7 @@
 //! EVKey 2.0 app: CLI flags, single instance, tray icon and settings window.
 #![windows_subsystem = "windows"]
 
+mod ai;
 mod autostart;
 mod banner;
 mod clipboard;
@@ -10,6 +11,7 @@ mod i18n;
 mod ipc;
 mod keyboard;
 mod popup_cmd;
+mod secret;
 mod secure_input_win;
 mod settings_cmd;
 mod tray;
@@ -54,6 +56,9 @@ fn run(show_settings: bool) {
             settings_cmd::save_settings,
             settings_cmd::save_macros,
             settings_cmd::reset_config,
+            settings_cmd::import_macros,
+            settings_cmd::export_config,
+            settings_cmd::import_config,
             settings_cmd::set_autostart,
             settings_cmd::open_config_dir,
             settings_cmd::open_github,
@@ -78,6 +83,10 @@ fn run(show_settings: bool) {
             banner::banner_state,
             banner::banner_defaults,
             banner::banner_fit,
+            ai::gemini_key_status,
+            ai::gemini_key_set,
+            ai::gemini_key_delete,
+            ai::ai_run,
         ])
         .on_window_event(tray::on_window_event)
         .setup(move |app| {

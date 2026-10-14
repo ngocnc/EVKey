@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use evkey_engine::import;
 use evkey_engine::settings::{self, Loaded, Settings};
 use evkey_engine::hotkey::parse_hotkey;
 use serde::{Deserialize, Serialize};
@@ -67,6 +68,37 @@ fn reset_config_in(dir: &Path) -> Result<(), String> {
     settings::save(dir, &Loaded::default())
 }
 
+/// Imports UniKey/OpenKey macros. `replace` drops the current macros; otherwise imported keys
+/// overwrite same-named macros and the rest are kept. Returns the number of macros imported.
+/// `bytes` is the file content: the settings page reads the file the user picked with `<input type="file">`.
+fn import_macros_in(dir: &Path, bytes: &[u8], replace: bool) -> Result<usize, String> {
+    let mut imported = BTreeMap::new();
+    for (key, text) in import::parse_macros(bytes)? {
+        if imported.insert(key.clone(), text).is_some() {
+            return Err(format!("{}{key}", crate::i18n::tr("Từ viết tắt bị trùng: ", "Duplicate abbreviation: ")));
+        }
+    }
+    let count = imported.len();
+    let mut cfg = settings::load(dir)?;
+    if replace {
+        cfg.macros.clear();
+    }
+    cfg.macros.extend(imported);
+    settings::save(dir, &cfg)?;
+    Ok(count)
+}
+
+/// Writes `config.toml` and `macros.toml` as one document. Contains no secrets.
+fn export_config_in(dir: &Path, path: &Path) -> Result<(), String> {
+    let text = import::encode_config(&settings::load(dir)?)?;
+    std::fs::write(path, text).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// Validates the whole document first; nothing is written unless it passes.
+fn import_config_in(dir: &Path, text: &str) -> Result<(), String> {
+    settings::save(dir, &import::decode_config(text)?)
+}
+
 fn explorer(target: &str) -> Result<(), String> {
     Command::new("explorer.exe")
         .arg(target)
@@ -109,6 +141,32 @@ pub fn save_macros(rows: Vec<MacroRow>) -> Result<(), String> {
 #[tauri::command]
 pub fn reset_config() -> Result<(), String> {
     reset_config_in(&config_dir()?)
+}
+
+#[tauri::command]
+pub fn import_macros(content: Vec<u8>, replace: bool) -> Result<usize, String> {
+    import_macros_in(&config_dir()?, &content, replace)
+}
+
+/// Saves the export as `EVKey-config.toml` in the user's Downloads folder, selects it in Explorer and returns its path.
+// ponytail: fixed folder instead of a save dialog (no dialog plugin); add tauri-plugin-dialog if users want to choose.
+#[tauri::command]
+pub fn export_config() -> Result<String, String> {
+    let downloads = std::env::var_os("USERPROFILE").map(|home| PathBuf::from(home).join("Downloads")).ok_or_else(|| {
+        crate::i18n::tr("Không tìm thấy thư mục Downloads", "Downloads folder not found").to_string()
+    })?;
+    let path = downloads.join("EVKey-config.toml");
+    export_config_in(&config_dir()?, &path)?;
+    let _ = Command::new("explorer.exe").arg(format!("/select,{}", path.display())).spawn();
+    Ok(path.display().to_string())
+}
+
+#[tauri::command]
+pub fn import_config(app: AppHandle, content: String) -> Result<(), String> {
+    import_config_in(&config_dir()?, &content)?;
+    // The hotkey may have changed, and the tooltip shows it.
+    tray::refresh_icon(&app);
+    Ok(())
 }
 
 #[tauri::command]
@@ -207,6 +265,58 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("config.toml"), "toggle_hotkey = \"alt+\"\n").unwrap();
         assert!(settings::load(&dir).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn import_macros_merges_or_replaces() {
+        let dir = temp_dir("import-macros");
+        save_macros_in(&dir, vec![row("btw", "old"), row("keep", "kept")]).unwrap();
+        let file = ";[DO NOT DELETE THIS LINE]***version=1\nbtw:by the way\nvn:Việt Nam\n".as_bytes();
+        assert_eq!(import_macros_in(&dir, file, false).unwrap(), 2);
+        let m = settings::load(&dir).unwrap().macros;
+        assert_eq!(m.get("btw").map(String::as_str), Some("by the way"));
+        assert_eq!(m.get("keep").map(String::as_str), Some("kept"));
+        assert_eq!(import_macros_in(&dir, file, true).unwrap(), 2);
+        let m = settings::load(&dir).unwrap().macros;
+        assert_eq!(m.len(), 2);
+        assert!(!m.contains_key("keep"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn bad_macro_file_changes_nothing() {
+        let dir = temp_dir("import-macros-bad");
+        save_macros_in(&dir, vec![row("btw", "by the way")]).unwrap();
+        let err = import_macros_in(&dir, b"ok:fine\nbroken line\n", true).unwrap_err();
+        assert!(err.starts_with("line 2:"), "{err}");
+        assert_eq!(settings::load(&dir).unwrap().macros.len(), 1);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn config_export_then_import_restores_settings_and_macros() {
+        let src = temp_dir("export-src");
+        save_macros_in(&src, vec![row("btw", "by the way")]).unwrap();
+        save_settings_in(&src, Settings { free_mark: true, ..Settings::default() }).unwrap();
+        let file = src.join("evkey-config.toml");
+        export_config_in(&src, &file).unwrap();
+        let dst = temp_dir("export-dst");
+        import_config_in(&dst, &std::fs::read_to_string(&file).unwrap()).unwrap();
+        let cfg = settings::load(&dst).unwrap();
+        assert!(cfg.settings.free_mark);
+        assert_eq!(cfg.macros.get("btw").map(String::as_str), Some("by the way"));
+        let _ = std::fs::remove_dir_all(&src);
+        let _ = std::fs::remove_dir_all(&dst);
+    }
+
+    #[test]
+    fn invalid_config_import_writes_nothing() {
+        let dir = temp_dir("import-config-bad");
+        std::fs::create_dir_all(&dir).unwrap();
+        assert!(import_config_in(&dir, "format_version = 1\n[settings]\ntoggle_hotkey = \"alt+\"\n[macros]\n").is_err());
+        assert!(!dir.join("config.toml").exists());
+        assert!(!dir.join("macros.toml").exists());
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
