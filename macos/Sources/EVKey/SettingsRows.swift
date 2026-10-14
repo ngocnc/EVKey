@@ -102,6 +102,7 @@ struct SettingsMenuRow<Value: Hashable>: View {
             Picker("", selection: $selection) {
                 ForEach(choices) { Text($0.label).tag($0.value) }
             }
+                .pointerCursor()
             .pickerStyle(.menu)
             .labelsHidden()
             .fixedSize()

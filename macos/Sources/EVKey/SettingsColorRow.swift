@@ -45,6 +45,7 @@ struct SettingsColorRow: View {
                 set: { if let value = ColorHex.hex($0) { hex.wrappedValue = value } }),
             supportsOpacity: false
         )
+            .pointerCursor()
         .labelsHidden()
     }
 }

@@ -46,12 +46,15 @@ extension View {
 /// Dark mode: a soft light fill. Light mode: a milky white fill with a hairline edge, so blocks stand out from the glass.
 private struct SettingsBlockStyle: ViewModifier {
     @Environment(\.colorScheme) private var scheme
+    @ObservedObject private var appearance = GlassAppearance.shared
 
     func body(content: Content) -> some View {
+        // The fill follows the tint strength: a stronger tint means more opaque cards, 0 leaves them nearly clear.
+        let level = Double(appearance.tintStrength) / 100
         let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
         content
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(scheme == .dark ? Color.primary.opacity(0.12) : Color.white.opacity(0.55), in: shape)
+            .background(scheme == .dark ? Color.primary.opacity(0.06 + 0.2 * level) : Color.white.opacity(0.15 + 0.8 * level), in: shape)
             .overlay { if scheme == .light { shape.strokeBorder(Color.black.opacity(0.08), lineWidth: 0.5) } }
     }
 }

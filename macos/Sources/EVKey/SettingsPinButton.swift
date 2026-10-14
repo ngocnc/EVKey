@@ -17,6 +17,7 @@ struct SettingsPinButton: View {
                 .frame(width: 26, height: 26)
                 .background(pinned ? Color.accentColor.opacity(0.15) : Color.clear, in: Circle())
         }
+            .pointerCursor()
         .buttonStyle(.plain)
         .frame(height: 28)
         .help(pinned ? "Bỏ ghim" : "Ghim lên trên cùng")

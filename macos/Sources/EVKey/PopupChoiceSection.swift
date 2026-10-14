@@ -32,6 +32,7 @@ struct PopupChoiceSection<Value: Hashable>: View {
                         .animation(.easeInOut(duration: 0.2), value: expanded)
                 }
             }
+                .pointerCursor()
             .buttonStyle(PopupRowStyle())
 
             if expanded {
@@ -50,6 +51,7 @@ struct PopupChoiceSection<Value: Hashable>: View {
                                 .animation(.easeInOut(duration: 0.15), value: selected)
                         }
                     }
+                        .pointerCursor()
                     .buttonStyle(PopupRowStyle(leadingInset: 26))
                     .transition(.opacity)
                 }

@@ -22,10 +22,12 @@ struct SettingsInfoTab: View {
                 }
                 SettingsActionRow(title: "Kiểm tra cập nhật", subtitle: "Đang phát triển") {
                     Button("Sắp có") {}
+                        .pointerCursor()
                         .disabled(true)
                 }
                 SettingsActionRow(title: "GitHub", subtitle: "github.com/ngocnc/EVKey") {
                     Button("Mở trang GitHub", action: state.openGitHub)
+                        .pointerCursor()
                 }
             }
             Text("Phát triển bởi ChrisNguyen")

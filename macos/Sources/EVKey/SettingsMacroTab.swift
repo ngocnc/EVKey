@@ -31,6 +31,7 @@ struct SettingsMacroTab: View {
                                 let id = row.id
                                 withAnimation(.easeInOut(duration: 0.2)) { rows.removeAll { $0.id == id } }
                             }
+                                .pointerCursor()
                         }
                         .transition(.opacity)
                     }
@@ -38,8 +39,10 @@ struct SettingsMacroTab: View {
                         Button("Thêm dòng") {
                             withAnimation(.easeInOut(duration: 0.2)) { rows.append(MacroRow(key: "", value: "")) }
                         }
+                            .pointerCursor()
                         Spacer()
                         Button("Lưu gõ tắt", action: save)
+                            .pointerCursor()
                             .keyboardShortcut(.defaultAction)
                     }
                     .padding(.top, 4)

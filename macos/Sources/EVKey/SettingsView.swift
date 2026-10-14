@@ -36,8 +36,6 @@ struct SettingsView: View {
             .animation(.easeInOut(duration: 0.25), value: state.configError)
         }
         .frame(minWidth: 760, minHeight: 540)
-        // A thin material between the glass and the content keeps titles and captions legible over busy backgrounds.
-        .background(.thinMaterial)
         .glassBackdrop()
         .overlay(alignment: .topTrailing) {
             SettingsPinButton()
@@ -92,6 +90,7 @@ struct SettingsView: View {
                         .contentShape(Rectangle())
                         .animation(.easeInOut(duration: 0.2), value: navigation.tab)
                 }
+                    .pointerCursor()
                 .buttonStyle(.plain)
                 .padding(.horizontal, 8)
             }
@@ -147,6 +146,7 @@ private struct SettingsNotice: View {
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 8)
             Button(buttonTitle, action: action)
+                .pointerCursor()
         }
         .padding(12)
         .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))

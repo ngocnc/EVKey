@@ -39,8 +39,10 @@ struct SettingsAppsTab: View {
                             Button(app.name) { add(app.bundleID) }
                         }
                     }
+                        .pointerCursor()
                     .fixedSize()
                     Button("Thêm ứng dụng vừa dùng", action: addLastApp)
+                        .pointerCursor()
                     Spacer()
                 }
                 .padding(12)

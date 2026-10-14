@@ -26,6 +26,7 @@ struct PopupRow: View {
                 }
             }
         }
+            .pointerCursor()
         .buttonStyle(PopupRowStyle())
     }
 }

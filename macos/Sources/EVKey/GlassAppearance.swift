@@ -64,10 +64,13 @@ final class GlassAppearance: ObservableObject {
         tintStrength = defaults.object(forKey: "glass.strength") as? Int ?? Self.defaultStrength
     }
 
+    /// A white tint at full strength turns light glass into flat grey, so the default light tint is half as strong.
+    private func lightScale(_ scheme: ColorScheme) -> Double { scheme == .light && customTintHex == nil ? 0.4 : 1 }
+
     func tintHex(_ scheme: ColorScheme) -> String { customTintHex ?? Self.defaultTint(scheme) }
 
     func tint(_ scheme: ColorScheme) -> Color? {
-        tintStrength > 0 && tintEndHex.isEmpty ? ColorHex.color(tintHex(scheme)).opacity(Double(tintStrength) / 100) : nil
+        tintStrength > 0 && tintEndHex.isEmpty ? ColorHex.color(tintHex(scheme)).opacity(Double(tintStrength) / 100 * lightScale(scheme)) : nil
     }
 
     /// The tint as a gradient laid over the glass (Glass.tint takes a single colour only); nil unless a gradient is on.
@@ -98,6 +101,11 @@ private struct GlassSurface<S: Shape>: ViewModifier {
     @ViewBuilder private var gradientLayer: some View {
         if let gradient = appearance.gradientTint(scheme) {
             shape.fill(gradient).allowsHitTesting(false)
+        } else if scheme == .light {
+            // Light glass has no dark edges to read as glass, so a soft sheen from the top-left corner stands in for them.
+            shape.fill(LinearGradient(
+                colors: [.white.opacity(0.5), .white.opacity(0.05), .white.opacity(0.22)],
+                startPoint: .topLeading, endPoint: .bottomTrailing)).allowsHitTesting(false)
         }
     }
 

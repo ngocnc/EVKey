@@ -30,10 +30,12 @@ struct SettingsSystemTab: View {
                         .foregroundStyle(.secondary)
                     HStack {
                         Button("Mở thư mục", action: state.openConfigDir)
+                            .pointerCursor()
                         Spacer()
                         Button("Đặt lại về mặc định", role: .destructive) {
                             if confirmResetConfig() { state.perform { try state.resetConfig() } }
                         }
+                            .pointerCursor()
                     }
                 }
                 .padding(14)

@@ -361,3 +361,6 @@ body::before {
   .switch i::after { background: #fff; }
   .switch input:checked + i::after { background: #fff; }
 }
+
+/* Every clickable control shows the pointing hand. */
+button:not(:disabled), select, input[type="checkbox"], input[type="range"], label.item, .tab, .seg button { cursor: pointer; }

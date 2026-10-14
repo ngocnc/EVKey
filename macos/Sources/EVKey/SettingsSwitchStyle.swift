@@ -9,6 +9,7 @@ struct SettingsSwitchStyle: ToggleStyle {
         } label: {
             EmptyView()
         }
+            .pointerCursor()
         .buttonStyle(Track(isOn: configuration.isOn))
     }
 

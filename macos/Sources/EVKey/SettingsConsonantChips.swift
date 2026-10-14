@@ -28,6 +28,7 @@ struct SettingsConsonantChips: View {
                         .frame(width: 24, height: 24)
                         .background(Color.blue, in: Circle())
                 }
+                    .pointerCursor()
                 .buttonStyle(.plain)
             }
             if let error {
@@ -53,6 +54,7 @@ struct SettingsConsonantChips: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
+                .pointerCursor()
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 10)

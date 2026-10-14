@@ -23,6 +23,7 @@ struct SettingsSegmented<Value: Hashable>: View {
                         }
                     }
                     .contentShape(Rectangle())
+                    .pointerCursor()
                     .onTapGesture {
                         withAnimation(.easeInOut(duration: 0.2)) { selection = choice.value }
                     }

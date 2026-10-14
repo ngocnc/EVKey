@@ -37,6 +37,7 @@ struct SettingsTypingTab: View {
                     Spacer(minLength: 12)
                     if !state.accessibilityTrusted {
                         Button("Mở cài đặt", action: state.openAccessibilitySettings)
+                            .pointerCursor()
                     }
                 }
                 .padding(.horizontal, 14)

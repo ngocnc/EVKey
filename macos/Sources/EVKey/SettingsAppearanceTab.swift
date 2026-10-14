@@ -22,6 +22,7 @@ struct SettingsAppearanceTab: View {
                     GlassAppearance.shared.reset()
                     SettingsBannerSection.reset()
                 }
+                    .pointerCursor()
             }
         }
     }
