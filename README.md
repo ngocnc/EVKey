@@ -1,6 +1,6 @@
 # EVKey
 
-Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 dùng TSF thật; macOS (arm64 + x86_64) dùng CGEventTap. Engine port từ [OpenKey](https://github.com/tuyenvm/OpenKey) nên repo là GPL-3.0.
+Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 mặc định dùng hook bàn phím như UniKey (TSF vẫn chọn được); macOS (arm64 + x86_64) dùng CGEventTap. Engine port từ [OpenKey](https://github.com/tuyenvm/OpenKey) nên repo là GPL-3.0.
 
 ## Cài đặt
 
@@ -18,7 +18,7 @@ Tải `EVKey-Setup-<version>.exe` từ [Releases](https://github.com/ngocnc/EVKe
 
 **Cảnh báo SmartScreen:** installer chưa ký số nên Windows có thể hiện "Windows protected your PC". Bấm **More info** → **Run anyway**. Kiểm tra SHA256 trong phần ghi chú của release nếu muốn xác minh file.
 
-Sau khi cài, chọn "EVKey" (English (United States)) bằng `Win+Space`. Installer tự thêm bộ gõ vào danh sách bàn phím và bật khởi động cùng Windows; có thể bỏ các tùy chọn này ở bước chọn tác vụ.
+Sau khi cài, EVKey chạy ở khay hệ thống và gõ được ngay (cơ chế hook mặc định không cần thêm bàn phím Windows). Bấm trái icon khay để đổi Việt/Anh, bấm phải để mở menu (kiểu gõ, bảng mã, gõ tắt, cài đặt). Installer bật khởi động cùng Windows; có thể bỏ ở bước chọn tác vụ. Chọn `backend = "tsf"` nếu muốn dùng bàn phím TSF: khi đó chọn "EVKey" (English (United States)) bằng `Win+Space`.
 
 Cài im lặng (không hỏi gì, dùng mặc định):
 
@@ -88,17 +88,18 @@ vn = "Việt Nam"
 
 ### Chuyển Việt / Anh
 
-- Chế độ Việt/Anh là một trạng thái chung của bộ gõ (TSF global compartment), dùng chung cho mọi ứng dụng. Mặc định là Việt. Chế độ Anh: bộ gõ vẫn là bàn phím đang dùng nhưng không biến đổi phím; phím đi thẳng tới ứng dụng.
+- Chế độ Việt/Anh dùng chung cho mọi ứng dụng. Mặc định là Việt. Chế độ Anh: phím đi thẳng tới ứng dụng, không bị biến đổi. (Với `backend = "tsf"` trạng thái này là một TSF global compartment.)
 - `toggle_hotkey` là tổ hợp phím chuyển chế độ. Cú pháp (không phân biệt hoa thường, nối bằng `+`, không có khoảng trắng): không hoặc nhiều trong `ctrl|alt|shift|win`, kèm theo đúng một phím (`a`-`z`, `0`-`9`, `space`, `f1`-`f12`) hoặc không có phím nào. Ví dụ `alt+z`, `ctrl+shift`, `f8`. Tổ hợp không có phím (như `ctrl+shift`) kích hoạt khi nhả các phím bổ trợ mà không bấm phím nào khác ở giữa. `"none"` tắt phím tắt. Giá trị sai cú pháp làm việc nạp cấu hình báo lỗi.
 - `backend = "hook"` (mặc định): EVKey nghe phím toàn cục và gõ lại bằng `SendInput`, không cần thêm bàn phím Windows và không cần DLL. Khi khởi động, EVKey tự gỡ mục bàn phím TSF (nếu có) để phím không bị xử lý hai lần. Hạn chế: cửa sổ chạy quyền admin chỉ gõ được nếu EVKey cũng chạy với quyền admin; Chrome/Electron có thể lệch dấu trong vài trường hợp (EVKey dùng cách chống autocomplete của OpenKey). `backend = "tsf"` giữ cơ chế cũ. Đổi `backend` cần khởi động lại EVKey; `evkey --mode` với hook chỉ có `vietnamese|english|toggle`.
 - Đổi `toggle_hotkey` có hiệu lực trong khoảng 1 giây, không cần khởi động lại ứng dụng.
 - **Lưu ý**: phím tắt đổi bố cục của Windows (Ctrl+Shift, Alt+Shift) vẫn hoạt động độc lập; EVKey không xử lý chúng. Nếu đặt `toggle_hotkey` trùng với tổ hợp này, cả hai sẽ cùng chạy.
 
-## Trạng thái (v2.0.0)
+## Trạng thái (v2.2.3)
 
-- Windows 11 x64: engine so khớp từng sự kiện với OpenKey gốc; bộ gõ, bộ cài, gỡ cài đã chạy thật trên máy tác giả.
-- Icon khay: bấm trái hoặc phải để mở Popup (công tắc Việt/Anh, kiểu gõ, bảng mã, Quản lý Macro, Bảng điều khiển, Thoát). Mọi lựa chọn ghi vào `config.toml`.
-- Lỗi đã biết: `TextBox` WinForms (EDIT cổ điển) có thể mất chữ gõ sau lần commit đầu.
+- Windows 11 x64: engine so khớp từng sự kiện với OpenKey gốc; bộ gõ (hook), bộ cài, gỡ cài đã chạy thật trên máy tác giả.
+- Khay: bấm trái đổi Việt/Anh, bấm phải mở menu. Cửa sổ Cài đặt (liquid-glass, tự lưu) có các tab: Gõ tiếng Việt, Chính tả & gõ nhanh, Gõ tắt, Phím tắt, Ứng dụng loại trừ, Giao diện (sáng/tối, kiểu kính, màu phủ, màu chủ đạo, banner Secure Input), Hệ thống, Thông tin. Mọi lựa chọn ghi vào `config.toml`.
+- Banner Secure Input (Windows): hiện mờ dần, vừa khít nội dung, căn giữa theo vùng trang của trình duyệt (tính cả trường hợp tab dọc). Chưa kiểm chứng trên màn hình thật với mọi trình duyệt.
+- Chưa kiểm chứng đủ: hook trong Chrome/VS Code; `TextBox` WinForms (EDIT cổ điển) có thể mất chữ sau lần commit đầu (chỉ gặp với TSF).
 - Ứng dụng 32-bit không gõ được (chỉ build x64). Bộ cài chưa ký số. macOS: app SwiftUI chạy được (menu bar, Bảng điều khiển, Banner); gõ thật cần cấp quyền Accessibility và chưa có người dùng kiểm chứng trên nhiều ứng dụng.
 
 ## Phát triển
@@ -108,7 +109,8 @@ vn = "Việt Nam"
 | Đường dẫn | Nội dung |
 |---|---|
 | `crates/engine` | Engine thuần (không phụ thuộc OS): port OpenKey, `Composer` cho IME, `settings` |
-| `crates/tsf` | Text service Windows (`evkey_tsf.dll`) |
+| `crates/app` | App khay Windows (Tauri): hook bàn phím, cửa sổ Cài đặt, popup, banner (UI web ở `crates/app/ui`) |
+| `crates/tsf` | Text service Windows (`evkey_tsf.dll`), chỉ dùng khi `backend = "tsf"` |
 | `tools/difftest` | Harness C++ build engine OpenKey gốc để so sánh |
 | `installer/` | Script Inno Setup (`evkey.iss`) và ngôn ngữ tiếng Việt |
 | `packaging/winget/` | Manifest winget |

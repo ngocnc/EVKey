@@ -81,6 +81,7 @@ fn run(show_settings: bool) {
             popup_cmd::popup_resize,
             banner::banner_state,
             banner::banner_defaults,
+            banner::banner_fit,
         ])
         .on_window_event(tray::on_window_event)
         .setup(move |app| {

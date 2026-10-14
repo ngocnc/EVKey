@@ -1,5 +1,13 @@
 # Release notes
 
+## v2.2.3
+
+- Banner Secure Input: mờ dần cả cửa sổ (kể cả nền acrylic) thay vì hiệu ứng trượt gây giật; không áp lại acrylic mỗi lần hiện.
+- Banner vừa khít nội dung (không còn cố định 360 px) và căn giữa theo vùng trang của trình duyệt, đúng cả khi dùng tab dọc.
+- README cập nhật theo cơ chế hook mặc định và giao diện mới.
+- Chưa kiểm chứng: vị trí banner trên trình duyệt thật.
+
+
 ## v2.2.2
 
 - Banner Secure Input: hiệu ứng mờ dần khi hiện/ẩn.

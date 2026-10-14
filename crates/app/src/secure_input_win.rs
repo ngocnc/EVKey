@@ -6,9 +6,9 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use windows::Win32::Foundation::HWND;
+use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED};
-use windows::Win32::UI::Accessibility::{CUIAutomation, IUIAutomation};
+use windows::Win32::UI::Accessibility::{CUIAutomation, IUIAutomation, UIA_DocumentControlTypeId};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetGUIThreadInfo, GetWindowLongW, GetWindowThreadProcessId, GUITHREADINFO, GWL_STYLE,
 };
@@ -45,9 +45,8 @@ pub fn start() {
 
 /// `Some(app)` while a password field has focus (`app` is "" when unknown), `None` otherwise.
 fn holder_app(automation: Option<&IUIAutomation>) -> Option<String> {
-    if !classic_password_focused() && !uia_password_focused(automation) {
-        return None;
-    }
+    let viewport = if classic_password_focused() { None } else { Some(uia_password_focused(automation)?) };
+    banner::set_anchor(viewport.flatten());
     Some(app_name(unsafe { GetForegroundWindow() }))
 }
 
@@ -64,13 +63,24 @@ pub fn classic_password_focused() -> bool {
     }
 }
 
-fn uia_password_focused(automation: Option<&IUIAutomation>) -> bool {
-    let Some(automation) = automation else { return false };
+/// `Some(viewport)` when the focused UI Automation element is a password field. `viewport` is the bounds of the
+/// enclosing document (a browser's page area, which excludes vertical tab strips and sidebars), `None` if not found.
+fn uia_password_focused(automation: Option<&IUIAutomation>) -> Option<Option<RECT>> {
+    let automation = automation?;
     unsafe {
-        automation
-            .GetFocusedElement()
-            .and_then(|element| element.CurrentIsPassword())
-            .is_ok_and(|password| password.as_bool())
+        let element = automation.GetFocusedElement().ok()?;
+        if !element.CurrentIsPassword().ok()?.as_bool() {
+            return None;
+        }
+        let walker = automation.ControlViewWalker().ok()?;
+        let mut node = element;
+        for _ in 0..40 {
+            if node.CurrentControlType().is_ok_and(|t| t == UIA_DocumentControlTypeId) {
+                return Some(node.CurrentBoundingRectangle().ok().filter(|r| r.right > r.left && r.bottom > r.top));
+            }
+            node = walker.GetParentElement(&node).ok()?;
+        }
+        Some(None)
     }
 }
 
