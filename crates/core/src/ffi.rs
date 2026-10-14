@@ -6,6 +6,7 @@ use std::ffi::{c_char, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::PathBuf;
 
+use evkey_engine::convert;
 use evkey_engine::hotkey::parse_hotkey;
 use evkey_engine::settings::{self, Loaded, Settings};
 use serde::{Deserialize, Serialize};
@@ -251,6 +252,16 @@ pub unsafe extern "C" fn evkey_settings_save_json(dir_utf8: *const c_char, json_
     })
 }
 
+/// Converts `text_utf8` to precomposed Unicode, guessing its code table (the action panel's Convert). `NULL` on bad
+/// input. Free with `evkey_string_free`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn evkey_convert_to_unicode(text_utf8: *const c_char) -> *mut c_char {
+    guard(std::ptr::null_mut(), || {
+        let Some(text) = (unsafe { str_arg(text_utf8) }) else { return std::ptr::null_mut() };
+        into_c_string(convert::to_unicode(text, convert::detect(text)))
+    })
+}
+
 /// Releases a string returned by this library. `NULL` is a no-op.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn evkey_string_free(s: *mut c_char) {
@@ -330,6 +341,6 @@ mod tests {
             assert!(header.contains(&format!("{name}(")), "header is missing {name}");
             exported += 1;
         }
-        assert_eq!(exported, 14, "update the header test when adding or removing exports");
+        assert_eq!(exported, 15, "update the header test when adding or removing exports");
     }
 }
