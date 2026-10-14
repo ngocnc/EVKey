@@ -7,7 +7,7 @@
 //! Events this module injects carry `MARKER` in `dwExtraInfo` and are ignored when they come back through the hook.
 use std::cell::RefCell;
 use std::mem::size_of;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{mpsc, Arc, LazyLock};
 
 use evkey_core::session::EMPTY_CHAR;
@@ -18,12 +18,14 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
     GetAsyncKeyState, GetKeyState, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
     KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_BACK, VK_CAPITAL,
 };
+use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CallNextHookEx, DispatchMessageW, GetForegroundWindow, GetMessageW, SetTimer, SetWindowsHookExW, TranslateMessage,
-    UnhookWindowsHookEx, HHOOK, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WH_MOUSE_LL,
+    CallNextHookEx, DispatchMessageW, GetForegroundWindow, GetMessageW, PostThreadMessageW, SetTimer,
+    SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx, HHOOK, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
+    WH_MOUSE_LL, WM_APP,
 };
 
-use crate::foreground;
+use crate::{foreground, tray};
 
 /// Tags our own injected events ("EVKY").
 const MARKER: usize = 0x4556_4B59;
@@ -36,6 +38,20 @@ pub fn english() -> bool {
 
 pub fn set_english(on: bool) {
     MODE.store(on, Ordering::Relaxed);
+    tray::mode_changed();
+    post_to_hook_thread(WM_APP_MODE);
+}
+
+/// Wakes the hook thread to re-read the frontmost app. Called from the foreground WinEvent hook.
+pub fn foreground_changed() {
+    post_to_hook_thread(WM_APP_FOREGROUND);
+}
+
+fn post_to_hook_thread(msg: u32) {
+    let tid = HOOK_THREAD.load(Ordering::Relaxed);
+    if tid != 0 {
+        let _ = unsafe { PostThreadMessageW(tid, msg, WPARAM(0), LPARAM(0)) };
+    }
 }
 
 /// Physical state of the modifier keys, read from the OS on each key event.
@@ -59,29 +75,38 @@ impl State {
         State { session: Session::with_mode(settings::default_dir(), MODE.clone()), fg: HWND::default() }
     }
 
-    /// Tells the session which app is frontmost (and so which remembered V/E mode applies). The app is looked up again
-    /// only when the foreground window changes, so this is cheap enough for every key press, in either mode.
+    /// Tells the session which app is frontmost (and so which remembered V/E mode applies). Runs on each key press;
+    /// the app is looked up again only when the foreground window changes, so this is cheap.
     fn refresh_foreground(&mut self) {
         let fg = unsafe { GetForegroundWindow() };
         if fg != self.fg {
             self.fg = fg;
-            self.session.set_foreground(foreground::exe_name(fg).as_deref());
+            self.set_app(foreground::exe_name(fg).as_deref());
         }
     }
 
-    /// Runs a few times a second on the hook thread, so a switch to another app restores that app's remembered mode
-    /// at once (the tray icon follows) instead of at the next key press, and a mode changed from the tray is saved.
-    fn poll(&mut self) {
-        let fg = unsafe { GetForegroundWindow() };
-        if fg != self.fg {
-            let app = foreground::exe_name(fg);
-            // EVKey's own popup or settings window: the user is still typing in the app behind it.
-            if !app.as_deref().is_some_and(|a| a.eq_ignore_ascii_case("evkey.exe")) {
-                self.fg = fg;
-                self.session.set_foreground(app.as_deref());
-            }
+    /// Sets the frontmost app on the session; the tray follows when that restores a different mode.
+    fn set_app(&mut self, app: Option<&str>) {
+        let before = self.session.is_english();
+        self.session.set_foreground(app);
+        if self.session.is_english() != before {
+            tray::mode_changed();
         }
-        self.session.remember_current();
+    }
+
+    /// The foreground window changed (posted by the WinEvent hook), so a switch restores that app's remembered mode at
+    /// once and the tray follows. EVKey's own popup or settings window is skipped: the user is still typing in the app
+    /// behind it, so a mode toggled from the popup must be remembered for that app.
+    fn on_foreground_event(&mut self) {
+        let fg = unsafe { GetForegroundWindow() };
+        if fg == self.fg {
+            return;
+        }
+        let app = foreground::exe_name(fg);
+        if !app.as_deref().is_some_and(|a| a.eq_ignore_ascii_case("evkey.exe")) {
+            self.fg = fg;
+            self.set_app(app.as_deref());
+        }
     }
 
     /// Password-field state, needed only for keys that may be converted. The UIA poll result is cached; the classic
@@ -100,7 +125,11 @@ impl State {
             }
         }
         let caps_lock = unsafe { GetKeyState(VK_CAPITAL.0 as i32) } & 1 != 0;
+        let before = self.session.is_english();
         let reaction = self.session.on_key(KeyInput { vk, down, mods: async_mods(), caps_lock });
+        if self.session.is_english() != before {
+            tray::mode_changed();
+        }
         if reaction.hotkey_toggled && self.session.settings().toggle_sound {
             crate::keyboard::play_toggle_sound(self.session.is_english());
         }
@@ -216,12 +245,18 @@ fn install() -> Result<(HHOOK, HHOOK), String> {
 
 const WM_TIMER: u32 = 0x113;
 const REINSTALL_EVERY_MS: u32 = 5000;
-const POLL_EVERY_MS: u32 = 250;
+/// Posted to the hook thread when another thread set the V/E flag, so that mode is remembered for the app.
+const WM_APP_MODE: u32 = WM_APP + 1;
+/// Posted by the foreground WinEvent hook (see `foreground_changed`).
+const WM_APP_FOREGROUND: u32 = WM_APP + 2;
+/// Hook thread id, so other threads can post to it.
+static HOOK_THREAD: AtomicU32 = AtomicU32::new(0);
 
 /// Installs the hooks on a new thread and waits for the result. On failure the app keeps running without typing.
 pub fn start() -> Result<(), String> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
+        HOOK_THREAD.store(unsafe { GetCurrentThreadId() }, Ordering::Relaxed);
         STATE.with(|s| *s.borrow_mut() = Some(State::new()));
         let mut hooks = match install() {
             Ok(h) => h,
@@ -234,13 +269,20 @@ pub fn start() -> Result<(), String> {
         let _ = tx.send(Ok(()));
         // With no window the system picks the timer ids; WM_TIMER carries the id in wParam.
         let reinstall_timer = unsafe { SetTimer(None, 0, REINSTALL_EVERY_MS, None) };
-        let poll_timer = unsafe { SetTimer(None, 0, POLL_EVERY_MS, None) };
         let mut msg = MSG::default();
         while unsafe { GetMessageW(&mut msg, None, 0, 0) }.as_bool() {
-            if msg.message == WM_TIMER && msg.wParam.0 == poll_timer {
+            if msg.message == WM_APP_FOREGROUND {
                 STATE.with(|s| {
                     if let Some(state) = s.borrow_mut().as_mut() {
-                        state.poll();
+                        state.on_foreground_event();
+                    }
+                });
+                continue;
+            }
+            if msg.message == WM_APP_MODE {
+                STATE.with(|s| {
+                    if let Some(state) = s.borrow_mut().as_mut() {
+                        state.session.remember_current();
                     }
                 });
                 continue;

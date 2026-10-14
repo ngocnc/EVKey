@@ -2,6 +2,8 @@
 use std::fs::OpenOptions;
 use std::io::Write;
 use parking_lot::Mutex;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::OnceLock;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tauri::image::Image;
@@ -17,13 +19,14 @@ const TRAY_ID: &str = "evkey";
 const POPUP: &str = "popup";
 const ICON_V: &[u8] = include_bytes!("../icons/tray-v.png");
 const ICON_E: &[u8] = include_bytes!("../icons/tray-e.png");
-const MODE_POLL: Duration = Duration::from_millis(400);
 /// Clicking the tray while the popup is open blurs (hides) it first; the click that follows must not reopen it.
 const BLUR_GRACE: Duration = Duration::from_millis(300);
 
 /// Tray icon rect in physical pixels, kept so the popup can be re-anchored after it resizes.
 static ANCHOR: Mutex<Option<(PhysicalPosition<f64>, PhysicalSize<f64>)>> = Mutex::new(None);
 static LAST_BLUR_HIDE: Mutex<Option<Instant>> = Mutex::new(None);
+/// Wakes the mode watcher thread (see `mode_changed`).
+static MODE_WAKE: OnceLock<Sender<()>> = OnceLock::new();
 
 pub fn setup(app: &mut App) -> tauri::Result<()> {
     if let Some(popup) = app.get_webview_window(POPUP) {
@@ -49,8 +52,10 @@ pub fn setup(app: &mut App) -> tauri::Result<()> {
         })
         .build(app)?;
     refresh_icon(app.handle());
+    let (tx, rx) = channel();
+    let _ = MODE_WAKE.set(tx);
     let watch = app.handle().clone();
-    std::thread::spawn(move || watch_mode(watch));
+    std::thread::spawn(move || watch_mode(watch, rx));
     Ok(())
 }
 
@@ -187,11 +192,17 @@ fn tooltip(mode: Mode) -> String {
     }
 }
 
-/// Polls the shared mode, so changes from the hotkey, the CLI or a per-app switch reach the icon and the open popup.
-fn watch_mode(app: AppHandle) {
+/// Wakes `watch_mode` when the shared V/E mode may have changed. Non-blocking, so the hook thread can call it.
+pub fn mode_changed() {
+    if let Some(tx) = MODE_WAKE.get() {
+        let _ = tx.send(());
+    }
+}
+
+/// Syncs the icon and the open popup each time `mode_changed` wakes it. Idle until then, so no polling.
+fn watch_mode(app: AppHandle, wake: Receiver<()>) {
     let mut shown = None;
-    loop {
-        std::thread::sleep(MODE_POLL);
+    while wake.recv().is_ok() {
         let mode = mode::get();
         if shown != Some(mode) {
             shown = Some(mode);
