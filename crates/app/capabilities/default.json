@@ -2,5 +2,5 @@
   "identifier": "default",
   "description": "Settings, tray popup and Secure Input banner windows",
   "windows": ["settings", "popup", "banner", "update", "actions"],
-  "permissions": ["core:default", "core:window:allow-set-always-on-top", "core:window:allow-set-theme"]
+  "permissions": ["core:default", "core:window:allow-set-always-on-top", "core:window:allow-set-theme", "core:window:allow-start-dragging"]
 }

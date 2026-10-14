@@ -67,6 +67,7 @@ fn run(show_settings: bool) {
             settings_cmd::quit,
             actions::actions_state,
             actions::actions_close,
+            actions::actions_keep,
             actions::actions_fit,
             actions::actions_run,
             updater::check_update_now,

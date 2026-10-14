@@ -65,7 +65,26 @@ async function render() {
   requestAnimationFrame(() => invoke("actions_fit", { height: Math.ceil($("panel").getBoundingClientRect().height) }));
 }
 
-// The panel never takes focus, so there is no Esc: a click outside the menu closes it.
-document.addEventListener("click", () => invoke("actions_close"));
+// The panel never takes focus, so there is no Esc. The x button closes it; a plain click on it does too.
+// Dragging moves it and keeps it open (the auto-hide timer and countdown stop).
+const win = window.__TAURI__.window.getCurrentWindow();
+let dragFrom = null;
+$("panel").addEventListener("mousedown", (e) => {
+  if (e.button !== 0 || e.target.closest("button")) return;
+  dragFrom = [window.screenX, window.screenY];
+  win.startDragging().catch(console.error);
+});
+document.addEventListener("click", (e) => {
+  const moved = dragFrom && (window.screenX !== dragFrom[0] || window.screenY !== dragFrom[1]);
+  dragFrom = null;
+  if (moved) {
+    fill?.cancel();
+    $("tr-bar").style.visibility = "hidden";
+    invoke("actions_keep");
+    return;
+  }
+  if (!e.target.closest(".ac-item, .ac-setup")) invoke("actions_close");
+});
+$("ac-close").onclick = () => invoke("actions_close");
 listen("actions-update", render);
 render();

@@ -281,6 +281,12 @@ pub fn actions_close(app: AppHandle) {
     hide(&app);
 }
 
+/// The panel was dragged: it stays open until closed (the pending auto-hide no longer matches).
+#[tauri::command]
+pub fn actions_keep() {
+    SHOWN.fetch_add(1, Ordering::SeqCst);
+}
+
 /// From the hook thread: Esc (`point` None) or a click at `point` (physical pixels) outside the open menu closes it.
 pub fn dismiss_menu(point: Option<(i32, i32)>) {
     if !MENU_OPEN.load(Ordering::SeqCst) {

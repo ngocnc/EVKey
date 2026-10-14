@@ -14,3 +14,9 @@
 .ac-item:hover { background: var(--track); }
 .ac-item:disabled { opacity: 0.45; cursor: default; background: var(--field); }
 .ac-setup { grid-column: 1 / -1; font: inherit; font-size: 13px; padding: 6px 10px; border: 0; background: none; color: var(--accent); text-align: start; cursor: pointer; }
+/* Close button in the top-right corner; the rest of the panel is a drag handle. */
+.tr-panel { position: relative; cursor: grab; }
+.ac-close { position: absolute; top: 9px; right: 8px; z-index: 1; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--muted, currentColor); opacity: 0.7; cursor: pointer; }
+.ac-close:hover { opacity: 1; background: var(--track); }
+.tr-text { padding-right: 36px; }
+.ac-menu { padding-right: 36px; }
