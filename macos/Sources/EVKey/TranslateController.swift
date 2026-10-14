@@ -116,7 +116,7 @@ final class TranslateController {
 }
 
 /// Why a translation could not be shown.
-enum TranslateFailure: Equatable {
+enum TranslateFailure: Error, Equatable {
     case noSelection
     case tooLong
     case failed(String)

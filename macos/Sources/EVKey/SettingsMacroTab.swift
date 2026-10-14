@@ -62,7 +62,7 @@ struct SettingsMacroTab: View {
         }
         .onAppear(perform: reload)
         // Typing in the last row appends a fresh empty one.
-        .onChange(of: rows.last.map { !isBlank($0.key) || !isBlank($0.value) } ?? true) {
+        .onChange(of: rows.last.map { !isBlank($0.key) || !isBlank($0.value) } ?? true) { _ in
             withAnimation(.easeInOut(duration: 0.2)) { rows.append(MacroRow(key: "", value: "")) }
         }
     }

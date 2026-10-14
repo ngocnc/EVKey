@@ -22,7 +22,7 @@ struct SettingsConsonantChips: View {
                     .frame(width: 80)
                     .onSubmit(add)
                     // A letter is added as soon as it is typed; the + button and Return stay as a way to retry.
-                    .onChange(of: draft) {
+                    .onChange(of: draft) { _ in
                         if draft.isEmpty { error = nil } else { add() }
                     }
                 Button(action: add) {

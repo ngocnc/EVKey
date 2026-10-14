@@ -27,11 +27,6 @@ public enum TempOffKey: String, Codable, Equatable, CaseIterable {
     case alt
 }
 
-public enum Backend: String, Codable, Equatable, CaseIterable {
-    case hook
-    case tsf
-}
-
 /// Display language of every EVKey screen; not the V/E Chế độ.
 public enum UILanguage: String, Codable, Equatable, CaseIterable {
     case vi
@@ -76,7 +71,6 @@ public struct EVSettings: Codable, Equatable {
     public var excludedAppsMacos: [String]
     public var tempOffKey: TempOffKey
     public var toggleHotkey: String
-    public var backend: Backend
     public var bannerOpacity: Int
     public var bannerBlur: Int
     public var bannerBg: String
@@ -132,7 +126,6 @@ public struct EVSettings: Codable, Equatable {
         case excludedAppsMacos = "excluded_apps_macos"
         case tempOffKey = "temp_off_key"
         case toggleHotkey = "toggle_hotkey"
-        case backend
         case bannerOpacity = "banner_opacity"
         case bannerBlur = "banner_blur"
         case bannerBg = "banner_bg"
