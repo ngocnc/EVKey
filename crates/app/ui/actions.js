@@ -8,36 +8,17 @@ const applyTheme = () => {
 };
 applyTheme();
 
-// Menu entries in display order: action id (as actions.rs expects) and its i18n key.
-const MENU = [
-  ["translate", "actions.translate"],
-  ["add_diacritics", "actions.add_diacritics"],
-  ["fix_spelling", "actions.fix_spelling"],
-  ["rewrite_formal", "actions.rewrite_formal"],
-  ["rewrite_shorter", "actions.rewrite_shorter"],
-  ["rewrite_friendly", "actions.rewrite_friendly"],
-  ["convert", "actions.convert"],
-];
-
 const menu = $("ac-menu");
-for (const [id, key] of MENU) {
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "ac-item";
-  btn.dataset.key = key;
-  btn.dataset.ai = String(!["translate", "convert"].includes(id));
+const setup = menu.querySelector(".ac-setup");
+// Menu buttons carry the action id actions.rs expects; a click runs it and must not close the panel.
+for (const btn of menu.querySelectorAll("[data-id]")) {
   btn.onclick = (e) => {
-    // A menu click runs an action; it must not close the panel.
     e.stopPropagation();
-    invoke("actions_run", { action: id });
+    invoke("actions_run", { action: btn.dataset.id });
   };
-  menu.append(btn);
 }
 // Shown when no Gemini key is saved: opens the Translate tab where the key is entered.
-const setup = Object.assign(document.createElement("button"), { type: "button", className: "ac-setup" });
-setup.dataset.key = "actions.setup_gemini";
 setup.onclick = () => invoke("popup_open_settings", { tab: "translate" });
-menu.append(setup);
 
 let fill = null;
 
@@ -46,16 +27,18 @@ async function render() {
   setUiLanguage(v.ui_language);
   const menuOpen = v.status === "menu";
   const loading = v.status === "loading";
-  for (const btn of menu.children) {
-    btn.textContent = t(btn.dataset.key);
-    if (btn.dataset.ai === "true") btn.disabled = !v.gemini;
-  }
+  for (const el of menu.querySelectorAll("[data-key]")) (el.querySelector("span") ?? el).textContent = t(el.dataset.key);
+  for (const btn of menu.querySelectorAll("[data-ai]")) btn.disabled = !v.gemini;
   setup.hidden = v.gemini;
   menu.hidden = !menuOpen;
   const text = $("tr-text");
   text.hidden = menuOpen;
-  text.textContent = loading ? t("translate.loading") : v.text;
+  // While loading, v.text is the action id (actions.rs perform).
+  text.textContent = loading ? t("actions.loading." + (v.text.startsWith("rewrite") ? "rewrite" : v.text)) : v.text;
   text.className = "tr-text " + (loading ? "loading" : v.status === "error" ? "error" : "");
+  const copy = $("ac-copy");
+  copy.hidden = v.status !== "ok";
+  copy.title = t("actions.copy");
   // The countdown bar starts when the panel is shown and runs for the configured time.
   fill?.cancel();
   // Hidden while loading and when the panel never closes by itself; it keeps its space so the content does not jump.
@@ -64,6 +47,12 @@ async function render() {
   if (timed) fill = $("tr-fill").animate([{ transform: "scaleX(1)" }, { transform: "scaleX(0)" }], { duration: v.ms, easing: "linear", fill: "forwards" });
   requestAnimationFrame(() => invoke("actions_fit", { height: Math.ceil($("panel").getBoundingClientRect().height) }));
 }
+
+// Copies the result and hides the panel.
+$("ac-copy").onclick = (e) => {
+  e.stopPropagation();
+  invoke("actions_copy");
+};
 
 // The panel never takes focus, so there is no Esc. The x button closes it; a plain click on it does too.
 // Dragging moves it and keeps it open (the auto-hide timer and countdown stop).
@@ -83,7 +72,7 @@ document.addEventListener("click", (e) => {
     invoke("actions_keep");
     return;
   }
-  if (!e.target.closest(".ac-item, .ac-setup")) invoke("actions_close");
+  if (!e.target.closest(".ac-menu")) invoke("actions_close");
 });
 $("ac-close").onclick = () => invoke("actions_close");
 listen("actions-update", render);

@@ -71,6 +71,16 @@ pub enum TranslateAction {
     Replace,
 }
 
+/// Service that translates the selected text.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TranslateProvider {
+    #[default]
+    Google,
+    /// Gemini with the API key saved for the AI actions.
+    Gemini,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Settings {
@@ -140,6 +150,8 @@ pub struct Settings {
     pub translate_hotkey: String,
     /// What happens to the translation after it is shown.
     pub translate_action: TranslateAction,
+    /// Service used for translating.
+    pub translate_provider: TranslateProvider,
     /// Milliseconds the translation popup stays on screen; 0 keeps it until it is clicked. Otherwise 100-600000.
     pub translate_popup_ms: u32,
     /// Key chord (`ctrl+alt+a`, must end in a key; `none` disables) that opens the action panel on the selected text.
@@ -186,6 +198,7 @@ impl Default for Settings {
             skipped_update: String::new(),
             translate_hotkey: "ctrl+alt+t".to_string(),
             translate_action: TranslateAction::Show,
+            translate_provider: TranslateProvider::Google,
             translate_popup_ms: 5000,
             action_hotkey: "ctrl+alt+a".to_string(),
         }

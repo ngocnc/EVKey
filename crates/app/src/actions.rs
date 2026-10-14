@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
 use evkey_engine::convert;
-use evkey_engine::settings::{self, Settings, TranslateAction, UiLanguage};
+use evkey_engine::settings::{self, Settings, TranslateAction, TranslateProvider, UiLanguage};
 use parking_lot::Mutex;
 use serde::Serialize;
 use tauri::window::{Effect, EffectsBuilder};
@@ -124,6 +124,10 @@ fn open(translate_now: bool) {
     if crate::secure_input_win::active() || crate::secure_input_win::classic_password_focused() {
         return;
     }
+    // The menu's actions rewrite the selection, so it only opens in an editable field; elsewhere the hotkey does nothing.
+    if !translate_now && !crate::secure_input_win::editable_focused() {
+        return;
+    }
     let cfg = load_settings();
     if let Ok(cursor) = app.cursor_position() {
         *ANCHOR.lock() = (cursor.x, cursor.y);
@@ -150,9 +154,10 @@ fn open(translate_now: bool) {
 /// Runs action `id` on the captured selection and shows the result. The `translate_action` setting applies to it.
 fn perform(app: &AppHandle, cfg: &Settings, id: &str) {
     let source = SOURCE.lock().clone();
-    set_view(cfg, "loading", String::new());
+    // While loading, the view text is the action id, so the panel can say what it is doing.
+    set_view(cfg, "loading", id.to_string());
     show(app, false);
-    match compute(id, &source) {
+    match compute(id, &source, cfg.translate_provider) {
         Ok(result) => {
             set_view(cfg, "ok", result.clone());
             show(app, true);
@@ -163,9 +168,10 @@ fn perform(app: &AppHandle, cfg: &Settings, id: &str) {
 }
 
 /// The text action `id` produces from `source`. Blocking: runs on the action thread.
-fn compute(id: &str, source: &str) -> Result<String, String> {
+/// Translate goes to Google unless Gemini is chosen; then it takes the AI path like the other actions.
+fn compute(id: &str, source: &str, provider: TranslateProvider) -> Result<String, String> {
     match id {
-        "translate" => translate_auto(source),
+        "translate" if provider == TranslateProvider::Google => translate_auto(source),
         "convert" => Ok(convert::to_unicode(source, convert::detect(source))),
         _ => {
             let action = ai::AiAction::from_id(id).ok_or_else(|| tr("Thao tác không tồn tại", "Unknown action").to_string())?;
@@ -285,6 +291,13 @@ pub fn actions_close(app: AppHandle) {
 #[tauri::command]
 pub fn actions_keep() {
     SHOWN.fetch_add(1, Ordering::SeqCst);
+}
+
+/// Copy button on a result: puts the shown text on the clipboard and hides the panel.
+#[tauri::command]
+pub fn actions_copy(app: AppHandle) {
+    clipboard::set_text(&VIEW.lock().text);
+    actions_close(app);
 }
 
 /// From the hook thread: Esc (`point` None) or a click at `point` (physical pixels) outside the open menu closes it.

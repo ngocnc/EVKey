@@ -10,6 +10,7 @@ const BOOLS = [
 // Segments bound to a config field; `data-local` ones are look-only preferences kept in local storage.
 const SEGS = [...document.querySelectorAll(".seg:not([data-local])")];
 const ALL_SEGS = [...document.querySelectorAll(".seg")];
+const DDS = [...document.querySelectorAll(".dd[data-key]")];
 let state = null;
 let toastTimer = 0;
 
@@ -77,7 +78,8 @@ function renderCustomConsonants(list) {
   $("custom-consonants").replaceChildren(
     ...list.map((k) => {
       const chip = Object.assign(document.createElement("span"), { className: "chip" });
-      const del = Object.assign(document.createElement("button"), { className: "chip-x", textContent: "×", title: t("common.delete") });
+      const del = Object.assign(document.createElement("button"), { className: "chip-x", title: t("common.delete") });
+      del.setAttribute("aria-label", t("common.delete"));
       del.onclick = () => setCustomConsonants(state.settings.custom_consonants.filter((x) => x !== k));
       chip.append(Object.assign(document.createElement("b"), { textContent: k.toUpperCase() }), del);
       return chip;
@@ -119,9 +121,11 @@ const segId = (seg) => seg.dataset.key ?? "local-" + seg.dataset.local;
 function paintHint(seg, value) {
   const key = `hint.${segId(seg)}.${value}`;
   const text = t(key);
-  let hint = seg.nextElementSibling?.classList.contains("seg-hint") ? seg.nextElementSibling : null;
+  // A dropdown sits in a row with its label, so its hint goes under that row.
+  const anchor = seg.closest(".dd-row") ?? seg;
+  let hint = anchor.nextElementSibling?.classList.contains("seg-hint") ? anchor.nextElementSibling : null;
   if (text === key) return hint?.remove();
-  if (!hint) seg.after((hint = Object.assign(document.createElement("p"), { className: "seg-hint" })));
+  if (!hint) anchor.after((hint = Object.assign(document.createElement("p"), { className: "seg-hint" })));
   hint.textContent = text;
 }
 const activeValue = (seg) => seg.querySelector("button.active")?.dataset.value;
@@ -172,6 +176,7 @@ function fill() {
   applyI18n();
   for (const k of BOOLS) $(k).checked = s[k];
   for (const seg of SEGS) setSeg(seg, s[seg.dataset.key]);
+  for (const dd of DDS) setDropdown(dd, s[dd.dataset.key]);
   $("excluded_apps").value = s.excluded_apps.join("\n");
   $("macro-rows").replaceChildren();
   for (const [k, v] of Object.entries(state.macros)) addMacroRow(k, v, k);
@@ -199,6 +204,7 @@ function applyLanguage(lang) {
   applyI18n();
   renderBannerPreview();
   for (const seg of document.querySelectorAll(".seg")) if (activeValue(seg)) paintHint(seg, activeValue(seg));
+  for (const dd of DDS) setDropdown(dd, dd.value);
   renderCustomConsonants(state.settings.custom_consonants);
   for (const row of document.querySelectorAll(".macro-row")) {
     row.querySelector(".mk").placeholder = t("macro.key_placeholder");
@@ -216,6 +222,7 @@ function readForm() {
   const s = { ...state.settings };
   for (const k of BOOLS) s[k] = $(k).checked;
   for (const seg of SEGS) s[seg.dataset.key] = seg.querySelector(".active")?.dataset.value ?? s[seg.dataset.key];
+  for (const dd of DDS) s[dd.dataset.key] = dd.value || s[dd.dataset.key];
   s.excluded_apps = lines($("excluded_apps").value);
   s.banner_opacity = Number($("bn-opacity").value);
   s.banner_blur = Number($("bn-blur").value);
@@ -374,6 +381,7 @@ for (const seg of SEGS) {
     paintHint(seg, b.dataset.value);
     // The welcome screen repeats the input-method control; keep every copy of a key in step before saving.
     for (const other of SEGS) if (other !== seg && other.dataset.key === seg.dataset.key) setSeg(other, b.dataset.value);
+    for (const dd of DDS) if (dd.dataset.key === seg.dataset.key) setDropdown(dd, b.dataset.value);
     saveSettings();
     if (seg.dataset.key === "ui_language") applyLanguage(b.dataset.value);
     if (seg.dataset.key === "input_type") paintWelcome();
@@ -407,12 +415,7 @@ for (const k of BOOLS) $(k).onchange = saveSettings;
 $("excluded_apps").onchange = saveSettings;
 $("save-macros").onclick = saveMacros;
 $("add-last-app").onclick = addLastApp;
-$("add-custom-consonant").onclick = addCustomConsonant;
-// A DOM0 handler that returns false cancels the key, so this must not return the `&&` result.
-$("custom-consonant-input").onkeydown = (e) => {
-  if (e.key === "Enter") addCustomConsonant();
-};
-// A letter is added as soon as it is typed; the + button and Enter stay as a way to retry.
+// A letter is added as soon as it is typed, so there is no add button or Enter handling.
 $("custom-consonant-input").oninput = addCustomConsonant;
 const appWindow = window.__TAURI__.window.getCurrentWindow();
 // Settings window starts pinned; keep the real window level in sync with the pin button.
@@ -602,6 +605,23 @@ function initDropdown(el) {
 }
 initDropdown($("translate-unit"));
 
+// Dropdowns bound to a config field (options with several long names, or that are rarely changed).
+function setDropdown(dd, value) {
+  dd.value = value;
+  paintHint(dd, value);
+}
+for (const dd of DDS) {
+  initDropdown(dd);
+  dd.onchange = () => {
+    paintHint(dd, dd.value);
+    // The welcome screen keeps a segmented copy of the input method; keep it in step.
+    for (const seg of SEGS) if (seg.dataset.key === dd.dataset.key) setSeg(seg, dd.value);
+    saveSettings();
+    if (dd.dataset.key === "input_type") paintWelcome();
+    updateVisibility();
+  };
+}
+
 $("translate-time").onchange = () => {
   $("translate-time").value = timeNumber();
   saveSettings();
@@ -750,6 +770,8 @@ refreshGemini();
 
 // Items marked data-when ("key", "key=value" or "key!=value") only show while that option is chosen.
 function currentValue(key) {
+  const control = document.querySelector(`.dd[data-key="${key}"]`);
+  if (control) return control.value;
   const seg = document.querySelector(`.seg[data-key="${key}"]`);
   if (seg) return seg.querySelector(".active")?.dataset.value;
   return $(key)?.checked;

@@ -1,22 +1,65 @@
 [hidden] { display: none !important; }
+
+/* Liquid glass over the native acrylic: a thin fill, a specular sheen from the top-left and a bright inner rim.
+   The OS draws the window's corners and shadow, so the rim is an inset shadow on the panel. */
+:root {
+  --lg-fill: rgba(255, 255, 255, 0.28);
+  --lg-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08) 35%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.12));
+  --lg-rim: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+  --lg-btn: rgba(255, 255, 255, 0.42);
+  --lg-btn-rim: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --lg-fill: rgba(30, 30, 38, 0.32);
+    --lg-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 35%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.05));
+    --lg-rim: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    --lg-btn: rgba(255, 255, 255, 0.1);
+    --lg-btn-rim: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+}
+
 /* The panel is as tall as its content; actions.js reports the height so the window can follow. */
-.tr-panel { display: flex; flex-direction: column; width: 100%; height: max-content; max-height: 360px; padding: 0; overflow: hidden; cursor: pointer; }
+.tr-panel {
+  position: relative; display: flex; flex-direction: column; width: 100%; height: max-content; max-height: 360px;
+  padding: 0; overflow: hidden; cursor: grab;
+  background: var(--lg-sheen), var(--lg-fill);
+  box-shadow: var(--lg-rim);
+}
 /* Time left before the panel hides: runs along the top edge and shrinks from full to empty. */
-.tr-bar { flex: none; height: 3px; background: var(--track); }
+.tr-bar { flex: none; height: 3px; background: transparent; }
 .tr-bar i { display: block; height: 100%; transform-origin: left; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-.tr-text { min-height: 0; overflow-y: auto; padding: 14px 18px 16px; white-space: pre-wrap; word-break: break-word; font-size: 15px; font-weight: 500; line-height: 1.5; letter-spacing: 0.1px; }
+
+.tr-text { min-height: 0; overflow-y: auto; padding: 12px 70px 16px 18px; white-space: pre-wrap; word-break: break-word; font-size: 15px; font-weight: 500; line-height: 1.5; letter-spacing: 0.1px; user-select: text; -webkit-user-select: text; }
 .tr-text.loading { color: var(--muted); font-weight: 400; }
 .tr-text.error { color: #c4291c; }
 @media (prefers-color-scheme: dark) { .tr-text.error { color: #ff8a80; } }
-.ac-menu { --field: rgba(0, 0, 0, 0.05); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px; }
-@media (prefers-color-scheme: dark) { .ac-menu { --field: rgba(255, 255, 255, 0.07); } }
-.ac-item { font: inherit; font-size: 14px; padding: 9px 10px; border: 0; border-radius: 8px; background: var(--field); color: inherit; text-align: start; cursor: pointer; }
-.ac-item:hover { background: var(--track); }
-.ac-item:disabled { opacity: 0.45; cursor: default; background: var(--field); }
-.ac-setup { grid-column: 1 / -1; font: inherit; font-size: 13px; padding: 6px 10px; border: 0; background: none; color: var(--accent); text-align: start; cursor: pointer; }
-/* Close button in the top-right corner; the rest of the panel is a drag handle. */
-.tr-panel { position: relative; cursor: grab; }
-.ac-close { position: absolute; top: 9px; right: 8px; z-index: 1; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--muted, currentColor); opacity: 0.7; cursor: pointer; }
-.ac-close:hover { opacity: 1; background: var(--track); }
-.tr-text { padding-right: 36px; }
-.ac-menu { padding-right: 36px; }
+
+/* Copy and close, top-right. The rest of the panel is a drag handle. */
+.ac-tools { position: absolute; top: 8px; right: 8px; z-index: 1; display: flex; gap: 4px; }
+.ac-tool {
+  display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border-radius: 50%;
+  color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.ac-tool:hover { background: var(--lg-btn); box-shadow: var(--lg-btn-rim); color: var(--fg); }
+
+.ac-menu { display: flex; flex-direction: column; gap: 2px; padding: 4px 8px 10px; }
+.ac-title { padding: 6px 10px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+
+.ac-item, .ac-label { display: flex; align-items: center; gap: 10px; padding: 8px 10px; font-size: 14px; }
+.ac-item { width: 100%; border-radius: 10px; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
+.ac-menu svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; color: var(--accent); }
+.ac-item:hover:not(:disabled) { background: var(--lg-btn); box-shadow: var(--lg-btn-rim); }
+.ac-item:disabled, .ac-chip:disabled { opacity: 0.4; cursor: default; }
+
+.ac-group { display: flex; flex-direction: column; }
+.ac-label { padding-bottom: 4px; }
+.ac-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 6px 36px; }
+.ac-chip {
+  padding: 5px 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
+  background: var(--lg-btn); box-shadow: var(--lg-btn-rim); transition: filter 0.15s, transform 0.1s;
+}
+.ac-chip:hover:not(:disabled) { filter: brightness(1.08); }
+.ac-chip:active:not(:disabled) { transform: scale(0.97); }
+
+.ac-setup { margin-top: 4px; padding: 6px 10px; font-size: 12px; color: var(--accent); cursor: pointer; }

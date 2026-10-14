@@ -11,8 +11,36 @@
 <body>
 <div class="panel tr-panel" id="panel">
   <div class="tr-bar" id="tr-bar"><i id="tr-fill"></i></div>
-  <button id="ac-close" class="ac-close" type="button" aria-label="Close"><svg viewBox="0 0 12 12" width="10" height="10"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-  <div id="ac-menu" class="ac-menu" hidden></div>
+  <div class="ac-tools">
+    <button id="ac-copy" class="ac-tool" type="button" hidden>
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.8"/><path d="M10.5 3.5v-.3A1.7 1.7 0 0 0 8.8 1.5H4.2A1.7 1.7 0 0 0 2.5 3.2v4.6a1.7 1.7 0 0 0 1.7 1.7h.3"/></svg>
+    </button>
+    <button id="ac-close" class="ac-tool" type="button" aria-label="Close"><svg viewBox="0 0 12 12" width="10" height="10"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+  </div>
+  <div id="ac-menu" class="ac-menu" hidden>
+    <div class="ac-title" data-key="actions.title"></div>
+    <button class="ac-item" type="button" data-id="translate" data-key="actions.translate">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c1.8 1.7 2.6 3.8 2.6 6.2S9.8 12.5 8 14.2C6.2 12.5 5.4 10.4 5.4 8S6.2 3.5 8 1.8z"/></svg><span></span>
+    </button>
+    <button class="ac-item" type="button" data-id="add_diacritics" data-key="actions.add_diacritics" data-ai>
+      <svg viewBox="0 0 16 16"><path d="M3.5 14l4.5-10 4.5 10M5.3 10h5.4M6.5 1.5l3 1.5"/></svg><span></span>
+    </button>
+    <button class="ac-item" type="button" data-id="fix_spelling" data-key="actions.fix_spelling" data-ai>
+      <svg viewBox="0 0 16 16"><path d="M2 11.5l2.6-7 2.6 7M3 9h3.2M9 9.5l2 2 3.5-4.5"/></svg><span></span>
+    </button>
+    <div class="ac-group">
+      <div class="ac-label"><svg viewBox="0 0 16 16"><path d="M10.5 2.5l3 3L6 13H3v-3z"/><path d="M9 4l3 3"/></svg><span data-key="actions.rewrite"></span></div>
+      <div class="ac-chips">
+        <button class="ac-chip" type="button" data-id="rewrite_formal" data-key="actions.rewrite_formal" data-ai></button>
+        <button class="ac-chip" type="button" data-id="rewrite_shorter" data-key="actions.rewrite_shorter" data-ai></button>
+        <button class="ac-chip" type="button" data-id="rewrite_friendly" data-key="actions.rewrite_friendly" data-ai></button>
+      </div>
+    </div>
+    <button class="ac-item" type="button" data-id="convert" data-key="actions.convert">
+      <svg viewBox="0 0 16 16"><path d="M2.5 5.5h10l-2.5-2.5M13.5 10.5h-10l2.5 2.5"/></svg><span></span>
+    </button>
+    <button class="ac-setup" type="button" data-key="actions.setup_gemini"></button>
+  </div>
   <div id="tr-text" class="tr-text"></div>
 </div>
 <script src="i18n.js"></script>

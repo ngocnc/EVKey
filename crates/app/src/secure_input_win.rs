@@ -10,7 +10,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED};
 use windows::Win32::UI::Accessibility::{
-    CUIAutomation, IUIAutomation, SetWinEventHook, UIA_DocumentControlTypeId, HWINEVENTHOOK,
+    CUIAutomation, IUIAutomation, IUIAutomationLegacyIAccessiblePattern, IUIAutomationValuePattern, SetWinEventHook,
+    UIA_DocumentControlTypeId, UIA_LegacyIAccessiblePatternId, UIA_ValuePatternId, HWINEVENTHOOK,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     DispatchMessageW, GetForegroundWindow, GetGUIThreadInfo, GetMessageW, GetWindowLongW, GetWindowThreadProcessId,
@@ -106,6 +107,37 @@ pub fn classic_password_focused() -> bool {
             return false;
         }
         GetWindowLongW(info.hwndFocus, GWL_STYLE) & ES_PASSWORD != 0
+    }
+}
+
+/// True when keyboard focus is in an editable text field: a Win32 caret (Edit, RichEdit, Word…) or a UI Automation
+/// element with a writable Value pattern (browser inputs, contenteditable, UWP). Creates its own UIA client, so it
+/// can run on any thread.
+pub fn editable_focused() -> bool {
+    unsafe {
+        let tid = GetWindowThreadProcessId(GetForegroundWindow(), None);
+        let mut info = GUITHREADINFO { cbSize: std::mem::size_of::<GUITHREADINFO>() as u32, ..Default::default() };
+        if GetGUIThreadInfo(tid, &mut info).is_ok() && !info.hwndCaret.is_invalid() {
+            return true;
+        }
+        let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+        let Ok(automation) = CoCreateInstance::<_, IUIAutomation>(&CUIAutomation, None, CLSCTX_INPROC_SERVER) else {
+            return false;
+        };
+        let Ok(element) = automation.GetFocusedElement() else { return false };
+        let writable_value = element
+            .GetCurrentPatternAs::<IUIAutomationValuePattern>(UIA_ValuePatternId)
+            .and_then(|p| p.CurrentIsReadOnly())
+            .is_ok_and(|ro| !ro.as_bool());
+        // contenteditable in Chromium has no Value pattern; its MSAA state is focusable and not read-only,
+        // while page text and links are read-only.
+        const FOCUSABLE: u32 = 0x10_0000;
+        const READONLY: u32 = 0x40;
+        writable_value
+            || element
+                .GetCurrentPatternAs::<IUIAutomationLegacyIAccessiblePattern>(UIA_LegacyIAccessiblePatternId)
+                .and_then(|p| p.CurrentState())
+                .is_ok_and(|s| s & (FOCUSABLE | READONLY) == FOCUSABLE)
     }
 }
 

@@ -44,7 +44,6 @@ const STRINGS = {
   "nav.about": { vi: "Thông tin", en: "About" },
 
   // Translate popup and tab
-  "translate.loading": { vi: "Đang dịch…", en: "Translating…" },
   "translate.hotkey.title": { vi: "Phím tắt dịch", en: "Translate hotkey" },
   "translate.hotkey.desc": {
     vi: "Bôi đen văn bản ở bất kỳ ứng dụng nào rồi bấm phím này. Tiếng Việt được dịch sang tiếng Anh, ngôn ngữ khác được dịch sang tiếng Việt.",
@@ -74,16 +73,24 @@ const STRINGS = {
   "translate.unit.never": { vi: "Không tự đóng", en: "Never close" },
   "translate.provider.title": { vi: "Dịch vụ dịch", en: "Translation service" },
   "translate.provider.desc": {
-    vi: "Văn bản bạn chọn được gửi tới Google qua internet mỗi lần dịch.",
-    en: "The text you select is sent to Google over the internet each time you translate.",
+    vi: "Văn bản bạn chọn được gửi qua internet tới dịch vụ này mỗi lần dịch. Gemini dùng chung API key Gemini ở trên.",
+    en: "The text you select is sent over the internet to this service each time you translate. Gemini uses the Gemini API key above.",
   },
   // Action panel
   "actions.translate": { vi: "Dịch thuật", en: "Translate" },
   "actions.add_diacritics": { vi: "Thêm dấu", en: "Add diacritics" },
   "actions.fix_spelling": { vi: "Sửa chính tả", en: "Fix spelling" },
-  "actions.rewrite_formal": { vi: "Viết lại: trang trọng", en: "Rewrite: formal" },
-  "actions.rewrite_shorter": { vi: "Viết lại: ngắn gọn", en: "Rewrite: shorter" },
-  "actions.rewrite_friendly": { vi: "Viết lại: thân thiện", en: "Rewrite: friendly" },
+  "actions.title": { vi: "Bảng hành động", en: "Actions" },
+  "actions.rewrite": { vi: "Viết lại", en: "Rewrite" },
+  "actions.rewrite_formal": { vi: "Trang trọng", en: "Formal" },
+  "actions.rewrite_shorter": { vi: "Ngắn gọn", en: "Shorter" },
+  "actions.rewrite_friendly": { vi: "Thân thiện", en: "Friendly" },
+  "actions.copy": { vi: "Sao chép", en: "Copy" },
+  "actions.loading.translate": { vi: "Đang dịch…", en: "Translating…" },
+  "actions.loading.add_diacritics": { vi: "Đang thêm dấu…", en: "Adding diacritics…" },
+  "actions.loading.fix_spelling": { vi: "Đang sửa chính tả…", en: "Fixing spelling…" },
+  "actions.loading.rewrite": { vi: "Đang viết lại…", en: "Rewriting…" },
+  "actions.loading.convert": { vi: "Đang chuyển mã…", en: "Converting…" },
   "actions.convert": { vi: "Chuyển mã sang Unicode", en: "Convert to Unicode" },
   "actions.setup_gemini": { vi: "Thêm dấu, Sửa, Viết lại cần API key Gemini. Thiết lập…", en: "Add diacritics, Fix and Rewrite need a Gemini API key. Set up…" },
   "actions.hotkey.title": { vi: "Phím tắt bảng hành động", en: "Action panel hotkey" },
@@ -175,7 +182,6 @@ const STRINGS = {
     vi: "Cho phép các chữ này đứng đầu từ, dùng cho từ mượn và tên riêng, ví dụ Zalo, Wifi.",
     en: "Lets these letters start a word, for loanwords and names such as Zalo or Wifi.",
   },
-  "smart.custom.add_aria": { vi: "Thêm phụ âm", en: "Add consonant" },
   "smart.custom.caption": {
     vi: "Các phụ âm này được phép dùng khi gõ tiếng Việt.",
     en: "These consonants are allowed when typing Vietnamese.",

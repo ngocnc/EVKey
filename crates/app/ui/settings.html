@@ -34,12 +34,17 @@
       <h1 data-i18n="nav.typing"></h1>
       <div class="glass group">
         <div class="item stack">
-          <div class="text"><b data-i18n="typing.input_type.title"></b><span data-i18n="typing.input_type.desc"></span></div>
-          <div class="seg" data-key="input_type">
-            <button data-value="telex">Telex</button>
-            <button data-value="vni">VNI</button>
-            <button data-value="simple_telex1">Simple Telex 1</button>
-            <button data-value="simple_telex2">Simple Telex 2</button>
+          <div class="dd-row">
+            <div class="text"><b data-i18n="typing.input_type.title"></b><span data-i18n="typing.input_type.desc"></span></div>
+            <div class="dd" data-key="input_type">
+              <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <ul class="dd-menu" role="listbox" hidden>
+                <li role="option" data-value="telex">Telex</li>
+                <li role="option" data-value="vni">VNI</li>
+                <li role="option" data-value="simple_telex1">Simple Telex 1</li>
+                <li role="option" data-value="simple_telex2">Simple Telex 2</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -54,12 +59,17 @@
           </div>
         </div>
         <div class="item stack">
-          <div class="text"><b data-i18n="typing.table.title"></b><span data-i18n="typing.table.desc"></span></div>
-          <div class="seg" data-key="code_table">
-            <button data-value="unicode">Unicode</button>
-            <button data-value="tcvn3">TCVN3</button>
-            <button data-value="vni_windows">VNI Windows</button>
-            <button data-value="unicode_compound" data-i18n="table.unicode_compound"></button>
+          <div class="dd-row">
+            <div class="text"><b data-i18n="typing.table.title"></b><span data-i18n="typing.table.desc"></span></div>
+            <div class="dd" data-key="code_table">
+              <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <ul class="dd-menu" role="listbox" hidden>
+                <li role="option" data-value="unicode">Unicode</li>
+                <li role="option" data-value="tcvn3">TCVN3</li>
+                <li role="option" data-value="vni_windows">VNI Windows</li>
+                <li role="option" data-value="unicode_compound" data-i18n="table.unicode_compound"></li>
+              </ul>
+            </div>
           </div>
         </div>
         <label class="item">
@@ -127,7 +137,6 @@
           <div id="custom-consonants" class="chips"></div>
           <div class="chip-add">
             <input id="custom-consonant-input" type="text" maxlength="1" placeholder="a–z" autocomplete="off" spellcheck="false">
-            <button id="add-custom-consonant" class="round-add" data-i18n-aria-label="smart.custom.add_aria"></button>
           </div>
           <span class="chip-caption field-error" id="custom-consonant-error" hidden></span>
           <span class="chip-caption" data-i18n="smart.custom.caption"></span>
@@ -339,7 +348,13 @@
         </div>
         <div class="item last">
           <div class="text"><b data-i18n="translate.provider.title"></b><span data-i18n="translate.provider.desc"></span></div>
-          <span class="pill">Google Translate</span>
+          <div class="dd" data-key="translate_provider">
+            <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <ul class="dd-menu" role="listbox" hidden>
+              <li role="option" data-value="google">Google Translate</li>
+              <li role="option" data-value="gemini">Gemini</li>
+            </ul>
+          </div>
         </div>
       </div>
       </details>
