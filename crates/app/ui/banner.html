@@ -6,6 +6,10 @@
 <style>
   html, body { margin: 0; background: transparent; overflow: hidden; }
   .sec-banner { box-sizing: border-box; width: 100vw; height: 100vh; border-radius: 8px; }
+  .sec-banner { transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+  .sec-banner.out { opacity: 0; transform: translateY(14px); }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .sec-banner.in { animation: rise 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
 </style>
 </head>
 <body>
@@ -16,7 +20,14 @@
   const { listen } = window.__TAURI__.event;
   const el = document.getElementById("banner");
   invoke("banner_state").then((s) => renderBanner(el, s));
-  listen("banner-state", (e) => renderBanner(el, e.payload));
+  // Show: rise in (replay the animation each time); hide: fade down before the window closes.
+  listen("banner-state", (e) => {
+    renderBanner(el, e.payload);
+    el.classList.remove("out", "in");
+    void el.offsetWidth;
+    el.classList.add("in");
+  });
+  listen("banner-hide", () => el.classList.add("out"));
 </script>
 </body>
 </html>

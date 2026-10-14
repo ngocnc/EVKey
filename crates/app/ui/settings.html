@@ -180,13 +180,16 @@
             <span id="glass-tint-end-wrap" class="colors" hidden>→ <input type="color" id="glass-tint-end"></span>
           </div>
         </div>
+        <div class="item">
+          <div class="text"><b>Màu chủ đạo</b><span>Logo, công tắc, thanh trượt và thanh cuộn.</span></div>
+          <div class="colors">
+            <button id="accent-default" type="button">Mặc định</button>
+            <input type="color" id="accent-color">
+          </div>
+        </div>
       </div>
       <h2>Cảnh báo Secure Input</h2>
       <div class="glass group">
-        <div class="item preview">
-          <div class="sec-banner" id="bn-preview"></div>
-          <span class="hint">Hiện ở cạnh dưới màn hình khi EVKey tạm tắt trong ô mật khẩu.</span>
-        </div>
         <div class="item inline">
           <div class="text"><b>Độ đậm nền</b></div>
           <div class="range-row"><input type="range" id="bn-opacity" min="0" max="100" step="1"><output id="bn-opacity-value"></output></div>
@@ -195,13 +198,12 @@
           <div class="text"><b>Độ mờ kính</b><span>0 để tắt hiệu ứng kính.</span></div>
           <div class="range-row"><input type="range" id="bn-blur" min="0" max="100" step="1"><output id="bn-blur-value"></output></div>
         </div>
-        <div class="item">
-          <div class="text"><b>Màu sắc</b></div>
-          <div class="swatches">
-            <label>Nền<input type="color" id="bn-bg"></label>
-            <label>Viền<input type="color" id="bn-border"></label>
-            <label>Chữ<input type="color" id="bn-text"></label>
-          </div>
+        <div class="item"><div class="text"><b>Màu nền</b></div><input type="color" id="bn-bg"></div>
+        <div class="item"><div class="text"><b>Màu viền</b></div><input type="color" id="bn-border"></div>
+        <div class="item"><div class="text"><b>Màu chữ</b></div><input type="color" id="bn-text"></div>
+        <div class="item preview last">
+          <div class="sec-banner" id="bn-preview"></div>
+          <span class="hint">Hiện ở cạnh dưới màn hình khi EVKey tạm tắt trong ô mật khẩu.</span>
         </div>
       </div>
       <div class="actions"><button id="gl-reset" class="danger">Đặt lại giao diện</button></div>
@@ -241,21 +243,22 @@
     </section>
     <section class="pane" data-pane="about" hidden>
       <h1>Thông tin</h1>
+      <div class="glass group about-hero">
+        <span class="logo lg">V</span>
+        <div class="about-name">EVKey <code id="about-version" class="pill"></code></div>
+        <p>Bộ gõ tiếng Việt cho Windows, engine port từ OpenKey (GPL-3.0).</p>
+      </div>
       <div class="glass group">
         <div class="item">
-          <div class="text"><b>EVKey</b><span>Bộ gõ tiếng Việt cho Windows, engine port từ OpenKey (GPL-3.0).</span></div>
-          <code id="about-version"></code>
+          <div class="text"><b>Kiểm tra cập nhật</b><span>Tự động kiểm tra phiên bản mới</span></div>
+          <span class="pill">Sắp có</span>
         </div>
-        <div class="item">
-          <div class="text"><b>Kiểm tra cập nhật</b><span>Đang phát triển</span></div>
-          <button disabled>Sắp có</button>
-        </div>
-        <div class="item">
+        <div class="item last">
           <div class="text"><b>GitHub</b><span>ngocnc/EVKey</span></div>
-          <button id="open-github">Mở trang GitHub</button>
+          <button id="open-github" class="primary">Mở trang GitHub</button>
         </div>
       </div>
-      <p class="note">Phát triển bởi ChrisNguyen</p>
+      <p class="note about-foot">Phát triển bởi ChrisNguyen</p>
     </section>
 
   </main>

@@ -71,9 +71,17 @@ pub fn notify(state: Option<String>) {
     match state {
         Some(holder) => show(app, holder),
         None => {
-            if let Some(win) = app.get_webview_window(BANNER) {
-                let _ = win.hide();
-            }
+            // Fade out first, then close the window unless the banner came back meanwhile.
+            let _ = app.emit_to(BANNER, "banner-hide", ());
+            let app = app.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(230));
+                if CURRENT.lock().is_none() {
+                    if let Some(win) = app.get_webview_window(BANNER) {
+                        let _ = win.hide();
+                    }
+                }
+            });
         }
     }
 }

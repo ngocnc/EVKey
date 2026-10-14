@@ -67,7 +67,6 @@ async function setCustomConsonants(list) {
     await invoke("save_settings", { settings: next });
     state.settings = next;
     renderCustomConsonants(list);
-    say("Đã lưu", "ok");
   } catch (e) {
     say(String(e), "err");
   }
@@ -169,7 +168,6 @@ async function saveSettings() {
   try {
     await invoke("save_settings", { settings: readForm() });
     state.settings = readForm();
-    say("Đã lưu", "ok");
   } catch (e) {
     say(String(e), "err");
   }
@@ -221,21 +219,6 @@ const glassTint = $("glass-tint");
 const glassTintEnd = $("glass-tint-end");
 const glassGradient = $("glass-gradient");
 const defaultTint = matchMedia("(prefers-color-scheme: dark)").matches ? "#000000" : "#ffffff";
-// Companion colour for the gradient's second stop: hue shifted slightly, saturation and brightness floored.
-function hsvToHex(h, s, v) {
-  const i = Math.floor(h * 6), f = h * 6 - i;
-  const p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
-  const [r, g, b] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6];
-  return "#" + [r, g, b].map((x) => Math.round(x * 255).toString(16).padStart(2, "0")).join("");
-}
-function companionTint(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const [r, g, b] = [n >> 16, n >> 8, n].map((x) => (x & 255) / 255);
-  const max = Math.max(r, g, b), d = max - Math.min(r, g, b);
-  let h = 0;
-  if (d) h = (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6;
-  return hsvToHex((h + 0.12) % 1, Math.max(max ? d / max : 0, 0.5), Math.max(max, 0.6));
-}
 function syncGlassControls() {
   glassStrength.value = glassGet("strength");
   $("glass-strength-value").textContent = glassStrength.value + "%";
@@ -243,8 +226,18 @@ function syncGlassControls() {
   glassTintEnd.value = glassGet("tint-end") || companionTint(glassTint.value);
   glassGradient.checked = glassGet("tint-end") !== "";
   $("glass-tint-end-wrap").hidden = !glassGradient.checked;
+  $("accent-color").value = glassGet("accent") || "#ff6b8a";
 }
 syncGlassControls();
+$("accent-color").oninput = () => {
+  localStorage.setItem("evkey-glass-accent", $("accent-color").value);
+  applyGlassLook();
+};
+$("accent-default").onclick = () => {
+  localStorage.removeItem("evkey-glass-accent");
+  $("accent-color").value = "#ff6b8a";
+  applyGlassLook();
+};
 glassStrength.oninput = () => {
   localStorage.setItem("evkey-glass-strength", glassStrength.value);
   $("glass-strength-value").textContent = glassStrength.value + "%";

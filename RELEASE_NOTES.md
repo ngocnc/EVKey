@@ -1,5 +1,12 @@
 # Release notes
 
+## v2.2.2
+
+- Banner Secure Input: hiệu ứng mờ dần khi hiện/ẩn.
+- Cài đặt: thêm tuỳ chọn màu chủ đạo; trang Thông tin thiết kế lại; ba màu banner tách thành ba hàng, xem trước xuống cuối; nội dung mờ dần ở mép trên khi cuộn; bỏ thông báo "Đã lưu".
+- Chế độ sáng: chữ trên nút/nhãn màu accent đậm hơn để dễ đọc.
+
+
 ## v2.2.1
 
 - Banner Secure Input: góc cửa sổ được bo tròn bằng DWM, hết khung vuông xám quanh banner.
