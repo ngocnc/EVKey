@@ -19,9 +19,13 @@ struct SettingsAdvanced<Content: View>: View {
             }
             .padding(.top, 8)
         } label: {
+            // macOS only toggles on the chevron; the label should open it too.
             Text(UIStrings.misc("advanced"))
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+                .onTapGesture { withAnimation { isOpen.toggle() } }
+                .pointerCursor()
         }
         .padding(.top, 6)
     }

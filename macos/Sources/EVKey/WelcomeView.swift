@@ -30,6 +30,8 @@ struct WelcomeView: View {
             card
         }
         .onAppear { tryFocused = true }
+        // The try field has focus and eats Esc before the Skip button's cancel shortcut sees it.
+        .onExitCommand(perform: onClose)
     }
 
     private var card: some View {
