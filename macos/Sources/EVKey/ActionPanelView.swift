@@ -40,7 +40,8 @@ struct ActionPanelView: View {
         }
     }
 
-    /// Result, error or progress text. A click on it closes the panel, as on the translate popup.
+    /// Result, error or progress text; dragging it moves the panel. A click on a result or error closes the panel, as on
+    /// the translate popup; while loading a click does nothing, so extra clicks on a chosen entry cannot close it.
     private func text(_ string: String) -> some View {
         let body = Text(string)
             .font(.system(size: 15, weight: .medium))
@@ -52,11 +53,9 @@ struct ActionPanelView: View {
             .padding(.bottom, 16)
         // Natural height when it fits; scrolls only past the controller's max height.
         return ViewThatFits(in: .vertical) {
-            body
+            body.overlay(WindowDragArea { if model.mode.isSettled { ActionPanelController.shared.close() } })
             ScrollView { body }
         }
-        .contentShape(Rectangle())
-        .onTapGesture { ActionPanelController.shared.close() }
     }
 
     private var tools: some View {

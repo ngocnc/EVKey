@@ -38,6 +38,9 @@ struct ActionMenuView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                // The title row is the handle for moving the panel.
+                .overlay(WindowDragArea())
             ActionMenuRow(symbol: "globe", tile: Tile.blue, title: UIStrings.tr("actions.translate")) { run(.ai(.translate)) }
             ActionMenuRow(symbol: "character", tile: Tile.purple, title: UIStrings.tr("actions.add_diacritics"), ai: true, enabled: ai) { run(.ai(.addDiacritics)) }
             ActionMenuRow(symbol: "checkmark", tile: Tile.green, title: UIStrings.tr("actions.fix_spelling"), ai: true, enabled: ai) { run(.ai(.fixSpelling)) }

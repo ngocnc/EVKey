@@ -26,9 +26,11 @@ public enum EditableField {
         return facts.valueSettable || facts.editableFlag == true || facts.hasEditableAncestor
     }
 
-    /// Reads the focused element of the frontmost app. False when Accessibility is not granted or nothing has focus.
-    public static func isFocused() -> Bool {
-        guard AXIsProcessTrusted(), let element = focusedElement() else { return false }
+    /// Reads the focused element of the frontmost app. False when Accessibility is not granted; nil when the app reports
+    /// no focused element, as Chromium apps that keep their web content out of Accessibility do (Lark).
+    public static func isFocused() -> Bool? {
+        guard AXIsProcessTrusted() else { return false }
+        guard let element = focusedElement() else { return nil }
         // A hung app must not freeze the hotkey.
         AXUIElementSetMessagingTimeout(element, 0.5)
         var facts = Facts()
