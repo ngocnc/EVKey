@@ -20,13 +20,15 @@ struct SettingsAppsTab: View {
                         .focused($focused)
                         .scrollContentBackground(.hidden)
                         .padding(6)
-                        .background(Color.black.opacity(0.2), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .frame(height: 220)
                     if text.isEmpty {
+                        // Trùng đúng chỗ chữ đầu tiên của TextEditor: padding 6 + lineFragmentPadding 5 của NSTextView,
+                        // để con trỏ nhập nằm ngay trước chữ gợi ý chứ không lệch lên trên.
                         Text("com.apple.Safari")
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundStyle(.secondary)
-                            .padding(.top, 12)
+                            .padding(.top, 6)
                             .padding(.leading, 11)
                             .allowsHitTesting(false)
                     }
@@ -41,6 +43,7 @@ struct SettingsAppsTab: View {
                     }
                     .fixedSize()
                     Button(UIStrings.tr("apps.addRecent"), action: addLastApp)
+                        .buttonStyle(PressButtonStyle())
                     Spacer()
                 }
                 .padding(12)
