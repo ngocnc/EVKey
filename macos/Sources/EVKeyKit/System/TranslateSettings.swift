@@ -29,7 +29,7 @@ public enum TranslateHotkey {
             case "ctrl": return "⌃"
             case "alt": return "⌥"
             case "shift": return "⇧"
-            case "win": return "⌘"
+            case "win", "cmd": return "⌘"
             case "space": return "Space"
             default: return part.uppercased()
             }

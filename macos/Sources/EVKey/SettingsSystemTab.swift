@@ -2,7 +2,7 @@ import AppKit
 import EVKeyKit
 import SwiftUI
 
-/// "Hệ thống": UI language, launch at login, config folder and the about section.
+/// "Giao diện & Hệ thống": chủ đề, chất liệu, màu nhấn; ngôn ngữ, khởi động cùng máy, âm thanh, cập nhật; nâng cao là dữ liệu.
 struct SettingsSystemTab: View {
     @ObservedObject private var state = AppState.shared
 
@@ -13,8 +13,15 @@ struct SettingsSystemTab: View {
 
     var body: some View {
         SettingsPage(title: UIStrings.tr("tab.system")) {
+            SettingsHeading(UIStrings.tr("system.lookHeading"))
             SettingsGroup {
-                SettingsChoiceRow(
+                SettingsGlassSection()
+                SettingsGlassSection(advanced: true)
+            }
+
+            SettingsHeading(UIStrings.tr("system.systemHeading"))
+            SettingsGroup {
+                SettingsMenuRow(
                     title: UIStrings.tr("system.uiLanguage"),
                     choices: Self.languageChoices,
                     selection: state.binding(\.uiLanguage))
@@ -24,15 +31,17 @@ struct SettingsSystemTab: View {
                     isOn: Binding(
                         get: { state.autostart },
                         set: { value in state.perform { try state.setAutostart(value) } }))
+                SettingsToggleRow(
+                    title: UIStrings.tr("system.speakOnSwitch"),
+                    subtitle: UIStrings.tr("system.speakOnSwitch.detail"),
+                    isOn: state.binding(\.toggleSound))
+                SettingsToggleRow(
+                    title: UIStrings.tr("update.autoTitle"),
+                    subtitle: UIStrings.tr("update.autoDesc"),
+                    isOn: state.binding(\.autoCheckUpdates))
             }
 
             SettingsAdvanced(pane: "system") {
-                SettingsGroup {
-                    SettingsToggleRow(
-                        title: UIStrings.tr("system.speakOnSwitch"),
-                        subtitle: UIStrings.tr("system.speakOnSwitch.detail"),
-                        isOn: state.binding(\.toggleSound))
-                }
 
                 SettingsHeading(UIStrings.tr("system.configFiles"))
                 SettingsCard {

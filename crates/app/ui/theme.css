@@ -1,0 +1,190 @@
+/* Token và control dùng chung cho mọi cửa sổ EVKey (Settings, sau này popup, bảng hành động, banner, cập nhật).
+   Nguồn thiết kế: design-system/evkey/MASTER.md. Giá trị accent / chất liệu / độ trong suốt do glass.js gắn lên <html>
+   (data-accent, data-material, --tr). Sáng/tối theo prefers-color-scheme (Tauri setTheme đổi theo lựa chọn Chủ đề). */
+
+/* ================= Màu nhấn: a (nhạt), b → m → c (3 điểm gradient, chữ trắng ≥ 5.1:1) ================= */
+:root { --a: #64D1FF; --b: #1270B0; --m: #3A66D6; --c: #5B4FE0; }
+[data-accent="orchid"]   { --a: #E0A8FF; --b: #7A3AD0; --m: #A0359F; --c: #C02E6E; }
+[data-accent="sunset"]   { --a: #FFC27A; --b: #C2410C; --m: #C8325E; --c: #9B3BC4; }
+[data-accent="mint"]     { --a: #7EE8D8; --b: #0F766E; --m: #0E7490; --c: #0369A1; }
+[data-accent="graphite"] { --a: #C3CAD8; --b: #3C4250; --m: #4E5566; --c: #2C303A; }
+
+:root {
+  color-scheme: light dark;
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  /* Nền có chữ trắng: gradient 135° + quầng sáng nhạt ở góc trên trái */
+  --brand-fill: radial-gradient(80% 110% at 0% 0%, color-mix(in srgb, var(--a) 45%, transparent), transparent 45%),
+                linear-gradient(135deg, var(--b), var(--m) 55%, var(--c));
+  --brand-line: linear-gradient(90deg, var(--b), var(--m), var(--c));
+  --logo: radial-gradient(90% 90% at 25% 15%, color-mix(in srgb, var(--a) 90%, white), transparent 60%), linear-gradient(135deg, var(--a), var(--m) 60%, var(--c));
+  --brand-shadow: color-mix(in srgb, var(--m) 40%, transparent);
+  --ring: var(--m);
+
+  /* Độ trong suốt 0..1 (mặc định 0.6). Càng lớn thì lớp nền trong càng nhạt. */
+  --tr: 0.6;
+  --k: calc(1.6 - var(--tr));
+
+  --fg: #1D1D1F; --fg-muted: #5B5B60;
+  --win-glass: rgba(246, 248, 252, calc(0.62 * var(--k)));
+  --card: rgba(255, 255, 255, 0.80); --card-border: rgba(0, 0, 0, 0.08);
+  --lg-card: rgba(255, 255, 255, calc(0.46 * var(--k))); --lg-btn: rgba(255, 255, 255, calc(0.55 * var(--k)));
+  --separator: rgba(0, 0, 0, 0.08); --control: rgba(0, 0, 0, 0.06); --switch-off: rgba(0, 0, 0, 0.16);
+  --hover: rgba(0, 0, 0, 0.05);
+  --rim-top: rgba(255, 255, 255, 0.95); --rim-bottom: rgba(255, 255, 255, 0.22); --sheen: rgba(255, 255, 255, 0.55);
+  --success: #1E8E3E; --warning: #B25000; --danger: #C62828;
+  --spring: cubic-bezier(.32, .72, 0, 1); --bounce: cubic-bezier(.3, 1.6, .5, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #F5F5F7; --fg-muted: #A1A1A6;
+    --win-glass: rgba(30, 31, 38, calc(0.58 * var(--k)));
+    --card: rgba(255, 255, 255, 0.06); --card-border: rgba(255, 255, 255, 0.10);
+    --lg-card: rgba(255, 255, 255, calc(0.07 * var(--k))); --lg-btn: rgba(255, 255, 255, calc(0.11 * var(--k)));
+    --separator: rgba(255, 255, 255, 0.08); --control: rgba(255, 255, 255, 0.10); --switch-off: rgba(255, 255, 255, 0.16);
+    --hover: rgba(255, 255, 255, 0.06);
+    --rim-top: rgba(255, 255, 255, 0.38); --rim-bottom: rgba(255, 255, 255, 0.06); --sheen: rgba(255, 255, 255, 0.12);
+    --success: #30D158; --warning: #FFB340; --danger: #FF6961;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; color: var(--fg); font: 13px/1.35 var(--font); background: var(--win-glass); overflow: hidden; }
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+code { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+
+/* ================= Liquid Glass =================
+   Ở chất liệu "Liquid Glass", thẻ / nút / chip / thanh chọn / ô phím tắt dùng nền trong + viền khúc xạ (sáng ở trên và dưới)
+   + vệt sáng chéo. Chất liệu "Thường": thẻ và nút đặc. Cửa sổ luôn là Acrylic của Windows. */
+[data-material="glass"] :is(.card, .hero, .btn, .chip, .seg, .hk) { position: relative; isolation: isolate; }
+[data-material="glass"] :is(.card, .hero, .btn, .chip, .seg, .thumb, .hk, .nav-pill)::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: linear-gradient(180deg, var(--rim-top), var(--rim-bottom) 38%, var(--rim-bottom) 68%, var(--rim-top));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+[data-material="glass"] :is(.card, .hero, .btn, .chip, .thumb, .hk, .nav-pill)::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: linear-gradient(125deg, var(--sheen) 0%, transparent 34%, transparent 68%, var(--sheen) 100%); opacity: .7;
+  transition: opacity 200ms ease; }
+[data-material="glass"] .card { background: var(--lg-card); border-color: transparent; backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .07); }
+[data-material="glass"] .btn:not(.btn-primary), [data-material="glass"] .chip, [data-material="glass"] .hk {
+  background: var(--lg-btn); border-color: transparent; backdrop-filter: blur(10px) saturate(180%); box-shadow: 0 2px 8px rgba(0, 0, 0, .08); }
+[data-material="glass"] :is(.btn, .chip, .hk):hover::after { opacity: 1; }
+[data-material="glass"] .seg { background: var(--lg-btn); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .08); backdrop-filter: blur(10px); }
+
+/* ================= Primitive ================= */
+.card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; }
+.sub { color: var(--fg-muted); font-size: 11.5px; }
+.kbd { font: 11.5px ui-monospace, "Cascadia Mono", Consolas, monospace; padding: 2px 7px; border-radius: 5px; background: var(--control); border: 1px solid var(--card-border); white-space: nowrap; }
+.logo { width: 28px; height: 28px; border-radius: 8px; background: var(--logo); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 15px; flex: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .25); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 4px rgba(0, 0, 0, .12), 0 3px 10px var(--brand-shadow); }
+.ai { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px; color: #fff; background: var(--brand-fill); }
+
+/* Nút: hover sáng lên, bấm thì lún xuống (scale .95) rồi bật lại có độ nảy */
+.btn, .chip, .hk, .seg button, .swatch, .tab {
+  transition: transform 260ms var(--bounce), background 150ms ease, box-shadow 150ms ease, filter 150ms ease, color 200ms ease; }
+:is(.btn, .chip, .hk, .swatch):active:not(:disabled) { transform: scale(.95); transition-duration: 90ms; }
+.tab:active { transform: scale(.97); transition-duration: 90ms; }
+.seg button:active { transform: scale(.93); transition-duration: 90ms; }
+.btn { border: 1px solid var(--card-border); background: var(--control); border-radius: 8px; padding: 5px 13px; cursor: pointer; min-height: 28px; white-space: nowrap; }
+.btn:hover:not(:disabled) { background: var(--hover); box-shadow: 0 2px 6px rgba(0, 0, 0, .08); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-primary { background: var(--brand-fill); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 3px 12px var(--brand-shadow), inset 0 1px 0 rgba(255, 255, 255, .3); }
+.btn-primary:hover:not(:disabled) { background: var(--brand-fill); filter: brightness(1.08) saturate(1.05); box-shadow: 0 5px 18px var(--brand-shadow), inset 0 1px 0 rgba(255, 255, 255, .3); }
+.btn-danger { color: var(--danger); }
+.btn.loading::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 8px; vertical-align: -1px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Segment: viên thumb trượt, chỉ cho 2–3 lựa chọn ngắn */
+.seg { position: relative; display: inline-flex; background: var(--control); border-radius: 999px; padding: 3px; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .08); flex: none; }
+.seg button { position: relative; z-index: 3; border: 0; background: none; padding: 4px 13px; border-radius: 999px; cursor: pointer; font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
+.seg button:hover { color: var(--fg); }
+.seg button.active { color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, .18); }
+.thumb { position: absolute; top: 0; left: 0; border-radius: 999px; background: var(--brand-fill);
+  box-shadow: 0 2px 10px var(--brand-shadow), inset 0 1px 0 rgba(255, 255, 255, .35); }
+.seg.ready .thumb { transition: transform 340ms var(--spring), width 340ms var(--spring); }
+
+/* Dropdown: select gốc của hệ điều hành, chỉ đổi khung và mũi tên */
+.select { position: relative; display: inline-flex; flex: none; }
+.select select { appearance: none; -webkit-appearance: none; min-width: 156px; padding-right: 30px; cursor: pointer; }
+.select select option { color: initial; background: initial; }
+.select::after { content: ""; position: absolute; right: 12px; top: 50%; width: 6px; height: 6px; pointer-events: none;
+  border-right: 1.5px solid var(--fg-muted); border-bottom: 1.5px solid var(--fg-muted); transform: translateY(-70%) rotate(45deg); }
+.field { border: 1px solid var(--card-border); background: var(--control); border-radius: 8px; padding: 5px 10px; width: 180px; flex: none; }
+.field:focus { outline: 2px solid var(--ring); outline-offset: 1px; }
+.field.invalid { border-color: var(--danger); }
+.field::placeholder { color: var(--fg-muted); }
+
+/* Switch: núm giãn ngang khi đang bấm; ở chất liệu glass thì núm thành thấu kính trong */
+.switch { appearance: none; -webkit-appearance: none; margin: 0; width: 36px; height: 21px; border-radius: 999px; background: var(--switch-off); position: relative; cursor: pointer; flex: none;
+  transition: background 200ms ease; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .12); }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 999px; background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform 300ms var(--spring), width 200ms var(--spring), background 200ms ease; }
+.switch:checked { background: var(--brand-fill); }
+.switch:checked::after { transform: translateX(15px); }
+.switch:active::after { width: 23px; }
+.switch:checked:active::after { transform: translateX(9px); }
+.switch:disabled { opacity: .5; cursor: default; }
+[data-material="glass"] .switch:active::after { background: rgba(255, 255, 255, .55); backdrop-filter: blur(2px) saturate(160%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25), inset 0 0 0 1px rgba(255, 255, 255, .9), inset 0 -4px 6px rgba(255, 255, 255, .4); }
+.switch.lg { width: 50px; height: 30px; }
+.switch.lg::after { width: 26px; height: 26px; }
+.switch.lg:checked::after { transform: translateX(20px); }
+.switch.lg:active::after { width: 34px; }
+.switch.lg:checked:active::after { transform: translateX(12px); }
+
+/* Slider */
+.range { -webkit-appearance: none; appearance: none; width: 180px; height: 22px; background: transparent; cursor: pointer; --val: 50%; }
+.range::-webkit-slider-runnable-track { height: 5px; border-radius: 99px; background: var(--brand-line) 0 0 / var(--val) 100% no-repeat, var(--switch-off); }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -7.5px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .3), 0 0 0 .5px rgba(0, 0, 0, .1); transition: transform 220ms var(--bounce), box-shadow 150ms ease; }
+.range:hover::-webkit-slider-thumb { transform: scale(1.1); }
+.range:active::-webkit-slider-thumb { transform: scale(1.25); box-shadow: 0 2px 8px rgba(0, 0, 0, .25), 0 0 0 5px var(--brand-shadow); }
+[data-material="glass"] .range:active::-webkit-slider-thumb { background: rgba(255, 255, 255, .6); box-shadow: 0 2px 8px rgba(0, 0, 0, .25), inset 0 0 0 1px #fff; }
+.range:focus-visible { outline: none; }
+.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--ring); }
+
+/* Màu nhấn */
+.swatches { display: flex; gap: 8px; }
+.swatch { width: 22px; height: 22px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: radial-gradient(70% 70% at 30% 25%, color-mix(in srgb, var(--a) 80%, transparent), transparent 70%), linear-gradient(135deg, var(--b), var(--m), var(--c));
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .4), 0 1px 3px rgba(0, 0, 0, .2); }
+.swatch:hover { transform: scale(1.12); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--win-glass), 0 0 0 4px var(--m); }
+/* Mỗi chấm mang đúng bảng màu của nó, không theo màu nhấn đang chọn */
+.swatch[data-accent="ocean"]    { --a: #64D1FF; --b: #1270B0; --m: #3A66D6; --c: #5B4FE0; }
+.swatch[data-accent="orchid"]   { --a: #E0A8FF; --b: #7A3AD0; --m: #A0359F; --c: #C02E6E; }
+.swatch[data-accent="sunset"]   { --a: #FFC27A; --b: #C2410C; --m: #C8325E; --c: #9B3BC4; }
+.swatch[data-accent="mint"]     { --a: #7EE8D8; --b: #0F766E; --m: #0E7490; --c: #0369A1; }
+.swatch[data-accent="graphite"] { --a: #C3CAD8; --b: #3C4250; --m: #4E5566; --c: #2C303A; }
+
+/* Chip (phụ âm thêm): viên thuốc có nút × */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--card-border); background: var(--card); border-radius: 99px; padding: 3px 5px 3px 11px; font-size: 12px; }
+.chip b { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+/* Dấu × vẽ bằng hai thanh để luôn nằm chính giữa, không phụ thuộc font */
+.chip-x { position: relative; width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--fg-muted); cursor: pointer; flex: none; }
+.chip-x:hover { background: var(--hover); color: var(--fg); }
+.chip-x::before, .chip-x::after { content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 1.5px; background: currentColor; transform: translate(-50%, -50%) rotate(45deg); }
+.chip-x::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* Ô ghi phím tắt (sửa trực tiếp) */
+.hk-wrap { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.hk { display: inline-flex; align-items: center; gap: 4px; min-width: 120px; min-height: 30px; justify-content: center; padding: 3px 10px; cursor: pointer;
+  border: 1px solid var(--card-border); background: var(--control); border-radius: 8px; }
+.hk kbd { font: 600 12px var(--font); padding: 2px 7px; border-radius: 5px; min-width: 22px; text-align: center;
+  background: var(--card); box-shadow: 0 1px 0 var(--card-border), inset 0 0 0 1px var(--card-border); }
+.hk .ph { color: var(--fg-muted); font-size: 12px; }
+.hk.rec.recording { border-color: transparent; animation: rec 1.4s ease-in-out infinite; }
+@keyframes rec { 0%, 100% { box-shadow: 0 0 0 2px var(--m); } 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--m) 30%, transparent); } }
+.hk-clear { width: 22px; height: 22px; border-radius: 50%; border: 0; background: none; color: var(--fg-muted); cursor: pointer; display: grid; place-items: center;
+  transition: background 150ms ease, transform 200ms var(--bounce); }
+.hk-clear:hover:not(:disabled) { background: var(--hover); color: var(--fg); }
+.hk-clear:active:not(:disabled) { transform: scale(.85); }
+.hk-clear:disabled { opacity: .35; cursor: default; }
+.hk-msg { color: var(--danger); }
+.hk-msg:empty { display: none; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

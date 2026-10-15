@@ -1,43 +1,44 @@
-// Liquid-glass look shared by the settings and popup windows (same origin, so the same local storage).
-// Look-only preferences, applied as CSS variables: --t (glass fill), --blur, --tint (colour or gradient), --ts (tint strength).
-const GLASS_DEFAULTS = { style: "regular", tint: "", "tint-end": "", strength: "30", accent: "" };
-const glassGet = (key) => localStorage.getItem("evkey-glass-" + key) ?? GLASS_DEFAULTS[key];
+// Tùy chọn hiển thị dùng chung cho mọi cửa sổ EVKey (cùng origin nên chung localStorage).
+// Chỉ lưu trên máy này, không vào config.toml. Gắn lên <html>: data-accent, data-material, --tr (0-1).
+const LOOK_DEFAULTS = { accent: "ocean", material: "glass", transparency: "60", theme: "system" };
+const LOOK_ACCENTS = ["ocean", "orchid", "sunset", "mint", "graphite"];
+const lookGet = (name) => localStorage.getItem("evkey-" + name) ?? LOOK_DEFAULTS[name];
 
-// Partner colour for a gradient's second stop: hue shifted slightly, saturation and brightness floored.
-function hsvToHex(h, s, v) {
-  const i = Math.floor(h * 6), f = h * 6 - i;
-  const p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
-  const [r, g, b] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6];
-  return "#" + [r, g, b].map((x) => Math.round(x * 255).toString(16).padStart(2, "0")).join("");
-}
-function companionTint(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const [r, g, b] = [n >> 16, n >> 8, n].map((x) => (x & 255) / 255);
-  const max = Math.max(r, g, b), d = max - Math.min(r, g, b);
-  let h = 0;
-  if (d) h = (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4) / 6;
-  return hsvToHex((h + 0.12) % 1, Math.max(max ? d / max : 0, 0.5), Math.max(max, 0.6));
+function lookSet(name, value) {
+  localStorage.setItem("evkey-" + name, String(value));
+  lookApply();
+  if (name === "theme") lookTheme();
 }
 
-function applyGlassLook() {
-  const root = document.documentElement.style;
-  const clear = glassGet("style") === "clear";
-  root.setProperty("--t", clear ? 1 : 0.5);
-  root.setProperty("--blur", clear ? "10px" : "28px");
-  document.documentElement.classList.toggle("glass-clear", clear);
-  const [from, to] = [glassGet("tint"), glassGet("tint-end")];
-  root.setProperty("--tint", from ? (to ? `linear-gradient(135deg, ${from}, ${to})` : from) : "rgb(var(--base))");
-  root.setProperty("--ts", glassGet("strength") / 100);
-  // Accent colour (logo, switches, sliders, scrollbar): empty keeps the stylesheet's pink-to-peach pair.
-  const accent = glassGet("accent");
-  if (accent) {
-    root.setProperty("--accent", accent);
-    root.setProperty("--accent-2", companionTint(accent));
-  } else {
-    root.removeProperty("--accent");
-    root.removeProperty("--accent-2");
-  }
+// Đưa tùy chọn về mặc định; các khóa cũ evkey-glass-* (đã bỏ) cũng bị xóa.
+function lookReset() {
+  for (const name of Object.keys(LOOK_DEFAULTS)) localStorage.removeItem("evkey-" + name);
+  for (const k of Object.keys(localStorage)) if (k.startsWith("evkey-glass-")) localStorage.removeItem(k);
+  lookApply();
+  lookTheme();
 }
 
-applyGlassLook();
-window.addEventListener("storage", (e) => e.key?.startsWith("evkey-glass-") && applyGlassLook());
+function lookApply() {
+  const root = document.documentElement;
+  const accent = lookGet("accent");
+  root.dataset.accent = LOOK_ACCENTS.includes(accent) ? accent : "ocean";
+  root.dataset.material = lookGet("material") === "plain" ? "plain" : "glass";
+  root.dataset.themePref = lookGet("theme");
+  const pct = Number(lookGet("transparency"));
+  root.style.setProperty("--tr", (Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 60) / 100);
+}
+
+// Sáng/tối theo lựa chọn; "system" theo Windows. Trang không chạy trong Tauri (xem trước trên trình duyệt) thì bỏ qua.
+function lookTheme() {
+  const theme = lookGet("theme");
+  const win = window.__TAURI__?.window.getCurrentWindow();
+  win?.setTheme(theme === "system" ? null : theme).catch(console.error);
+}
+
+lookApply();
+lookTheme();
+addEventListener("storage", (e) => {
+  if (!e.key?.startsWith("evkey-")) return;
+  lookApply();
+  if (e.key === "evkey-theme") lookTheme();
+});

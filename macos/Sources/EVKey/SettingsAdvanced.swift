@@ -1,8 +1,8 @@
 import EVKeyKit
 import SwiftUI
 
-/// The collapsed "Nâng cao" section at the end of a settings tab. Closed by default; the open state is remembered per
-/// tab (`evkey-adv-<pane>` in UserDefaults), like the Windows settings window remembers it in localStorage.
+/// Mục "Nâng cao" cuối mỗi tab: mặc định đóng, trạng thái nhớ theo tab (`evkey-adv-<pane>` trong UserDefaults),
+/// giống cửa sổ Settings trên Windows nhớ trong localStorage. Mở/đóng bằng chiều cao có hiệu ứng.
 struct SettingsAdvanced<Content: View>: View {
     @AppStorage private var isOpen: Bool
     @ViewBuilder let content: () -> Content
@@ -13,19 +13,29 @@ struct SettingsAdvanced<Content: View>: View {
     }
 
     var body: some View {
-        DisclosureGroup(isExpanded: $isOpen) {
-            LazyVStack(alignment: .leading, spacing: 10) {
-                content()
-            }
-            .padding(.top, 8)
-        } label: {
-            // macOS only toggles on the chevron; the label should open it too.
-            Text(UIStrings.misc("advanced"))
-                .font(.system(size: 13, weight: .semibold))
+        VStack(alignment: .leading, spacing: 0) {
+            Button { isOpen.toggle() } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .rotationEffect(.degrees(isOpen ? 90 : 0))
+                    Text(UIStrings.misc("advanced"))
+                        .font(.system(size: 13, weight: .semibold))
+                    Spacer(minLength: 0)
+                }
                 .foregroundStyle(.secondary)
                 .contentShape(Rectangle())
-                .onTapGesture { withAnimation { isOpen.toggle() } }
-                .pointerCursor()
+            }
+            .buttonStyle(.plain)
+            .pointerCursor()
+            .motion(Motion.slide(), value: isOpen)
+
+            RevealGroup(isShown: isOpen) {
+                LazyVStack(alignment: .leading, spacing: 10) {
+                    content()
+                }
+                .padding(.top, 8)
+            }
         }
         .padding(.top, 6)
     }

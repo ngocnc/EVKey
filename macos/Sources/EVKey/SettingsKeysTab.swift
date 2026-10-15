@@ -1,11 +1,11 @@
 import EVKeyKit
 import SwiftUI
 
-/// "Phím tắt": Vietnamese/English toggle chord and the temporary-off key.
+/// "Phím tắt": phím chuyển Việt/Anh (ghi trực tiếp, nhận cả tổ hợp chỉ gồm phím bổ trợ) và phím tạm tắt.
 struct SettingsKeysTab: View {
     @ObservedObject private var state = AppState.shared
-
-    private static let presetHotkeys = ["alt+z", "ctrl+shift", "alt+shift", "ctrl+alt+z", "cmd+shift", "cmd+alt", "cmd+ctrl"]
+    /// Id của hàng đang ghi phím, nếu có.
+    @State private var recorder: String?
 
     private static var tempOffChoices: [ChoiceOption<TempOffKey>] {
         [
@@ -15,20 +15,18 @@ struct SettingsKeysTab: View {
         ]
     }
 
-    /// The presets plus the current value when it was written by hand in config.toml, so saving never drops it.
-    private var hotkeyChoices: [ChoiceOption<String>] {
-        var values = Self.presetHotkeys
-        let current = state.settings.toggleHotkey
-        if !values.contains(current) { values.append(current) }
-        return values.map { ChoiceOption(value: $0, label: Self.hotkeyLabel($0)) }
-    }
-
     var body: some View {
-        SettingsPage(title: UIStrings.tr("tab.keys")) {
+        SettingsPage(title: UIStrings.tr("tab.keys"), note: UIStrings.tr("keys.recordNote")) {
             SettingsGroup {
-                SettingsMenuRow(
-                    title: UIStrings.tr("keys.toggle"), subtitle: UIStrings.tr("keys.toggle.detail"),
-                    choices: hotkeyChoices, selection: state.binding(\.toggleHotkey))
+                SettingsHotkeyRow(
+                    id: "toggle", title: UIStrings.tr("keys.toggle"), subtitle: UIStrings.tr("keys.toggle.detail"),
+                    chord: state.binding(\.toggleHotkey), recorder: $recorder,
+                    others: [state.settings.translateHotkey, state.settings.actionHotkey],
+                    conflictNames: [
+                        state.settings.translateHotkey: UIStrings.tr("translate.hotkey"),
+                        state.settings.actionHotkey: UIStrings.tr("actions.hotkey"),
+                    ],
+                    allowsModifierOnly: true)
             }
             SettingsAdvanced(pane: "keys") {
                 SettingsGroup {
@@ -41,7 +39,7 @@ struct SettingsKeysTab: View {
         }
     }
 
-    /// Symbols for a chord such as `ctrl+alt+z`; `none` reads as "Tắt".
+    /// Ký hiệu của một tổ hợp như `ctrl+alt+z`; `none` hiện là "Tắt".
     static func hotkeyLabel(_ chord: String) -> String {
         if chord == "none" { return UIStrings.tr("keys.hotkey.none") }
         return chord.split(separator: "+").map { part -> String in

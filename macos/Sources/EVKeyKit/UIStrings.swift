@@ -26,14 +26,11 @@ public enum UIStrings {
         // Window and tabs
         "window.title": ("EVKey - Cài đặt", "EVKey - Settings"),
         "tab.typing": ("Gõ tiếng Việt", "Vietnamese typing"),
-        "tab.smart": ("Chính tả & gõ nhanh", "Smart typing"),
         "tab.macro": ("Gõ tắt", "Macros"),
         "tab.keys": ("Phím tắt", "Hotkeys"),
         "tab.apps": ("Ứng dụng loại trừ", "Excluded apps"),
-        "tab.appearance": ("Giao diện", "Appearance"),
-        "tab.system": ("Hệ thống", "System"),
-        "tab.translate": ("Dịch thuật", "Translate"),
-        "tab.info": ("Thông tin", "About"),
+        "tab.system": ("Giao diện & Hệ thống", "Appearance & System"),
+        "tab.translate": ("Dịch & AI", "Translate & AI"),
 
         // Menu bar popup
         "popup.header": ("Gõ tiếng Việt", "Vietnamese typing"),
@@ -62,6 +59,7 @@ public enum UIStrings {
 
         // Shortcuts tab
         "keys.toggle": ("Chuyển Việt / Anh", "Switch Vietnamese / English"),
+        "keys.recordNote": ("Bấm vào ô rồi nhấn tổ hợp phím mới. Esc để huỷ.", "Click the field, then press the new combination. Esc cancels."),
         "keys.toggle.detail": ("Bấm tổ hợp phím này để bật hoặc tắt gõ tiếng Việt, dùng được ở mọi ứng dụng.", "Press this to switch typing between Vietnamese and English in any app."),
         "keys.tempOff": ("Phím tạm tắt trong từ", "Pause key"),
         "keys.tempOff.detail": ("Bấm phím này giữa chừng một từ để phần còn lại của từ được gõ nguyên văn, không bỏ dấu.", "Press this key in the middle of a word and the rest of that word is typed exactly as you press it, with no accents."),
@@ -109,6 +107,7 @@ public enum UIStrings {
         "macro.delete": ("Xóa", "Delete"),
         "macro.rowIncomplete": ("Dòng %@: nhập cả từ viết tắt lẫn nội dung thay thế, hoặc xóa dòng này.", "Row %@: enter both the abbreviation and its replacement text, or delete the row."),
         "macro.save": ("Lưu gõ tắt", "Save macros"),
+        "macro.add": ("+ Thêm gõ tắt", "+ Add macro"),
 
         // Excluded apps tab
         "apps.note": ("EVKey sẽ không gõ tiếng Việt trong các ứng dụng này, ví dụ game. Mỗi dòng một bundle ID, như com.apple.Safari.", "EVKey will not type Vietnamese in these apps, for example games. Put one bundle ID per line, like com.apple.Safari."),
@@ -126,8 +125,10 @@ public enum UIStrings {
         "system.uiLanguage": ("Ngôn ngữ", "Language"),
         "system.launchAtLogin": ("Tự chạy khi đăng nhập", "Start at login"),
         "system.launchAtLogin.detail": ("EVKey tự mở và nằm trên thanh menu khi bạn đăng nhập.", "EVKey starts in the menu bar when you sign in."),
-        "system.speakOnSwitch": ("Phát tiếng khi đổi chế độ", "Sound when switching mode"),
-        "system.speakOnSwitch.detail": ("Phát âm khác nhau cho tiếng Việt và tiếng Anh, chỉ khi bạn tự chuyển.", "Plays a different sound for Vietnamese and English, only when you switch yourself."),
+        "system.speakOnSwitch": ("Phát âm thanh khi chuyển chế độ", "Play a sound when switching mode"),
+        "system.speakOnSwitch.detail": ("Phát âm thanh khác nhau cho tiếng Việt và tiếng Anh, chỉ khi bạn tự chuyển.", "Plays a different sound for Vietnamese and English, only when you switch yourself."),
+        "system.lookHeading": ("Giao diện", "Appearance"),
+        "system.systemHeading": ("Hệ thống", "System"),
         "system.configFiles": ("Tệp cấu hình", "Config files"),
         "system.openFolder": ("Mở thư mục", "Open folder"),
         "system.reset": ("Đặt lại về mặc định", "Reset to defaults"),
@@ -162,6 +163,16 @@ public enum UIStrings {
         "glass.theme.dark": ("Tối", "Dark"),
         "glass.style.regular": ("Thường", "Regular"),
         "glass.style.clear": ("Trong suốt", "Clear"),
+        "glass.accent": ("Màu nhấn", "Accent color"),
+        "glass.material": ("Chất liệu", "Material"),
+        "glass.transparency": ("Độ trong suốt", "Transparency"),
+        "material.plain": ("Thường", "Plain"),
+        "material.glass": ("Liquid Glass", "Liquid Glass"),
+        "accent.ocean": ("Đại dương", "Ocean"),
+        "accent.orchid": ("Lan tím", "Orchid"),
+        "accent.sunset": ("Hoàng hôn", "Sunset"),
+        "accent.mint": ("Bạc hà", "Mint"),
+        "accent.graphite": ("Than chì", "Graphite"),
         "pin.unpin": ("Bỏ ghim", "Unpin"),
         "pin.pin": ("Ghim lên trên cùng", "Keep on top"),
 
@@ -304,5 +315,22 @@ public enum UIStrings {
         "banner.blur.detail": ("Đặt 0 để tắt hiệu ứng kính.", "Set 0 to turn off the glass effect."),
         "banner.hint": ("Hiện ở cạnh dưới màn hình khi EVKey tạm tắt vì bạn đang nhập vào ô mật khẩu.", "Appears at the bottom of the screen when EVKey pauses because you are typing in a password field."),
         "system.uiLanguage.detail": ("Ngôn ngữ hiển thị của các cửa sổ và thông báo EVKey. Không ảnh hưởng đến việc gõ tiếng Việt.", "The language EVKey's windows and messages are shown in. It does not affect Vietnamese typing."),
+        "hotkey.recording": ("Nhấn tổ hợp phím mới… (Esc: hủy)", "Press the new hotkey… (Esc to cancel)"),
+        "hotkey.unset": ("Chưa đặt", "Not set"),
+        "hotkey.clear": ("Xoá phím tắt", "Clear hotkey"),
+        "hotkey.needModifier": ("Cần giữ ⌃ ⌥ ⇧ hoặc ⌘ cùng với một phím.", "Hold ⌃ ⌥ ⇧ or ⌘ together with a key."),
+        "hotkey.modifierOnly": ("Cần giữ ít nhất hai phím bổ trợ, hoặc thêm một phím thường.", "Hold at least two modifier keys, or add a letter, digit, Space or F-key."),
+        "hotkey.needKey": ("Thêm một phím thường, ví dụ ⌃ ⌥ T.", "Add a letter, digit, Space or F-key, for example ⌃ ⌥ T."),
+        "hotkey.badKey": ("Chỉ nhận chữ cái, chữ số, Space và F1–F12.", "Only letters, digits, Space and F1–F12 can be used."),
+        "hotkey.takenBy": ("Đã dùng cho “%@”.", "Already used for “%@”."),
+
+        // Settings shell and Gõ tiếng Việt page
+        "sidebar.version": ("Phiên bản %@", "Version %@"),
+        "hero.vietnamese": ("Tiếng Việt · %@", "Vietnamese · %@"),
+        "hero.english": ("Tiếng Anh", "English"),
+        "hero.toggleHint": ("Bấm %@ để chuyển Việt ⇄ Anh", "Press %@ to switch Vietnamese ⇄ English"),
+        "hero.noToggle": ("Chưa đặt phím tắt chuyển Việt ⇄ Anh", "No hotkey set to switch Vietnamese ⇄ English"),
+        "typing.group.input": ("Cách gõ", "Typing"),
+        "typing.toneHeading": ("Bỏ dấu", "Tone marks"),
     ]
 }

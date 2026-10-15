@@ -1,27 +1,31 @@
 import SwiftUI
 
-/// The EVKey mark: the outlined letter box of the menu bar icon, filled with a linear gradient. The gradient follows the
-/// Liquid Glass tint (start and, when set, end colour); with no gradient tint it stays cyan-indigo.
+/// Logo EVKey: ô bo góc tô gradient `logo` của màu nhấn (a → m → c, đốm sáng góc trên trái), chữ V trắng.
 struct LogoMark: View {
     var letter = "V"
     var size: CGFloat = 34
     @ObservedObject private var glass = GlassAppearance.shared
 
-    private var gradient: LinearGradient {
-        let colors = glass.tintEndHex.isEmpty
-            ? [Color(red: 0.39, green: 0.82, blue: 1.0), Color(red: 0.37, green: 0.36, blue: 0.9)]
-            : [ColorHex.color(glass.tintHex(.dark)), ColorHex.color(glass.tintEndHex)]
-        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
     var body: some View {
-        RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
-            .strokeBorder(gradient, lineWidth: size * 0.07)
+        let accent = glass.accent
+        let shape = RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
+        shape
+            .fill(LinearGradient(
+                stops: [.init(color: accent.a, location: 0), .init(color: accent.m, location: 0.6), .init(color: accent.c, location: 1)],
+                startPoint: .topLeading, endPoint: .bottomTrailing))
+            .overlay {
+                shape.fill(RadialGradient(
+                    colors: [Color.white.opacity(0.45), .clear],
+                    center: UnitPoint(x: 0.25, y: 0.15), startRadius: 0, endRadius: size * 0.6))
+            }
+            .overlay { shape.strokeBorder(Color.white.opacity(0.35), lineWidth: 0.5) }
             .overlay {
                 Text(letter)
-                    .font(.system(size: size * 0.6, weight: .heavy))
-                    .foregroundStyle(gradient)
+                    .font(.system(size: size * 0.5, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.25), radius: 1, y: 1)
             }
             .frame(width: size, height: size)
+            .shadow(color: accent.shadow, radius: size * 0.15, y: size * 0.06)
     }
 }

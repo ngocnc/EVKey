@@ -1,38 +1,44 @@
 import SwiftUI
 
-/// Switch with a flat track and a dimmed opaque thumb, without the glass highlight or white rim of the system style.
-/// The on colour is the accent colour, as with the system switch. The thumb stretches while pressed and springs over.
+/// Switch thương hiệu: bật = `brand-fill`, tắt = `switch-off`. Cỡ thường 36×21, cỡ lớn 50×30 (hero).
+/// Núm trắng giãn ngang khi đang bấm rồi nảy sang vị trí mới.
 struct SettingsSwitchStyle: ToggleStyle {
+    var large = false
+
     func makeBody(configuration: Configuration) -> some View {
         Button {
             configuration.isOn.toggle()
         } label: {
             EmptyView()
         }
-            .pointerCursor()
-        .buttonStyle(Track(isOn: configuration.isOn))
+        .pointerCursor()
+        .buttonStyle(Track(isOn: configuration.isOn, large: large))
     }
 
     private struct Track: ButtonStyle {
         let isOn: Bool
+        let large: Bool
         @Environment(\.colorScheme) private var scheme
 
         func makeBody(configuration: Configuration) -> some View {
-            let thumbWidth: CGFloat = configuration.isPressed ? 22 : 16
-            // Offset (not alignment) so the spring drives the thumb across; pressed stretches it toward the travel direction.
-            let travel: CGFloat = 34 - 4 - thumbWidth
+            let width: CGFloat = large ? 50 : 36
+            let height: CGFloat = large ? 30 : 21
+            let inset: CGFloat = 2
+            let knob = height - inset * 2
+            let knobWidth = configuration.isPressed ? knob * 1.35 : knob
+            let travel = width - inset * 2 - knobWidth
             ZStack(alignment: .leading) {
+                Capsule().fill(Tokens(scheme).switchOff)
+                BrandFill().clipShape(Capsule()).opacity(isOn ? 1 : 0)
                 Capsule()
-                    .fill(isOn ? Color.accentColor : Color.primary.opacity(scheme == .dark ? 0.22 : 0.32))
-                Capsule()
-                    // Light mode: a bright thumb, else it vanishes against the grey off track.
-                    .fill(Color(white: scheme == .dark ? (isOn ? 0.74 : 0.52) : (isOn ? 0.96 : 0.99)))
-                    .frame(width: thumbWidth, height: 16)
-                    .offset(x: 2 + (isOn ? travel : 0))
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1)
+                    .frame(width: knobWidth, height: knob)
+                    .offset(x: inset + (isOn ? travel : 0))
             }
-            .frame(width: 34, height: 20)
-            .animation(.spring(response: 0.38, dampingFraction: 0.55), value: isOn)
-            .animation(.easeOut(duration: 0.14), value: configuration.isPressed)
+            .frame(width: width, height: height)
+            .motion(.spring(response: 0.34, dampingFraction: 0.62), value: isOn)
+            .motion(.easeOut(duration: 0.14), value: configuration.isPressed)
         }
     }
 }

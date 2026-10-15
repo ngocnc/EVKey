@@ -120,13 +120,7 @@ struct SettingsMenuRow<Value: Hashable>: View {
         HStack(spacing: 12) {
             SettingsRowLabel(title: title, subtitle: subtitle)
             Spacer(minLength: 12)
-            Picker("", selection: $selection) {
-                ForEach(choices) { Text($0.label).tag($0.value) }
-            }
-                .pointerCursor()
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .fixedSize()
+            SettingsDropdown(choices: choices, selection: $selection)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

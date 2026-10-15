@@ -4,7 +4,8 @@ import SwiftUI
 
 /// Selected sidebar tab, shared between the window and callers that want a specific tab.
 final class SettingsNavigation: ObservableObject {
-    @Published var tab: SettingsTab = .typing
+    /// `EVKEY_DEBUG_TAB=<tab>` mở thẳng mục đó, để chụp màn hình từng trang.
+    @Published var tab: SettingsTab = DebugOptions.tab.flatMap(SettingsTab.init(rawValue:)) ?? .typing
 }
 
 /// Owns the Bảng điều khiển window. It is created once and reused; closing only hides it.

@@ -4,392 +4,173 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-i18n="settings.title"></title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="banner.css">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="settings.css">
   <script src="glass.js"></script>
 </head>
 <body class="settings">
   <button id="pin" class="pin active" type="button" aria-pressed="true" data-i18n-title="pin.unpin"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg></button>
 <div class="shell">
-  <nav class="side glass">
-    <div class="brand"><span class="logo">V</span><div><b>EVKey</b><small id="version"></small></div></div>
-    <button class="tab active" data-tab="typing"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg><span data-i18n="nav.typing"></span></button>
-    <button class="tab" data-tab="smart"><svg viewBox="0 0 24 24"><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/><path d="m16 20 2 2 4-4"/></svg><span data-i18n="nav.smart"></span></button>
-    <button class="tab" data-tab="macro"><svg viewBox="0 0 24 24"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/></svg><span data-i18n="nav.macro"></span></button>
-    <button class="tab" data-tab="keys"><svg viewBox="0 0 24 24"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></svg><span data-i18n="nav.keys"></span></button>
-    <button class="tab" data-tab="apps"><svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg><span data-i18n="nav.apps"></span></button>
-    <button class="tab" data-tab="appearance"><svg viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg><span data-i18n="nav.appearance"></span></button>
-    <button class="tab" data-tab="system"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span data-i18n="nav.system"></span></button>
-    <button class="tab" data-tab="translate"><svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-i18n="nav.translate"></span></button>
-    <button class="tab" data-tab="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg><span data-i18n="nav.about"></span></button>
-  </nav>
+  <aside class="side">
+    <div class="brand"><span class="logo">V</span><b>EVKey</b></div>
+    <nav class="tabs" aria-label="EVKey"><span class="nav-pill" aria-hidden="true"></span>
+      <button type="button" class="tab active" data-tab="typing" data-i18n="nav.typing"></button>
+      <button type="button" class="tab" data-tab="macro" data-i18n="nav.macro"></button>
+      <button type="button" class="tab" data-tab="keys" data-i18n="nav.keys"></button>
+      <button type="button" class="tab" data-tab="apps" data-i18n="nav.apps"></button>
+      <button type="button" class="tab" data-tab="system" data-i18n="nav.system"></button>
+      <button type="button" class="tab" data-tab="translate" data-i18n="nav.translate"></button>
+    </nav>
+    <div class="foot">
+      <span class="ver" id="app-version"></span>
+      <button type="button" class="link" id="check-update" data-i18n="about.update.check"></button>
+      <span class="sub" id="update-status"></span>
+      <button type="button" class="link" id="open-github">GitHub</button>
+    </div>
+  </aside>
 
-  <main>
-    <div id="config-error" class="banner" hidden>
+  <main class="content">
+    <div id="config-error" class="err-banner" hidden>
       <span id="config-error-text"></span>
-      <button id="reset-broken" data-i18n="reset.defaults"></button>
+      <button type="button" id="reset-broken" class="btn" data-i18n="reset.defaults"></button>
     </div>
 
     <section class="pane" data-pane="typing">
       <h1 data-i18n="nav.typing"></h1>
-      <div class="glass group">
-        <div class="item stack">
-          <div class="dd-row">
-            <div class="text"><b data-i18n="typing.input_type.title"></b><span data-i18n="typing.input_type.desc"></span></div>
-            <div class="dd" data-key="input_type">
-              <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-              <ul class="dd-menu" role="listbox" hidden>
-                <li role="option" data-value="telex">Telex</li>
-                <li role="option" data-value="vni">VNI</li>
-                <li role="option" data-value="simple_telex1">Simple Telex 1</li>
-                <li role="option" data-value="simple_telex2">Simple Telex 2</li>
-              </ul>
-            </div>
-          </div>
+      <div class="hero">
+        <span class="hero-glow" aria-hidden="true"></span>
+        <span class="logo">V</span>
+        <div class="grow">
+          <div class="mode" id="hero-mode"></div>
+          <div class="meta sub"><span data-i18n="hero.press"></span> <kbd class="kbd" id="hero-hotkey"></kbd> <span data-i18n="hero.switch"></span></div>
         </div>
+        <input type="checkbox" class="switch lg" id="hero-toggle" data-i18n-aria-label="hero.toggle">
       </div>
-      <details class="advanced" data-adv="typing">
-        <summary data-i18n="common.advanced"></summary>
-        <div class="glass group">
-        <div class="item stack">
-          <div class="text"><b data-i18n="typing.tone.title"></b><span data-i18n="typing.tone.desc"></span></div>
-          <div class="seg" data-key="tone_placement">
-            <button data-value="new" data-i18n="typing.tone.new"></button>
-            <button data-value="old" data-i18n="typing.tone.old"></button>
-          </div>
-        </div>
-        <div class="item stack">
-          <div class="dd-row">
-            <div class="text"><b data-i18n="typing.table.title"></b><span data-i18n="typing.table.desc"></span></div>
-            <div class="dd" data-key="code_table">
-              <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-              <ul class="dd-menu" role="listbox" hidden>
-                <li role="option" data-value="unicode">Unicode</li>
-                <li role="option" data-value="tcvn3">TCVN3</li>
-                <li role="option" data-value="vni_windows">VNI Windows</li>
-                <li role="option" data-value="unicode_compound" data-i18n="table.unicode_compound"></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <label class="item">
-          <div class="text"><b data-i18n="typing.free_mark.title"></b><span data-i18n="typing.free_mark.desc"></span></div>
-          <span class="switch"><input type="checkbox" id="free_mark"><i></i></span>
-        </label>
-      </div>
-      </details>
-    </section>
-
-    <section class="pane" data-pane="keys" hidden>
-      <h1 data-i18n="nav.keys"></h1>
-      <div class="glass group">
-        <div class="item stack">
-          <div class="text"><b data-i18n="keys.toggle.title"></b><span data-i18n="keys.toggle.desc"></span></div>
-          <div class="seg" data-key="toggle_hotkey" id="hotkey-seg">
-            <button data-value="alt+z"><kbd>Alt</kbd><kbd>Z</kbd></button>
-            <button data-value="ctrl+shift"><kbd>Ctrl</kbd><kbd>Shift</kbd></button>
-            <button data-value="alt+shift"><kbd>Alt</kbd><kbd>Shift</kbd></button>
-            <button data-value="ctrl+alt+z"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Z</kbd></button>
-          </div>
-        </div>
-      </div>
-      <details class="advanced" data-adv="keys">
-        <summary data-i18n="common.advanced"></summary>
-        <div class="glass group">
-        <div class="item stack">
-          <div class="text"><b data-i18n="keys.temp_off.title"></b><span data-i18n="keys.temp_off.desc"></span></div>
-          <div class="seg" data-key="temp_off_key">
-            <button data-value="none" data-i18n="common.none"></button>
-            <button data-value="ctrl"><kbd>Ctrl</kbd></button>
-            <button data-value="alt"><kbd>Alt</kbd></button>
-          </div>
-        </div>
-      </div>
-      <p class="note" data-i18n-html="keys.note"></p>
-      </details>
-    </section>
-
-    <section class="pane" data-pane="smart" hidden>
-      <h1 data-i18n="nav.smart"></h1>
-      <div class="glass group">
-        <label class="item"><div class="text"><b data-i18n="smart.spell.title"></b><span data-i18n="smart.spell.desc"></span></div><span class="switch"><input type="checkbox" id="check_spelling"><i></i></span></label>
-        <label class="item" data-when="check_spelling"><div class="text"><b data-i18n="smart.restore.title"></b><span data-i18n-html="smart.restore.desc"></span></div><span class="switch"><input type="checkbox" id="restore_if_wrong_spelling"><i></i></span></label>
-        <label class="item"><div class="text"><b><span data-i18n="smart.english.title"></span> <span class="beta">Beta</span></b><span data-i18n="smart.english.desc"></span></div><span class="switch"><input type="checkbox" id="restore_english"><i></i></span></label>
-        <label class="item" data-when="restore_english"><div class="text"><b data-i18n="smart.english_undo.title"></b><span data-i18n="smart.english_undo.desc"></span></div><span class="switch"><input type="checkbox" id="undo_english_restore"><i></i></span></label>
-        <div class="item stack" data-when="restore_english"><div class="text"><b data-i18n="smart.english_extra.title"></b><span data-i18n="smart.english_extra.desc"></span></div><input type="text" id="english_words_extra" spellcheck="false" placeholder="rust react"></div>
-        <div class="item stack" data-when="restore_english"><div class="text"><b data-i18n="smart.english_excluded.title"></b><span data-i18n="smart.english_excluded.desc"></span></div><input type="text" id="english_words_excluded" spellcheck="false" placeholder="was"></div>
-      </div>
-      <div class="glass group">
-        <label class="item">
-          <div class="text"><b data-i18n="smart.app_mode.title"></b><span data-i18n="smart.app_mode.desc"></span></div>
-          <span class="switch"><input type="checkbox" id="remember_app_mode"><i></i></span>
-        </label>
-        <label class="item">
-          <div class="text"><b data-i18n="smart.undo.title"></b><span data-i18n="smart.undo.desc"></span></div>
-          <span class="switch"><input type="checkbox" id="undo_word"><i></i></span>
-        </label>
-      </div>
-      <details class="advanced" data-adv="smart">
-        <summary data-i18n="common.advanced"></summary>
-      <h2 data-i18n="smart.quick.heading"></h2>
-      <div class="glass group">
-        <label class="item" data-when="input_type!=vni"><div class="text"><b data-i18n="smart.quick_telex.title"></b><span>cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</span></div><span class="switch"><input type="checkbox" id="quick_telex"><i></i></span></label>
-        <label class="item"><div class="text"><b data-i18n="smart.quick_start.title"></b><span>f→ph, j→gi, w→qu</span></div><span class="switch"><input type="checkbox" id="quick_start_consonant"><i></i></span></label>
-        <label class="item"><div class="text"><b data-i18n="smart.quick_end.title"></b><span>g→ng, h→nh, k→ch</span></div><span class="switch"><input type="checkbox" id="quick_end_consonant"><i></i></span></label>
-        <label class="item"><div class="text"><b data-i18n="smart.custom.title"></b><span data-i18n="smart.custom.desc"></span></div><span class="switch"><input type="checkbox" id="allow_consonant_zfwj"><i></i></span></label>
-        <div class="item stack" data-when="allow_consonant_zfwj">
+      <div class="group"><div class="card">
+<div class="row"><div class="grow"><b data-i18n="typing.input_type.title"></b><span class="sub" data-i18n="typing.input_type.desc"></span></div><div class="dd" data-key="input_type">
+            <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <ul class="dd-menu" role="listbox" hidden>
+              <li role="option" data-value="telex">Telex</li>
+              <li role="option" data-value="vni">VNI</li>
+              <li role="option" data-value="simple_telex1">Simple Telex 1</li>
+              <li role="option" data-value="simple_telex2">Simple Telex 2</li>
+            </ul>
+          </div></div>
+</div></div>
+      <div class="group"><h2 class="h2" data-i18n="group.spell"></h2><div class="card">
+<label class="row"><div class="grow"><b data-i18n="smart.spell.title"></b><span class="sub" data-i18n="smart.spell.desc"></span></div><input type="checkbox" class="switch" id="check_spelling"></label><div class="dep" data-when="check_spelling"><label class="row"><div class="grow"><b data-i18n="smart.restore.title"></b><span class="sub" data-i18n-html="smart.restore.desc"></span></div><input type="checkbox" class="switch" id="restore_if_wrong_spelling"></label></div><label class="row"><div class="grow"><b><span data-i18n="smart.english.title"></span> <span class="beta">Beta</span></b><span class="sub" data-i18n="smart.english.desc"></span></div><input type="checkbox" class="switch" id="restore_english"></label><div class="dep" data-when="restore_english"><label class="row"><div class="grow"><b data-i18n="smart.english_undo.title"></b><span class="sub" data-i18n="smart.english_undo.desc"></span></div><input type="checkbox" class="switch" id="undo_english_restore"></label><div class="row"><div class="grow"><b data-i18n="smart.english_extra.title"></b><span class="sub" data-i18n="smart.english_extra.desc"></span></div><input type="text" class="field" id="english_words_extra" spellcheck="false" placeholder="rust react"></div><div class="row"><div class="grow"><b data-i18n="smart.english_excluded.title"></b><span class="sub" data-i18n="smart.english_excluded.desc"></span></div><input type="text" class="field" id="english_words_excluded" spellcheck="false" placeholder="was"></div></div>
+</div></div>
+      <div class="group"><div class="card">
+<label class="row"><div class="grow"><b data-i18n="smart.app_mode.title"></b><span class="sub" data-i18n="smart.app_mode.desc"></span></div><input type="checkbox" class="switch" id="remember_app_mode"></label><label class="row"><div class="grow"><b data-i18n="smart.undo.title"></b><span class="sub" data-i18n="smart.undo.desc"></span></div><input type="checkbox" class="switch" id="undo_word"></label>
+</div></div>
+      <details class="adv" data-adv="typing"><summary data-i18n="common.advanced"></summary><div class="adv-body"><div class="group"><div class="card">
+<div class="row"><div class="grow"><b data-i18n="typing.tone.title"></b><span class="sub" data-i18n="typing.tone.desc"></span></div><div class="seg" data-key="tone_placement"><button type="button" data-value="new" data-i18n="typing.tone.new"></button><button type="button" data-value="old" data-i18n="typing.tone.old"></button></div></div><div class="row"><div class="grow"><b data-i18n="typing.table.title"></b><span class="sub" data-i18n="typing.table.desc"></span></div><div class="dd" data-key="code_table">
+            <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <ul class="dd-menu" role="listbox" hidden>
+              <li role="option" data-value="unicode">Unicode</li>
+              <li role="option" data-value="tcvn3">TCVN3</li>
+              <li role="option" data-value="vni_windows">VNI Windows</li>
+              <li role="option" data-value="unicode_compound" data-i18n="table.unicode_compound"></li>
+            </ul>
+          </div></div><label class="row"><div class="grow"><b data-i18n="typing.free_mark.title"></b><span class="sub" data-i18n="typing.free_mark.desc"></span></div><input type="checkbox" class="switch" id="free_mark"></label>
+</div></div><div class="group"><h2 class="h2" data-i18n="smart.quick.heading"></h2><div class="card">
+<div class="dep flat" data-when="input_type!=vni"><label class="row"><div class="grow"><b data-i18n="smart.quick_telex.title"></b><span class="sub">cc→ch, gg→gi, kk→kh, nn→ng, qq→qu, pp→ph, tt→th</span></div><input type="checkbox" class="switch" id="quick_telex"></label></div><label class="row"><div class="grow"><b data-i18n="smart.quick_start.title"></b><span class="sub">f→ph, j→gi, w→qu</span></div><input type="checkbox" class="switch" id="quick_start_consonant"></label><label class="row"><div class="grow"><b data-i18n="smart.quick_end.title"></b><span class="sub">g→ng, h→nh, k→ch</span></div><input type="checkbox" class="switch" id="quick_end_consonant"></label><label class="row"><div class="grow"><b data-i18n="smart.custom.title"></b><span class="sub" data-i18n="smart.custom.desc"></span></div><input type="checkbox" class="switch" id="allow_consonant_zfwj"></label><div class="dep" data-when="allow_consonant_zfwj"><div class="row chip-row"><div class="grow">
           <div id="custom-consonants" class="chips"></div>
-          <div class="chip-add">
-            <input id="custom-consonant-input" type="text" maxlength="1" placeholder="a–z" autocomplete="off" spellcheck="false">
-          </div>
-          <span class="chip-caption field-error" id="custom-consonant-error" hidden></span>
-          <span class="chip-caption" data-i18n="smart.custom.caption"></span>
-        </div>
-      </div>
-      <h2 data-i18n="smart.caps.heading"></h2>
-      <div class="glass group">
-        <label class="item"><div class="text"><b data-i18n="smart.caps_first.title"></b><span data-i18n="smart.caps_first.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_first_char"><i></i></span></label>
-        <label class="item sub" data-when="upper_case_first_char"><div class="text"><b data-i18n="smart.caps_punct.title"></b><span data-i18n="smart.caps_punct.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_after_punct"><i></i></span></label>
-        <label class="item sub" data-when="upper_case_first_char"><div class="text"><b data-i18n="smart.caps_enter.title"></b><span data-i18n="smart.caps_enter.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_after_enter"><i></i></span></label>
-        <label class="item sub" data-when="upper_case_first_char"><div class="text"><b data-i18n="smart.caps_first_letter.title"></b><span data-i18n="smart.caps_first_letter.desc"></span></div><span class="switch"><input type="checkbox" id="upper_case_first_letter"><i></i></span></label>
-        <label class="item"><div class="text"><b data-i18n="smart.macro_case.title"></b><span data-i18n="smart.macro_case.desc"></span></div><span class="switch"><input type="checkbox" id="auto_caps_macro"><i></i></span></label>
-      </div>
-      </details>
+          <div class="chip-add"><input id="custom-consonant-input" class="field" type="text" maxlength="1" placeholder="a–z" autocomplete="off" spellcheck="false"></div>
+          <span class="sub field-error" id="custom-consonant-error" hidden></span>
+          <span class="sub" data-i18n="smart.custom.caption"></span>
+        </div></div></div>
+</div></div><div class="group"><h2 class="h2" data-i18n="smart.caps.heading"></h2><div class="card">
+<label class="row"><div class="grow"><b data-i18n="smart.caps_first.title"></b><span class="sub" data-i18n="smart.caps_first.desc"></span></div><input type="checkbox" class="switch" id="upper_case_first_char"></label><div class="dep" data-when="upper_case_first_char"><label class="row"><div class="grow"><b data-i18n="smart.caps_punct.title"></b><span class="sub" data-i18n="smart.caps_punct.desc"></span></div><input type="checkbox" class="switch" id="upper_case_after_punct"></label><label class="row"><div class="grow"><b data-i18n="smart.caps_enter.title"></b><span class="sub" data-i18n="smart.caps_enter.desc"></span></div><input type="checkbox" class="switch" id="upper_case_after_enter"></label><label class="row"><div class="grow"><b data-i18n="smart.caps_first_letter.title"></b><span class="sub" data-i18n="smart.caps_first_letter.desc"></span></div><input type="checkbox" class="switch" id="upper_case_first_letter"></label></div>
+</div></div></div></details>
     </section>
 
     <section class="pane" data-pane="macro" hidden>
       <h1 data-i18n="nav.macro"></h1>
       <p class="note" data-i18n="macro.note"></p>
-      <div class="glass group pad">
+      <div class="group"><div class="card pad">
+        <label class="row flush"><div class="grow"><b data-i18n="smart.macro_case.title"></b><span class="sub" data-i18n="smart.macro_case.desc"></span></div><input type="checkbox" class="switch" id="auto_caps_macro"></label>
         <div id="macro-rows"></div>
-        <div class="actions">
-          <button id="save-macros" class="primary" data-i18n="macro.save"></button>
-        </div>
-      </div>
-      <details class="advanced" data-adv="macro">
-        <summary data-i18n="common.advanced"></summary>
-        <div class="glass group">
-          <div class="item">
-            <div class="text"><b data-i18n="macro.import.title"></b><span data-i18n="macro.import.desc"></span></div>
-            <div class="colors">
-              <label class="check"><input type="checkbox" id="macro-import-replace"> <span data-i18n="macro.import.replace"></span></label>
-              <button id="macro-import" type="button" data-i18n="macro.import.button"></button>
-            </div>
-          </div>
-        </div>
-      </details>
+        <div class="actions"><button type="button" id="save-macros" class="btn btn-primary" data-i18n="macro.save"></button></div>
+      </div></div>
+      <details class="adv" data-adv="macro"><summary data-i18n="common.advanced"></summary><div class="adv-body"><div class="group"><div class="card">
+<div class="row"><div class="grow"><b data-i18n="macro.import.title"></b><span class="sub" data-i18n="macro.import.desc"></span></div><div class="inline"><label class="check"><input type="checkbox" id="macro-import-replace"> <span data-i18n="macro.import.replace"></span></label><button type="button" id="macro-import" class="btn" data-i18n="macro.import.button"></button></div></div>
+</div></div></div></details>
       <input type="file" id="macro-import-file" accept=".txt,.dat,text/plain" hidden>
+    </section>
+
+    <section class="pane" data-pane="keys" hidden>
+      <h1 data-i18n="nav.keys"></h1>
+      <div class="group"><div class="card">
+<div class="row"><div class="grow"><b data-i18n="keys.toggle.title"></b><span class="sub" data-i18n="keys.toggle.desc"></span><div class="sub hk-msg rec-msg" data-for="toggle_hotkey"></div></div><span class="hk-wrap"><button type="button" class="hk rec" data-key="toggle_hotkey" data-name="Chuyển Việt ⇄ Anh" data-modonly></button><button type="button" class="hk-clear rec-clear" data-for="toggle_hotkey" aria-label="Xoá phím tắt" data-i18n-aria-label="keys.rec.clear"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span></div>
+</div></div>
+      <details class="adv" data-adv="keys"><summary data-i18n="common.advanced"></summary><div class="adv-body"><div class="group"><div class="card">
+<div class="row"><div class="grow"><b data-i18n="keys.temp_off.title"></b><span class="sub" data-i18n="keys.temp_off.desc"></span></div><div class="seg" data-key="temp_off_key"><button type="button" data-value="none" data-i18n="common.none"></button><button type="button" data-value="ctrl"><kbd>Ctrl</kbd></button><button type="button" data-value="alt"><kbd>Alt</kbd></button></div></div>
+</div></div><p class="note" data-i18n-html="keys.note"></p></div></details>
     </section>
 
     <section class="pane" data-pane="apps" hidden>
       <h1 data-i18n="nav.apps"></h1>
       <p class="note" data-i18n-html="apps.note"></p>
-      <div class="glass group pad">
-        <textarea id="excluded_apps" spellcheck="false" placeholder="game.exe"></textarea>
-        <div class="actions"><button id="add-last-app" data-i18n="apps.add_last"></button></div>
-      </div>
-    </section>
-
-    <section class="pane" data-pane="appearance" hidden>
-      <h1 data-i18n="nav.appearance"></h1>
-      <h2>Liquid Glass</h2>
-      <div class="glass group">
-        <div class="item stack">
-          <div class="text"><b data-i18n="look.theme.title"></b><span data-i18n="look.theme.desc"></span></div>
-          <div class="seg" data-local="theme">
-            <button data-value="system" data-i18n="look.theme.system"></button>
-            <button data-value="light" data-i18n="look.theme.light"></button>
-            <button data-value="dark" data-i18n="look.theme.dark"></button>
-          </div>
-        </div>
-      </div>
-      <details class="advanced" data-adv="appearance">
-        <summary data-i18n="common.advanced"></summary>
-        <div class="glass group">
-        <div class="item stack">
-          <div class="text"><b data-i18n="look.glass.title"></b><span data-i18n="look.glass.desc"></span></div>
-          <div class="seg" data-local="glass-style">
-            <button data-value="regular" data-i18n="look.glass.regular"></button>
-            <button data-value="clear" data-i18n="look.glass.clear"></button>
-          </div>
-        </div>
-        <div class="item inline">
-          <div class="text"><b data-i18n="look.strength.title"></b><span data-i18n="look.strength.desc"></span></div>
-          <div class="range-row"><input type="range" id="glass-strength" min="0" max="100" step="1"><output id="glass-strength-value"></output></div>
-        </div>
-        <div class="item">
-          <div class="text"><b data-i18n="look.tint"></b></div>
-          <div class="colors">
-            <small>Gradient</small>
-            <span class="switch"><input type="checkbox" id="glass-gradient"><i></i></span>
-            <input type="color" id="glass-tint">
-            <span id="glass-tint-end-wrap" class="colors" hidden>→ <input type="color" id="glass-tint-end"></span>
-          </div>
-        </div>
-        <div class="item">
-          <div class="text"><b data-i18n="look.accent.title"></b><span data-i18n="look.accent.desc"></span></div>
-          <div class="colors">
-            <button id="accent-default" type="button" data-i18n="look.default"></button>
-            <input type="color" id="accent-color">
-          </div>
-        </div>
-      </div>
-      <h2 data-i18n="look.banner.heading"></h2>
-      <div class="glass group">
-        <div class="item inline">
-          <div class="text"><b data-i18n="look.bn_opacity.title"></b></div>
-          <div class="range-row"><input type="range" id="bn-opacity" min="0" max="100" step="1"><output id="bn-opacity-value"></output></div>
-        </div>
-        <div class="item inline">
-          <div class="text"><b data-i18n="look.bn_blur.title"></b><span data-i18n="look.bn_blur.desc"></span></div>
-          <div class="range-row"><input type="range" id="bn-blur" min="0" max="100" step="1"><output id="bn-blur-value"></output></div>
-        </div>
-        <div class="item"><div class="text"><b data-i18n="look.bn_bg"></b></div><input type="color" id="bn-bg"></div>
-        <div class="item"><div class="text"><b data-i18n="look.bn_border"></b></div><input type="color" id="bn-border"></div>
-        <div class="item"><div class="text"><b data-i18n="look.bn_text"></b></div><input type="color" id="bn-text"></div>
-        <div class="item preview last">
-          <div class="sec-banner" id="bn-preview"></div>
-          <span class="hint" data-i18n="look.bn_hint"></span>
-        </div>
-      </div>
-      <div class="actions"><button id="gl-reset" class="danger" data-i18n="look.reset"></button></div>
-      </details>
+      <div class="group"><div class="card pad">
+        <textarea id="excluded_apps" class="field" spellcheck="false" placeholder="game.exe"></textarea>
+        <div class="actions"><button type="button" id="add-last-app" class="btn" data-i18n="apps.add_last"></button></div>
+      </div></div>
     </section>
 
     <section class="pane" data-pane="system" hidden>
       <h1 data-i18n="nav.system"></h1>
-      <div class="glass group">
-        <div class="item stack">
-          <div class="text"><b data-i18n="system.ui_language.title"></b><span data-i18n="system.ui_language.desc"></span></div>
-          <div class="seg" data-key="ui_language">
-            <button data-value="vi">Tiếng Việt</button>
-            <button data-value="en">English</button>
-          </div>
-        </div>
-        <label class="item"><div class="text"><b id="autostart-title" data-i18n="system.autostart.title"></b><span data-i18n="system.autostart.desc"></span></div><span class="switch"><input type="checkbox" id="autostart"><i></i></span></label>
-        <label class="item"><div class="text"><b data-i18n="system.admin.title"></b><span data-i18n="system.admin.desc"></span></div><span class="switch"><input type="checkbox" id="admin"><i></i></span></label>
-      </div>
-      <details class="advanced" data-adv="system">
-        <summary data-i18n="common.advanced"></summary>
-      <div class="glass group">
-        <label class="item"><div class="text"><b data-i18n="system.sound.title"></b><span data-i18n="system.sound.desc"></span></div><span class="switch"><input type="checkbox" id="toggle_sound"><i></i></span></label>
-      </div>
-      <h2 data-i18n="system.files.heading"></h2>
-      <div class="glass group pad">
-        <code id="config-dir" class="path"></code>
-        <div class="actions">
-          <button id="open-folder" data-i18n="system.open_folder"></button>
-          <button id="reset" class="danger" data-i18n="reset.defaults"></button>
-        </div>
-      </div>
-      <h2 data-i18n="system.backup.heading"></h2>
-      <div class="glass group">
-        <div class="item">
-          <div class="text"><b data-i18n="system.export.title"></b><span data-i18n="system.export.desc"></span></div>
-          <button id="config-export" type="button" data-i18n="system.export.button"></button>
-        </div>
-        <div class="item">
-          <div class="text"><b data-i18n="system.import.title"></b><span data-i18n="system.import.desc"></span></div>
-          <button id="config-import" type="button" data-i18n="system.import.button"></button>
-        </div>
-      </div>
-      <input type="file" id="config-import-file" accept=".toml" hidden>
-      </details>
+      <div class="group"><h2 class="h2" data-i18n="group.look"></h2><div class="card">
+<div class="row"><div class="grow"><b data-i18n="look.theme.title"></b><span class="sub" data-i18n="look.theme.desc"></span></div><div class="seg" data-local="theme"><button type="button" data-value="system" data-i18n="look.theme.system"></button><button type="button" data-value="light" data-i18n="look.theme.light"></button><button type="button" data-value="dark" data-i18n="look.theme.dark"></button></div></div><div class="row"><div class="grow"><b data-i18n="look.material.title"></b><span class="sub" data-i18n="look.material.desc"></span></div><div class="seg" data-local="material"><button type="button" data-value="plain" data-i18n="look.material.plain"></button><button type="button" data-value="glass" data-i18n="look.material.glass"></button></div></div><div class="row"><div class="grow"><b data-i18n="look.accent.title"></b><span class="sub" data-i18n="look.accent.desc"></span></div><div class="swatches" id="accent-swatches"></div></div><div class="dep flat" data-when="local:material=glass"><div class="row"><div class="grow"><b data-i18n="look.transparency.title"></b><span class="sub" data-i18n="look.transparency.desc"></span></div><div class="range-row"><input type="range" class="range" id="glass-transparency" min="0" max="100" step="1"><output id="glass-transparency-value"></output></div></div></div>
+</div></div>
+      <div class="group"><h2 class="h2" data-i18n="group.system"></h2><div class="card">
+<div class="row"><div class="grow"><b data-i18n="system.ui_language.title"></b><span class="sub" data-i18n="system.ui_language.desc"></span></div><div class="dd" data-key="ui_language">
+            <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <ul class="dd-menu" role="listbox" hidden>
+              <li role="option" data-value="vi">Tiếng Việt</li>
+              <li role="option" data-value="en">English</li>
+            </ul>
+          </div></div><label class="row"><div class="grow"><b id="autostart-title" data-i18n="system.autostart.title"></b><span class="sub" data-i18n="system.autostart.desc"></span></div><input type="checkbox" class="switch" id="autostart"></label><label class="row"><div class="grow"><b data-i18n="system.admin.title"></b><span class="sub" data-i18n="system.admin.desc"></span></div><input type="checkbox" class="switch" id="admin"></label><label class="row"><div class="grow"><b data-i18n="about.update.title"></b><span class="sub" data-i18n="about.update.desc"></span></div><input type="checkbox" class="switch" id="auto_check_updates"></label>
+</div></div>
+      <details class="adv" data-adv="system"><summary data-i18n="common.advanced"></summary><div class="adv-body"><div class="group"><div class="card">
+<label class="row"><div class="grow"><b data-i18n="system.sound.title"></b><span class="sub" data-i18n="system.sound.desc"></span></div><input type="checkbox" class="switch" id="toggle_sound"></label>
+</div></div><div class="group"><h2 class="h2" data-i18n="system.files.heading"></h2><div class="card pad"><code id="config-dir" class="path"></code><div class="actions"><button type="button" id="open-folder" class="btn" data-i18n="system.open_folder"></button><button type="button" id="reset" class="btn btn-danger" data-i18n="reset.defaults"></button><button type="button" id="gl-reset" class="btn btn-danger" data-i18n="look.reset"></button></div></div></div><div class="group"><h2 class="h2" data-i18n="system.backup.heading"></h2><div class="card">
+<div class="row"><div class="grow"><b data-i18n="system.export.title"></b><span class="sub" data-i18n="system.export.desc"></span></div><button type="button" id="config-export" class="btn" data-i18n="system.export.button"></button></div><div class="row"><div class="grow"><b data-i18n="system.import.title"></b><span class="sub" data-i18n="system.import.desc"></span></div><button type="button" id="config-import" class="btn" data-i18n="system.import.button"></button></div>
+</div></div><input type="file" id="config-import-file" accept=".toml" hidden></div></details>
     </section>
+
     <section class="pane" data-pane="translate" hidden>
       <h1 data-i18n="nav.translate"></h1>
-      <div class="glass group">
-        <div class="item">
-          <div class="text"><b data-i18n="translate.hotkey.title"></b><span data-i18n="translate.hotkey.desc"></span></div>
-          <div class="hotkey-rec">
-            <button id="translate-hotkey-btn" class="rec" type="button" data-key="translate_hotkey"></button>
-            <button class="ghost" type="button" data-i18n="common.off"></button>
-          </div>
-        </div>
-        <div class="item">
-          <div class="text"><b data-i18n="actions.hotkey.title"></b><span data-i18n="actions.hotkey.desc"></span></div>
-          <div class="hotkey-rec">
-            <button class="rec" type="button" data-key="action_hotkey"></button>
-            <button class="ghost" type="button" data-i18n="common.off"></button>
-          </div>
-        </div>
-        <div class="item stack">
-          <div class="text"><b data-i18n="translate.action.title"></b><span data-i18n="translate.action.desc"></span></div>
-          <div class="seg" data-key="translate_action">
-            <button data-value="show" data-i18n="translate.action.show"></button>
-            <button data-value="copy" data-i18n="translate.action.copy"></button>
-            <button data-value="replace" data-i18n="translate.action.replace"></button>
-          </div>
-        </div>
-      </div>
-      <h2>Gemini (AI)</h2>
-      <div class="glass group">
-        <div class="item stack">
-          <div class="text"><b data-i18n="gemini.key.title"></b><span data-i18n="gemini.key.desc"></span></div>
-          <div class="key-row">
-            <input type="password" id="gemini-key" autocomplete="off" spellcheck="false">
-            <button id="gemini-save" class="primary" type="button" data-i18n="gemini.key.save"></button>
-            <button id="gemini-delete" class="danger" type="button" data-i18n="common.delete"></button>
-          </div>
-          <span id="gemini-status" class="chip-caption"></span>
-        </div>
-      </div>
-      <details class="advanced" data-adv="translate">
-        <summary data-i18n="common.advanced"></summary>
-        <div class="glass group">
-        <div class="item">
-          <div class="text"><b data-i18n="translate.secs.title"></b><span data-i18n="translate.secs.desc"></span></div>
-          <div class="time-field">
-            <input type="text" inputmode="numeric" id="translate-time" size="6" autocomplete="off">
-            <div class="dd" id="translate-unit" data-value="s">
-              <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-              <ul class="dd-menu" role="listbox" hidden>
-                <li role="option" data-value="ms">ms</li>
-                <li role="option" data-value="s" data-i18n="translate.unit.s"></li>
-                <li role="option" data-value="never" data-i18n="translate.unit.never"></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="item last">
-          <div class="text"><b data-i18n="translate.provider.title"></b><span data-i18n="translate.provider.desc"></span></div>
-          <div class="dd" data-key="translate_provider">
+      <div class="group"><div class="card">
+<div class="row"><div class="grow"><b data-i18n="translate.hotkey.title"></b><span class="sub" data-i18n="translate.hotkey.desc"></span><div class="sub hk-msg rec-msg" data-for="translate_hotkey"></div></div><span class="hk-wrap"><button type="button" class="hk rec" data-key="translate_hotkey" data-name="Phím tắt dịch"></button><button type="button" class="hk-clear rec-clear" data-for="translate_hotkey" aria-label="Xoá phím tắt" data-i18n-aria-label="keys.rec.clear"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span></div><div class="row"><div class="grow"><b data-i18n="actions.hotkey.title"></b><span class="sub" data-i18n="actions.hotkey.desc"></span><div class="sub hk-msg rec-msg" data-for="action_hotkey"></div></div><span class="hk-wrap"><button type="button" class="hk rec" data-key="action_hotkey" data-name="Phím tắt bảng hành động"></button><button type="button" class="hk-clear rec-clear" data-for="action_hotkey" aria-label="Xoá phím tắt" data-i18n-aria-label="keys.rec.clear"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span></div><div class="row"><div class="grow"><b data-i18n="translate.action.title"></b><span class="sub" data-i18n="translate.action.desc"></span></div><div class="seg" data-key="translate_action"><button type="button" data-value="show" data-i18n="translate.action.show"></button><button type="button" data-value="copy" data-i18n="translate.action.copy"></button><button type="button" data-value="replace" data-i18n="translate.action.replace"></button></div></div>
+</div></div>
+      <div class="group"><h2 class="h2">Gemini (AI)</h2><div class="card">
+        <div class="row stack"><div class="grow"><b data-i18n="gemini.key.title"></b><span class="sub" data-i18n="gemini.key.desc"></span></div></div>
+        <div class="row"><div class="key-row grow"><input type="password" class="field" id="gemini-key" autocomplete="off" spellcheck="false"><button type="button" id="gemini-save" class="btn btn-primary" data-i18n="gemini.key.save"></button><button type="button" id="gemini-delete" class="btn btn-danger" data-i18n="common.delete"></button></div></div>
+        <div class="row"><span id="gemini-status" class="sub"></span></div>
+      </div></div>
+      <details class="adv" data-adv="translate"><summary data-i18n="common.advanced"></summary><div class="adv-body"><div class="group"><div class="card">
+<div class="row"><div class="grow"><b data-i18n="translate.secs.title"></b><span class="sub" data-i18n="translate.secs.desc"></span></div><div class="time-field"><input type="text" class="field" inputmode="numeric" id="translate-time" size="6" autocomplete="off"><div class="dd" id="translate-unit" data-value="s">
+            <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <ul class="dd-menu" role="listbox" hidden>
+              <li role="option" data-value="ms">ms</li>
+              <li role="option" data-value="s" data-i18n="translate.unit.s"></li>
+              <li role="option" data-value="never" data-i18n="translate.unit.never"></li>
+            </ul>
+          </div></div></div><div class="row"><div class="grow"><b data-i18n="translate.provider.title"></b><span class="sub" data-i18n="translate.provider.desc"></span></div><div class="dd" data-key="translate_provider">
             <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
             <ul class="dd-menu" role="listbox" hidden>
               <li role="option" data-value="google">Google Translate</li>
               <li role="option" data-value="gemini">Gemini</li>
             </ul>
-          </div>
-        </div>
-      </div>
-      </details>
+          </div></div>
+</div></div></div></details>
     </section>
-    <section class="pane" data-pane="about" hidden>
-      <h1 data-i18n="nav.about"></h1>
-      <div class="glass group about-hero">
-        <span class="logo lg">V</span>
-        <div class="about-name">EVKey <code id="about-version" class="pill"></code></div>
-        <p data-i18n="about.intro"></p>
-      </div>
-      <div class="glass group">
-        <label class="item"><div class="text"><b data-i18n="about.update.title"></b><span data-i18n="about.update.desc"></span></div><span class="switch"><input type="checkbox" id="auto_check_updates"><i></i></span></label>
-        <div class="item">
-          <div class="text"><b data-i18n="about.update.check"></b><span id="update-status"></span></div>
-          <button id="check-update" data-i18n="about.update.check"></button>
-        </div>
-        <div class="item last">
-          <div class="text"><b>GitHub</b><span>ngocnc/EVKey</span></div>
-          <button id="open-github" class="primary" data-i18n="about.github"></button>
-        </div>
-      </div>
-      <p class="note about-foot" data-i18n="about.credit"></p>
-    </section>
-
   </main>
   <p id="msg" class="toast" role="status"></p>
 </div>
 <div id="welcome" class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title" hidden>
-  <div class="welcome-card glass">
+  <div class="welcome-card">
     <span class="logo lg">V</span>
     <h1 id="welcome-title" data-i18n="welcome.title"></h1>
     <p class="welcome-sub" data-i18n="welcome.sub"></p>
@@ -406,17 +187,16 @@
       <li><b data-i18n="welcome.step_toggle"></b><span id="welcome-hotkey" class="welcome-line"></span></li>
       <li>
         <b data-i18n="welcome.step_try"></b>
-        <textarea id="welcome-try" rows="2" spellcheck="false"></textarea>
+        <textarea id="welcome-try" class="field" rows="2" spellcheck="false"></textarea>
       </li>
     </ol>
     <div class="actions">
-      <button id="welcome-skip" class="ghost" type="button" data-i18n="welcome.skip"></button>
-      <button id="welcome-start" class="primary" type="button" data-i18n="welcome.start"></button>
+      <button id="welcome-skip" class="btn" type="button" data-i18n="welcome.skip"></button>
+      <button id="welcome-start" class="btn btn-primary" type="button" data-i18n="welcome.start"></button>
     </div>
   </div>
 </div>
 <script src="i18n.js"></script>
-<script src="banner-view.js"></script>
 <script src="settings.js"></script>
 </body>
 </html>
