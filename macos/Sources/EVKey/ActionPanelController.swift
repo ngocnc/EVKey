@@ -36,7 +36,7 @@ final class ActionPanelModel: ObservableObject {
 final class ActionPanelController {
     static let shared = ActionPanelController()
     static let width: CGFloat = 340
-    private static let maxHeight: CGFloat = 360
+    private static let maxHeight: CGFloat = 480
 
     private let model = ActionPanelModel()
     private let hosting: NSHostingController<ActionPanelView>
@@ -178,8 +178,9 @@ final class ActionPanelController {
     }
 
     private func fit() {
-        hosting.view.layoutSubtreeIfNeeded()
-        let height = min(max(hosting.view.fittingSize.height, 1), Self.maxHeight)
+        // `sizingOptions = []` leaves the view's fittingSize at zero, so ask SwiftUI for the content height.
+        let fitted = hosting.sizeThatFits(in: NSSize(width: Self.width, height: .infinity)).height
+        let height = min(max(fitted, 1), Self.maxHeight)
         let size = NSSize(width: Self.width, height: height)
         let frame = dragged
             ? NSRect(origin: NSPoint(x: panel.frame.minX, y: panel.frame.maxY - height), size: size)

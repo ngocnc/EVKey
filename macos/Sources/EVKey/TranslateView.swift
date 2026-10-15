@@ -12,14 +12,10 @@ struct TranslateView: View {
         let ms = state.settings.translatePopupMs
         VStack(spacing: 0) {
             DrainBar(active: model.status != .loading && ms > 0, token: model.token, seconds: Double(ms) / 1000)
-            ScrollView {
-                content
-                    .font(.system(size: 15, weight: .medium))
-                    .lineSpacing(7)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 14)
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 16)
+            // Natural height when it fits; scrolls only past the controller's max height.
+            ViewThatFits(in: .vertical) {
+                padded
+                ScrollView { padded }
             }
         }
         .frame(width: 340)
@@ -27,6 +23,16 @@ struct TranslateView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture { TranslateController.shared.close() }
+    }
+
+    private var padded: some View {
+        content
+            .font(.system(size: 15, weight: .medium))
+            .lineSpacing(7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 14)
+            .padding(.horizontal, 18)
+            .padding(.bottom, 16)
     }
 
     @ViewBuilder private var content: some View {

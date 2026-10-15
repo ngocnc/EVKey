@@ -107,8 +107,16 @@ final class TranslateController {
     }
 
     /// Fits the popup to its text, capped at `maxHeight` (the text scrolls beyond that), then places it by the pointer.
+    /// SwiftUI redraws on the next run-loop turn, so the fit runs again shortly after to pick up the new content.
     private func resize() {
-        let fitted = panel.contentView?.fittingSize.height ?? 40
+        fit()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in self?.fit() }
+    }
+
+    private func fit() {
+        // The hosting view's fittingSize is zero here; ask SwiftUI for the content height instead.
+        let fitted = (panel.contentViewController as? NSHostingController<TranslateView>)?
+            .sizeThatFits(in: NSSize(width: Self.width, height: .infinity)).height ?? 40
         let height = min(max(fitted, 1), Self.maxHeight)
         panel.setFrame(
             TextSelection.popupFrame(anchor: anchor, size: NSSize(width: Self.width, height: height)), display: true)

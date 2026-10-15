@@ -17,6 +17,7 @@ struct ActionPanelView: View {
             content
         }
         .frame(width: ActionPanelController.width)
+        .background(WindowDragArea())
         .glassSurface(cornerRadius: Self.corner)
         .liquidGlassEdge(cornerRadius: Self.corner)
         .clipShape(RoundedRectangle(cornerRadius: Self.corner, style: .continuous))
@@ -40,15 +41,18 @@ struct ActionPanelView: View {
 
     /// Result, error or progress text. A click on it closes the panel, as on the translate popup.
     private func text(_ string: String) -> some View {
-        ScrollView {
-            Text(string)
-                .font(.system(size: 15, weight: .medium))
-                .lineSpacing(7)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 14)
-                .padding(.leading, 18)
-                .padding(.trailing, 70)
-                .padding(.bottom, 16)
+        let body = Text(string)
+            .font(.system(size: 15, weight: .medium))
+            .lineSpacing(7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 14)
+            .padding(.leading, 18)
+            .padding(.trailing, 70)
+            .padding(.bottom, 16)
+        // Natural height when it fits; scrolls only past the controller's max height.
+        return ViewThatFits(in: .vertical) {
+            body
+            ScrollView { body }
         }
         .contentShape(Rectangle())
         .onTapGesture { ActionPanelController.shared.close() }
