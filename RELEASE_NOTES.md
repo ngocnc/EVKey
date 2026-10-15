@@ -1,6 +1,6 @@
 # Release notes
 
-## v4.0.0 (chưa phát hành)
+## v4.0.0
 
 ### Cài đặt
 
