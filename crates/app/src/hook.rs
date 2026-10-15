@@ -64,6 +64,9 @@ struct State {
     session: Session,
     /// Foreground window last seen; its app is looked up again only when it changes.
     fg: HWND,
+    /// Virtual keys whose key-down was swallowed. Their key-up is swallowed too: Lark inserts a space for the lone
+    /// key-up of Space, wherever the typing of a macro has got to by then.
+    swallowed: [bool; 256],
 }
 
 thread_local! {
@@ -72,7 +75,7 @@ thread_local! {
 
 impl State {
     fn new() -> Self {
-        State { session: Session::with_mode(settings::default_dir(), MODE.clone()), fg: HWND::default() }
+        State { session: Session::with_mode(settings::default_dir(), MODE.clone()), fg: HWND::default(), swallowed: [false; 256] }
     }
 
     /// Tells the session which app is frontmost (and so which remembered V/E mode applies). Runs on each key press;
@@ -117,6 +120,11 @@ impl State {
 
     /// Handles one key event. Returns whether to swallow it, plus input to inject.
     fn on_key(&mut self, vk: u16, down: bool) -> (bool, Vec<INPUT>) {
+        if !down && self.swallowed.get(vk as usize).copied().unwrap_or(false) {
+            self.swallowed[vk as usize] = false;
+            return (true, Vec::new());
+        }
+        let mut input = Vec::new();
         // Always, even in English mode: leaving an English app for a Vietnamese one must restore its remembered mode.
         if down {
             if vk == 0x1B {
@@ -142,7 +150,6 @@ impl State {
         if reaction.actions_requested {
             crate::actions::trigger(false);
         }
-        let mut input = Vec::new();
         if let Some(edit) = reaction.edit {
             if edit.prefix_empty_char {
                 input.extend(unicode(EMPTY_CHAR));
@@ -169,6 +176,9 @@ impl State {
         }
         if reaction.dummy_key {
             input.extend([key(0xFF, false), key(0xFF, true)]);
+        }
+        if let Some(s) = self.swallowed.get_mut(vk as usize).filter(|_| down) {
+            *s = reaction.swallow;
         }
         (reaction.swallow, input)
     }

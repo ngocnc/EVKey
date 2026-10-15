@@ -68,6 +68,9 @@ pub struct Config {
     pub upper_case_after_enter: i32,
     /// EVKey addition: after the host lost the caret context (focus change, click), the next letter starts a sentence.
     pub upper_case_on_reset: i32,
+    /// EVKey addition: a first letter capitalized by `upper_case_first_char` does not stop a macro from matching
+    /// (`ms` typed at a sentence start still expands, with its first letter capitalized). Off for parity with OpenKey.
+    pub macro_ignores_auto_caps: i32,
     pub allow_consonant_zfwj: i32,
     pub quick_start_consonant: i32,
     pub quick_end_consonant: i32,
@@ -100,6 +103,7 @@ impl Default for Config {
             upper_case_after_exclaim: 0,
             upper_case_after_enter: 1,
             upper_case_on_reset: 0,
+            macro_ignores_auto_caps: 0,
             allow_consonant_zfwj: 0,
             quick_start_consonant: 0,
             quick_end_consonant: 0,
@@ -183,6 +187,8 @@ pub struct Engine {
     is_caps: bool,
     space_count: i32,
     has_handled_macro: bool,
+    /// The word's first letter was capitalized by `upper_case_first_char`, not typed with Shift, so the macro lookup ignores it.
+    macro_first_auto_capped: bool,
     upper_case_status: u8,
     special_char: Vec<u32>,
     use_spell_checking_before: bool,
@@ -229,6 +235,7 @@ impl Engine {
             is_caps: false,
             space_count: 0,
             has_handled_macro: false,
+            macro_first_auto_capped: false,
             upper_case_status: 0,
             special_char: Vec::new(),
             use_spell_checking_before: false,
