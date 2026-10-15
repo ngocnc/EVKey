@@ -1,17 +1,11 @@
 import EVKeyKit
 import SwiftUI
 
-/// Liquid Glass look of the popup and Bảng điều khiển. `advanced` false shows the theme; true shows style, tint colour
-/// and tint strength. Applies live.
+/// Giao diện cục bộ. `advanced` false: chủ đề. `advanced` true: màu nhấn, chất liệu và độ trong suốt (chỉ khi Liquid Glass).
+/// Áp dụng ngay.
 struct SettingsGlassSection: View {
     var advanced = false
     @ObservedObject private var glass = GlassAppearance.shared
-    @ObservedObject private var state = AppState.shared
-    @Environment(\.colorScheme) private var scheme
-
-    private var tintBinding: Binding<String> {
-        Binding(get: { glass.tintHex(scheme) }, set: { glass.customTintHex = $0 })
-    }
 
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 10) {
@@ -22,18 +16,28 @@ struct SettingsGlassSection: View {
                     SettingsSegmented(
                         choices: GlassAppearance.Theme.allCases.map { ChoiceOption(value: $0, label: $0.label) },
                         selection: $glass.theme)
+                    Text(UIStrings.tr("hint.local-theme.\(glass.theme.rawValue)"))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(14)
                 .settingsBlock()
-            }
-
-            if advanced {
+            } else {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(UIStrings.tr("glass.style"))
+                    Text(UIStrings.tr("glass.accent"))
+                        .font(.system(size: 13, weight: .semibold))
+                    AccentSwatches()
+                }
+                .padding(14)
+                .settingsBlock()
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(UIStrings.tr("glass.material"))
                         .font(.system(size: 13, weight: .semibold))
                     SettingsSegmented(
-                        choices: GlassAppearance.Style.allCases.map { ChoiceOption(value: $0, label: $0.label) },
-                        selection: $glass.style)
+                        choices: SurfaceMaterial.allCases.map { ChoiceOption(value: $0, label: $0.label) },
+                        selection: $glass.material)
                     if #unavailable(macOS 26.0) {
                         Text(UIStrings.tr("glass.needsMacOS26"))
                             .font(.system(size: 11))
@@ -43,10 +47,10 @@ struct SettingsGlassSection: View {
                 .padding(14)
                 .settingsBlock()
 
-                SettingsCard {
-                    SettingsPercentRow(title: UIStrings.tr("glass.tintStrength"), value: $glass.tintStrength)
-                    SettingsDivider()
-                    SettingsColorRow(title: UIStrings.tr("glass.tint"), start: tintBinding, end: $glass.tintEndHex)
+                RevealGroup(isShown: glass.material == .glass) {
+                    SettingsCard {
+                        SettingsPercentRow(title: UIStrings.tr("glass.transparency"), value: $glass.transparency)
+                    }
                 }
             }
         }

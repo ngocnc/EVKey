@@ -38,7 +38,10 @@ final class BannerController {
     }
 
     private func refresh() {
-        guard AppState.shared.secureHolder != nil || DebugOptions.show == "banner" else {
+        // Chính EVKey giữ Secure Input (ô API key Gemini đang được gõ): banner chỉ che mất ô nhập, không có ích.
+        let holder = AppState.shared.secureHolder
+        let ownName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? ProcessInfo.processInfo.processName
+        guard (holder != nil && holder != ownName) || DebugOptions.show == "banner" else {
             fadeOut()
             return
         }

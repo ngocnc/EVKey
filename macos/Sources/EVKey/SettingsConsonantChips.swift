@@ -22,7 +22,7 @@ struct SettingsConsonantChips: View {
                     .frame(width: 80)
                     .onSubmit(add)
                     // A letter is added as soon as it is typed; the + button and Return stay as a way to retry.
-                    .onChange(of: draft) {
+                    .onChange(of: draft) { _ in
                         if draft.isEmpty { error = nil } else { add() }
                     }
                 Button(action: add) {
@@ -32,6 +32,7 @@ struct SettingsConsonantChips: View {
                         .frame(width: 24, height: 24)
                         .background(Color.blue, in: Circle())
                 }
+                    .pointerCursor()
                 .buttonStyle(.plain)
             }
             if let error {
@@ -57,6 +58,7 @@ struct SettingsConsonantChips: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }
+                .pointerCursor()
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 10)

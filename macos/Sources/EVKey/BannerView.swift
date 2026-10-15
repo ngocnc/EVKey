@@ -1,52 +1,55 @@
 import EVKeyKit
 import SwiftUI
 
-/// The Secure Input banner. The settings preview renders this same view with the live appearance.
+/// Banner Secure Input: thẻ glass bo 16, ô khoá nền `brand-fill` (không viền), tiêu đề và tên ứng dụng đang giữ.
+/// Độ mờ/độ trong theo `banner_opacity`/`banner_blur`; màu theo token, không còn tuỳ chỉnh màu riêng.
 struct BannerView: View {
     let settings: EVSettings
     let appName: String
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        let border = ColorHex.style(settings.bannerBorder, settings.bannerBorderEnd)
-        let text = ColorHex.style(settings.bannerText, settings.bannerTextEnd)
+        let tokens = Tokens(scheme)
         HStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(border)
+            BrandFill()
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 34, height: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(UIStrings.tr("banner.title"))
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 13.5, weight: .semibold))
+                    .foregroundStyle(tokens.fg)
                 Text(UIStrings.tr("banner.message", appName))
-                    .font(.system(size: 12))
-                    .opacity(0.75)
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(tokens.fgMuted)
             }
-            .foregroundStyle(text)
         }
-        .padding(.horizontal, 18)
+        .padding(.leading, 12)
+        .padding(.trailing, 18)
         .padding(.vertical, 12)
         .fixedSize()
         .background { surface }
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(border, lineWidth: 1))
+        .liquidGlassEdge(cornerRadius: 16)
     }
 
-    /// Liquid Glass tinted with the background colour on macOS 26+; tinted material with a blur layer before that.
+    /// Liquid Glass trên macOS 26+, material trước đó; lớp nền token phủ theo `banner_opacity`.
     @ViewBuilder private var surface: some View {
-        let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-        let tint = ColorHex.style(settings.bannerBg, settings.bannerBgEnd, opacity: Double(settings.bannerOpacity) / 100)
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+        let fill = Tokens(scheme).surface.opacity(Double(settings.bannerOpacity) / 100)
         if #available(macOS 26.0, *) {
-            // Glass itself has no blur setting, so the clear style provides the edge and refraction and a material
-            // layer scaled by `bannerBlur` provides the adjustable blur.
             ZStack {
                 Color.clear.glassEffect(.clear, in: shape)
                 shape.fill(.ultraThinMaterial).opacity(Double(settings.bannerBlur) / 100)
-                shape.fill(tint)
+                shape.fill(fill)
             }
         } else {
             ZStack {
                 shape.fill(.ultraThinMaterial).opacity(Double(settings.bannerBlur) / 100)
-                shape.fill(tint)
+                shape.fill(fill)
             }
         }
     }

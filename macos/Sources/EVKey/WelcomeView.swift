@@ -30,14 +30,16 @@ struct WelcomeView: View {
             card
         }
         .onAppear { tryFocused = true }
+        // The try field has focus and eats Esc before the Skip button's cancel shortcut sees it.
+        .onExitCommand(perform: onClose)
     }
 
     private var card: some View {
         VStack(spacing: 6) {
-            LogoMark(letter: "V", size: 48)
+            LogoMark(letter: "V", size: 64)
             Text(UIStrings.misc("welcome.title"))
                 .font(.system(size: 22, weight: .bold))
-                .padding(.top, 6)
+                .padding(.top, 8)
             Text(UIStrings.misc("welcome.sub"))
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
@@ -45,9 +47,24 @@ struct WelcomeView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 10)
 
+            if !state.accessibilityTrusted {
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.orange)
+                    SettingsRowLabel(title: UIStrings.tr("typing.access.missing"), subtitle: UIStrings.tr("typing.access.missingDetail"))
+                    Spacer(minLength: 8)
+                    Button(UIStrings.tr("common.openSettings"), action: state.openAccessibilitySettings)
+                        .buttonStyle(PressButtonStyle(primary: true))
+                }
+                .padding(12)
+                .settingsBlock()
+                .padding(.bottom, 6)
+            }
+
             VStack(alignment: .leading, spacing: 16) {
                 step(1, title: UIStrings.misc("welcome.stepInput")) {
-                    SettingsSegmented(choices: Self.inputChoices, selection: state.binding(\.inputType))
+                    SettingsDropdown(choices: Self.inputChoices, selection: state.binding(\.inputType))
                 }
                 step(2, title: UIStrings.misc("welcome.stepToggle")) {
                     Text(hotkeyLine)
@@ -67,8 +84,10 @@ struct WelcomeView: View {
             HStack {
                 Spacer()
                 Button(UIStrings.misc("welcome.skip"), action: onClose)
+                    .buttonStyle(PressButtonStyle())
                     .keyboardShortcut(.cancelAction)
                 Button(UIStrings.misc("welcome.start"), action: onClose)
+                    .buttonStyle(PressButtonStyle(primary: true))
                     .keyboardShortcut(.defaultAction)
             }
             .padding(.top, 18)
@@ -78,6 +97,7 @@ struct WelcomeView: View {
         .padding(.bottom, 22)
         .frame(width: 500)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .liquidGlassEdge(cornerRadius: 20)
         .shadow(color: .black.opacity(0.3), radius: 24, y: 12)
     }
 
@@ -97,14 +117,10 @@ struct WelcomeView: View {
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(number)")
-                .font(.system(size: 13, weight: .bold))
+                .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(.white)
-                .frame(width: 28, height: 28)
-                .background(
-                    LinearGradient(
-                        colors: [Color.accentColor, Color.accentColor.opacity(0.7)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing),
-                    in: Circle())
+                .frame(width: 24, height: 24)
+                .background { BrandFill().clipShape(Circle()) }
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.system(size: 13, weight: .semibold))

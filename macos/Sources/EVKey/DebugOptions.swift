@@ -5,6 +5,7 @@ import Foundation
 enum DebugOptions {
     static let show: String? = ProcessInfo.processInfo.environment["EVKEY_DEBUG_SHOW"]
     static let bannerApp: String? = ProcessInfo.processInfo.environment["EVKEY_DEBUG_BANNER"]
+    static let tab: String? = ProcessInfo.processInfo.environment["EVKEY_DEBUG_TAB"]
 
     /// `--settings` or `EVKEY_DEBUG_SHOW=settings` opens Bảng điều khiển at launch.
     static var opensSettingsAtLaunch: Bool {

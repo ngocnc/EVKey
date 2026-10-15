@@ -5,12 +5,15 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var navigation: SettingsNavigation
     @ObservedObject private var state = AppState.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// True on the very first open; closing the welcome card records it in UserDefaults.
     @State private var showWelcome = !WelcomeView.seen
+    /// +1 when the last tab change moved down the sidebar, -1 when it moved up; the new page slides in from that side.
+    @State private var direction: CGFloat = 1
 
     var body: some View {
         HStack(spacing: 0) {
-            sidebar
+            SettingsSidebar(navigation: navigation, onSelect: select)
                 .frame(width: 200)
             Divider()
             VStack(alignment: .leading, spacing: 0) {
@@ -18,8 +21,7 @@ struct SettingsView: View {
                 ScrollView {
                     detail
                         .id(navigation.tab)
-                        // Only the new tab fades in; fading the old one out too would draw two heavy tabs at once.
-                        .transition(.asymmetric(insertion: .opacity, removal: .identity))
+                        .transition(pageTransition)
                         .padding(24)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -32,14 +34,12 @@ struct SettingsView: View {
                         Color.black
                     }
                 }
-                .animation(.easeOut(duration: 0.18), value: navigation.tab)
+                .motion(Motion.slide(), value: navigation.tab)
             }
             .animation(.easeInOut(duration: 0.25), value: state.accessibilityTrusted)
             .animation(.easeInOut(duration: 0.25), value: state.configError)
         }
         .frame(minWidth: 760, minHeight: 540)
-        // A thin material between the glass and the content keeps titles and captions legible over busy backgrounds.
-        .background(.thinMaterial)
         .glassBackdrop()
         .overlay(alignment: .topTrailing) {
             SettingsPinButton()
@@ -55,6 +55,23 @@ struct SettingsView: View {
         .noFocusRing()
     }
 
+    /// Đổi tab và ghi nhớ hướng để trang mới trượt từ phía mục vừa bấm.
+    private func select(_ tab: SettingsTab) {
+        guard tab != navigation.tab else { return }
+        let tabs = SettingsTab.allCases
+        let from = tabs.firstIndex(of: navigation.tab) ?? 0
+        let to = tabs.firstIndex(of: tab) ?? 0
+        direction = to > from ? 1 : -1
+        navigation.tab = tab
+    }
+
+    /// Trang mới trượt 28pt từ phía mục được bấm kèm mờ dần; trang cũ chỉ mờ đi để không chồng hai trang. Reduce Motion: không hiệu ứng.
+    private var pageTransition: AnyTransition {
+        reduceMotion
+            ? .identity
+            : .asymmetric(insertion: .offset(x: 28 * direction).combined(with: .opacity), removal: .opacity)
+    }
+
     private func closeWelcome() {
         WelcomeView.seen = true
         withAnimation(.easeOut(duration: 0.2)) { showWelcome = false }
@@ -64,49 +81,6 @@ struct SettingsView: View {
     /// notices strip already sits below it.
     private var titlebarFade: CGFloat {
         state.accessibilityTrusted && state.configError == nil ? 36 : 0
-    }
-
-    private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 10) {
-                LogoMark(letter: state.isEnglish ? "E" : "V", size: 34)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("EVKey").font(.system(size: 13, weight: .semibold))
-                    Text("v\(state.version)").font(.system(size: 11)).foregroundStyle(.secondary)
-                }
-            }
-            .padding(.top, 34)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
-
-            ForEach(SettingsTab.allCases) { tab in
-                Button {
-                    navigation.tab = tab
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: tab.systemImage).frame(width: 20)
-                        Text(tab.title)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
-                    .font(.system(size: 13))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                        .background(
-                            navigation.tab == tab ? Color.accentColor.opacity(0.18) : Color.clear,
-                            in: RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        )
-                        .contentShape(Rectangle())
-                        .animation(.easeInOut(duration: 0.2), value: navigation.tab)
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 8)
-            }
-            Spacer()
-        }
-        .padding(.bottom, 12)
-        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     @ViewBuilder
@@ -128,14 +102,11 @@ struct SettingsView: View {
     private var detail: some View {
         switch navigation.tab {
         case .typing: SettingsTypingTab()
-        case .keys: SettingsKeysTab()
-        case .smart: SettingsSmartTab()
         case .macro: SettingsMacroTab()
+        case .keys: SettingsKeysTab()
         case .apps: SettingsAppsTab()
-        case .appearance: SettingsAppearanceTab()
         case .system: SettingsSystemTab()
         case .translate: SettingsTranslateTab()
-        case .info: SettingsInfoTab()
         }
     }
 }
@@ -155,6 +126,7 @@ private struct SettingsNotice: View {
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 8)
             Button(buttonTitle, action: action)
+                .pointerCursor()
         }
         .padding(12)
         .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))

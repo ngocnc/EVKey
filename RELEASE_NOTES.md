@@ -1,5 +1,25 @@
 # Release notes
 
+## v4.0.0
+
+### Cài đặt
+
+- Bỏ cài qua winget và Homebrew. Cài bằng file tải từ GitHub Releases: `EVKey-Setup-<version>.exe` (Windows) hoặc `EVKey-<version>-universal.dmg` (macOS). Ai đã cài qua winget/Homebrew thì vẫn dùng được; bản mới cài đè bằng file .exe/.dmg, hoặc cập nhật trong app.
+
+### Sửa lỗi & cải thiện (macOS)
+
+- Bảng hành động không còn đơ vài giây khi chạy Dịch / Thêm dấu / Sửa / Viết lại: key Gemini được đọc từ Keychain ngoài luồng giao diện. Trước đây, khi macOS hỏi quyền Keychain (sau mỗi lần cập nhật), cả bảng và phím tắt đứng chờ tới khi trả lời hộp thoại. Nên chọn **Luôn cho phép** để không bị hỏi lại.
+- Bảng hành động hiện ngay khi bấm phím tắt, không chờ copy xong đoạn bôi đen.
+- Bảng không còn nháy hoặc nhảy kích thước khi mở và khi chuyển từ menu sang kết quả; không còn nhảy sang phía bên kia con trỏ.
+- Kéo bảng đi chỗ khác bằng tiêu đề, phần kết quả hoặc viền. Bấm (không kéo) vào kết quả để đóng. Sửa lỗi bảng có lúc dính theo con trỏ sau khi bấm.
+- Bấm nhiều lần không còn làm hỏng bảng: bấm vào "Đang …" không đóng bảng, bấm đúp vào một mục không đóng luôn kết quả, đóng bảng giữa chừng thì phím tắt dùng lại được ngay.
+- Mở được bảng hành động trong Lark (và các app Chromium giấu ô nhập khỏi Accessibility): khi không xác định được ô nhập, EVKey vẫn copy đoạn bôi đen và mở bảng nếu có chữ.
+
+### Chưa kiểm chứng
+
+- Bôi đen chữ trong ô chat Lark rồi mở bảng hành động (mới thử trường hợp không bôi đen).
+- Bản Windows không thay đổi.
+
 ## v3.1.1
 
 ### Sửa lỗi & cải thiện

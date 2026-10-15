@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The extra layers of the Windows action panel's liquid glass, drawn over `glassSurface`: a specular sheen from the
-/// top-left and a bright inner rim that fades towards the bottom edge.
+/// Lớp thêm của Liquid Glass: vệt sáng chéo từ góc trên trái (vẽ DƯỚI nội dung, để không phủ trắng lên chữ) và viền
+/// sáng mảnh nhạt dần về phía dưới (vẽ trên).
 private struct LiquidGlassEdge: ViewModifier {
     let cornerRadius: CGFloat
     @Environment(\.colorScheme) private var scheme
@@ -12,7 +12,7 @@ private struct LiquidGlassEdge: ViewModifier {
         let sheen = dark ? [0.16, 0.03, 0.0, 0.05] : [0.55, 0.08, 0.0, 0.12]
         let rim = dark ? [0.28, 0.10] : [0.85, 0.40]
         content
-            .overlay {
+            .background {
                 shape
                     .fill(LinearGradient(
                         stops: [

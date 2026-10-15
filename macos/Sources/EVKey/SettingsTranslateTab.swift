@@ -19,6 +19,12 @@ struct SettingsTranslateTab: View {
         ]
     }
 
+    private let actionHints: [TranslateAction: String] = [
+        .show: "hint.translate_action.show",
+        .copy: "hint.translate_action.copy",
+        .replace: "hint.translate_action.replace",
+    ]
+
     private let providerChoices: [ChoiceOption<TranslateProvider>] = [
         ChoiceOption(value: .google, label: "Google Translate"),
         ChoiceOption(value: .gemini, label: "Gemini"),
@@ -29,17 +35,30 @@ struct SettingsTranslateTab: View {
             SettingsGroup {
                 SettingsHotkeyRow(
                     id: "translate", title: UIStrings.tr("translate.hotkey"), subtitle: UIStrings.tr("translate.hotkey.detail"),
-                    chord: state.binding(\.translateHotkey), recorder: $recorder)
+                    chord: state.binding(\.translateHotkey), recorder: $recorder,
+                    others: [state.settings.actionHotkey, state.settings.toggleHotkey],
+                    conflictNames: [
+                        state.settings.actionHotkey: UIStrings.tr("actions.hotkey"),
+                        state.settings.toggleHotkey: UIStrings.tr("keys.toggle"),
+                    ])
                 SettingsHotkeyRow(
                     id: "actions", title: UIStrings.tr("actions.hotkey"), subtitle: UIStrings.tr("actions.hotkey.detail"),
-                    chord: state.binding(\.actionHotkey), recorder: $recorder)
+                    chord: state.binding(\.actionHotkey), recorder: $recorder,
+                    others: [state.settings.translateHotkey, state.settings.toggleHotkey],
+                    conflictNames: [
+                        state.settings.translateHotkey: UIStrings.tr("translate.hotkey"),
+                        state.settings.toggleHotkey: UIStrings.tr("keys.toggle"),
+                    ])
                 SettingsChoiceRow(
                     title: UIStrings.tr("translate.action"), subtitle: UIStrings.tr("translate.action.detail"),
-                    choices: actionChoices, selection: state.binding(\.translateAction))
-                displayTimeRow
-                SettingsChoiceRow(
+                    choices: actionChoices, selection: state.binding(\.translateAction), hints: actionHints)
+                SettingsMenuRow(
                     title: UIStrings.tr("translate.service"), subtitle: UIStrings.tr("translate.service.detail"),
                     choices: providerChoices, selection: state.binding(\.translateProvider))
+            }
+
+            SettingsAdvanced(pane: "translate") {
+                SettingsGroup { displayTimeRow }
             }
 
             SettingsHeading(UIStrings.tr("gemini.heading"))
@@ -68,14 +87,9 @@ struct SettingsTranslateTab: View {
                 .onChange(of: timeFocused) { focused in
                     if !focused { commitDisplayTime() }
                 }
-            Picker("", selection: unitBinding) {
-                ForEach(TranslateDisplayTime.DisplayUnit.allCases, id: \.self) { unit in
-                    Text(unitLabel(unit)).tag(unit)
-                }
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .fixedSize()
+            SettingsDropdown(
+                choices: TranslateDisplayTime.DisplayUnit.allCases.map { ChoiceOption(value: $0, label: unitLabel($0)) },
+                selection: unitBinding)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

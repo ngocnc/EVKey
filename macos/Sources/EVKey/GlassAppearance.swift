@@ -8,12 +8,6 @@ import SwiftUI
 final class GlassAppearance: ObservableObject {
     static let shared = GlassAppearance()
 
-    enum Style: String, CaseIterable, Identifiable {
-        case regular, clear
-        var id: String { rawValue }
-        var label: String { UIStrings.tr(self == .regular ? "glass.style.regular" : "glass.style.clear") }
-    }
-
     /// Colour theme of every EVKey window: follow macOS, or force light or dark.
     enum Theme: String, CaseIterable, Identifiable {
         case system, light, dark
@@ -35,46 +29,36 @@ final class GlassAppearance: ObservableObject {
         }
     }
 
-    /// Untinted glass lets whatever is behind the window show through; the default tint is dark in dark mode and white in
-    /// light mode, so the window never turns muddy grey in the light theme.
-    static func defaultTint(_ scheme: ColorScheme) -> String { scheme == .dark ? "#000000" : "#ffffff" }
-    /// A light dark tint by default: untinted glass lets whatever is behind the window show through and hurts legibility.
-    static let defaultStrength = 30
-
     @Published var theme: Theme {
         didSet {
             defaults.set(theme.rawValue, forKey: "glass.theme")
             NSApp.appearance = theme.appearance
         }
     }
-    @Published var style: Style { didSet { defaults.set(style.rawValue, forKey: "glass.style") } }
-    /// "#rrggbb" tint the user picked; nil follows the theme (see `defaultTint`).
-    @Published var customTintHex: String? { didSet { defaults.set(customTintHex, forKey: "glass.tint") } }
-    /// "#rrggbb" end colour of a gradient tint; empty keeps the tint a single colour.
-    @Published var tintEndHex: String { didSet { defaults.set(tintEndHex, forKey: "glass.tintEnd") } }
-    /// 0-100: how strongly the tint covers the glass; 0 leaves the glass untinted.
-    @Published var tintStrength: Int { didSet { defaults.set(tintStrength, forKey: "glass.strength") } }
+    /// Màu nhấn của cả ứng dụng (gradient thương hiệu).
+    @Published var accent: Accent { didSet { defaults.set(accent.rawValue, forKey: "glass.accent") } }
+    /// Thẻ, nút và thanh chọn: đặc hoặc Liquid Glass.
+    @Published var material: SurfaceMaterial { didSet { defaults.set(material.rawValue, forKey: "glass.material") } }
+    /// 0-100: độ trong suốt của kính (chỉ có tác dụng khi `material == .glass`).
+    @Published var transparency: Int { didSet { defaults.set(transparency, forKey: "glass.transparency") } }
+
+    static let defaultTransparency = 60
 
     private let defaults = UserDefaults.standard
 
     private init() {
         theme = Theme(rawValue: defaults.string(forKey: "glass.theme") ?? "") ?? .system
-        style = Style(rawValue: defaults.string(forKey: "glass.style") ?? "") ?? .regular
-        customTintHex = defaults.string(forKey: "glass.tint")
-        tintEndHex = defaults.string(forKey: "glass.tintEnd") ?? ""
-        tintStrength = defaults.object(forKey: "glass.strength") as? Int ?? Self.defaultStrength
+        accent = Accent(rawValue: defaults.string(forKey: "glass.accent") ?? "") ?? .ocean
+        material = SurfaceMaterial(rawValue: defaults.string(forKey: "glass.material") ?? "") ?? .glass
+        transparency = defaults.object(forKey: "glass.transparency") as? Int ?? Self.defaultTransparency
     }
 
-    func tintHex(_ scheme: ColorScheme) -> String { customTintHex ?? Self.defaultTint(scheme) }
-
-    func tint(_ scheme: ColorScheme) -> Color? {
-        tintStrength > 0 && tintEndHex.isEmpty ? ColorHex.color(tintHex(scheme)).opacity(Double(tintStrength) / 100) : nil
-    }
-
-    /// The tint as a gradient laid over the glass (Glass.tint takes a single colour only); nil unless a gradient is on.
-    func gradientTint(_ scheme: ColorScheme) -> AnyShapeStyle? {
-        tintStrength > 0 && !tintEndHex.isEmpty
-            ? ColorHex.style(tintHex(scheme), tintEndHex, opacity: Double(tintStrength) / 100) : nil
+    /// Độ đậm lớp phủ nền kính: càng trong suốt càng nhẹ. Kính sáng không có cạnh tối nên cần lớp trắng đậm hơn,
+    /// nếu không cửa sổ thành màu xám đục.
+    func tintOpacity(_ scheme: ColorScheme) -> Double {
+        scheme == .dark
+            ? (1 - Double(transparency) / 100) * 0.6 + 0.05
+            : (1 - Double(transparency) / 100) * 0.55 + 0.35
     }
 
     /// Applies the saved theme; call once at launch (the setter only runs on changes).
@@ -82,10 +66,9 @@ final class GlassAppearance: ObservableObject {
 
     func reset() {
         theme = .system
-        style = .regular
-        customTintHex = nil
-        tintEndHex = ""
-        tintStrength = Self.defaultStrength
+        accent = .ocean
+        material = .glass
+        transparency = Self.defaultTransparency
     }
 }
 
@@ -96,29 +79,33 @@ private struct GlassSurface<S: Shape>: ViewModifier {
 
     init(shape: S) { self.shape = shape }
 
-    @ViewBuilder private var gradientLayer: some View {
-        if let gradient = appearance.gradientTint(scheme) {
-            shape.fill(gradient).allowsHitTesting(false)
-        }
-    }
-
     @ViewBuilder func body(content: Content) -> some View {
-        if #available(macOS 26.0, *) {
-            let glass: Glass = appearance.style == .clear ? .clear : .regular
-            content
-                .glassEffect(glass.tint(appearance.tint(scheme)), in: shape)
-                .overlay { gradientLayer }
+        let tint = (scheme == .dark ? Color.black : Color.white).opacity(appearance.tintOpacity(scheme))
+        if appearance.material == .plain {
+            content.background(Color(nsColor: .windowBackgroundColor), in: shape)
+        } else if #available(macOS 26.0, *) {
+            content.glassEffect(.regular.tint(tint), in: shape).overlay { lightSheen }
         } else {
             content
                 .background(.ultraThinMaterial, in: shape)
-                .background(appearance.tint(scheme) ?? .clear, in: shape)
-                .overlay { gradientLayer }
+                .background(tint, in: shape)
+                .overlay { lightSheen }
+        }
+    }
+
+    /// Vệt sáng chéo từ góc trên trái cho kính sáng, thay cho cạnh tối mà kính tối có sẵn.
+    @ViewBuilder private var lightSheen: some View {
+        if scheme == .light {
+            shape.fill(LinearGradient(
+                colors: [.white.opacity(0.5), .white.opacity(0.05), .white.opacity(0.22)],
+                startPoint: .topLeading, endPoint: .bottomTrailing))
+                .allowsHitTesting(false)
         }
     }
 }
 
 extension View {
-    /// Liquid Glass on macOS 26+ (style and tint from `GlassAppearance`), ultra-thin material on macOS 13–25.
+    /// Liquid Glass on macOS 26+ (material and transparency from `GlassAppearance`), ultra-thin material on macOS 13–25.
     func glassSurface(cornerRadius: CGFloat) -> some View {
         modifier(GlassSurface(shape: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)))
     }

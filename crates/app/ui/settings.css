@@ -1,0 +1,163 @@
+/* Cửa sổ Cài đặt (Windows). Token và control dùng chung nằm ở theme.css; file này chỉ có bố cục và phần riêng của Settings.
+   Spec: design-system/evkey/MASTER.md, mockup: design-system/evkey/mockup/index.html (stage Settings). */
+
+/* ================= Khung: sidebar + nội dung ================= */
+.shell { display: grid; grid-template-columns: 216px 1fr; height: 100vh; }
+.side { display: flex; flex-direction: column; padding: 14px 10px 12px; border-right: 1px solid var(--separator); min-height: 0; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; font-size: 15px; font-weight: 700; }
+.tabs { position: relative; display: grid; gap: 2px; }
+.tab { all: unset; position: relative; z-index: 3; box-sizing: border-box; display: flex; align-items: center; width: 100%; min-height: 38px; padding: 0 14px; border-radius: 10px; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: transform 260ms var(--bounce), background 150ms ease, color 200ms ease; }
+.tab:not(.active):hover { background: var(--hover); }
+.tab.active { color: #fff; font-weight: 600; text-shadow: 0 1px 1px rgba(0, 0, 0, .2); }
+.tab:focus-visible { outline: 2px solid var(--ring); }
+/* Mục đang chọn: viên gradient có quầng sáng, settings.js trượt nó dọc theo mục */
+.nav-pill { position: absolute; left: 0; right: 0; top: 0; height: 34px; border-radius: 9px; background: var(--brand-fill);
+  box-shadow: 0 4px 14px var(--brand-shadow), inset 0 1px 0 rgba(255, 255, 255, .35); transition: transform 340ms var(--spring), height 340ms var(--spring); }
+.foot { margin-top: auto; display: grid; justify-items: start; gap: 6px; padding: 10px 8px 0; border-top: 1px solid var(--separator); }
+.foot .ver { font-size: 12px; color: var(--fg-muted); }
+.link { all: unset; font-size: 11.5px; color: var(--fg-muted); cursor: pointer; transition: color 150ms; }
+.link:hover { color: var(--fg); }
+.link:focus-visible { outline: 2px solid var(--ring); border-radius: 4px; }
+.link.loading::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 6px; vertical-align: -1px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+
+.content { overflow-x: hidden; overflow-y: auto; padding: 14px 24px 36px; }
+.content h1 { font-size: 20px; font-weight: 600; margin: 0 0 16px; }
+.note { color: var(--fg-muted); font-size: 11.5px; margin: -6px 14px 14px; }
+/* Lúc đang chạy animation chiều cao, bỏ backdrop-filter của thẻ kính để không repaint mờ từng khung hình (giật trên GPU tích hợp) */
+.content.animating :is(.card, .hero, .btn, .chip, .seg, .hk) { backdrop-filter: none !important; }
+
+/* ================= Thẻ, hàng, tuỳ chọn phụ thuộc ================= */
+.group { margin-bottom: 20px; }
+.h2 { font-size: 11px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: var(--fg-muted); margin: 0 0 6px 14px; }
+.card.pad { padding: 14px; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 36px; padding: 9px 14px; }
+.row + .row, .dep + .row, .row + .dep, .dep > .row { border-top: 1px solid var(--separator); }
+.dep:not(.flat) > .row { padding-left: 32px; }
+.row.stack { padding-bottom: 0; }
+.row.flush { padding: 0 0 10px; }
+label.row { cursor: pointer; }
+.grow { flex: 1; min-width: 0; }
+.row b { display: block; font-weight: 600; font-size: 13px; }
+.row .sub { display: block; margin-top: 2px; }
+.beta { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--brand-fill); color: #fff; font-size: 10.5px; font-weight: 600; }
+.card .row > .btn, .row > .inline { flex: none; }
+.inline { display: flex; align-items: center; gap: 12px; }
+.field-error { color: var(--danger); }
+.seg-hint { margin: 2px 0 0; color: var(--fg-muted); font-size: 11.5px; }
+/* Gợi ý của dropdown/segment nằm trong hàng thì xuống dòng riêng, không chen giữa nhãn và control */
+.row:has(> .seg-hint) { flex-wrap: wrap; }
+.row > .seg-hint { flex-basis: 100%; margin: 0; }
+.range-row { display: flex; align-items: center; gap: 12px; flex: none; }
+.range-row output { min-width: 40px; text-align: right; color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+.range { --val: var(--p, 50%); }
+.actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.path { display: block; padding: 8px 10px; border-radius: 8px; background: var(--control); word-break: break-all; }
+.card.pad .field { width: 100%; }
+textarea.field { min-height: 150px; resize: vertical; font-family: "Cascadia Mono", Consolas, monospace; }
+.key-row { display: flex; gap: 8px; }
+.key-row .field { flex: 1; min-width: 0; width: auto; }
+.time-field { display: flex; flex: none; align-items: center; gap: 8px; }
+.time-field .field { width: 76px; text-align: right; }
+.time-field .field:disabled { opacity: .4; }
+.chip-row { padding-left: 32px; }
+.chip-add { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.chip-add .field { width: 80px; font-family: ui-monospace, monospace; }
+label.check { display: inline-flex; align-items: center; gap: 6px; color: var(--fg-muted); cursor: pointer; white-space: nowrap; }
+.macro-row { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; margin-bottom: 8px; }
+.macro-row input { border: 1px solid var(--card-border); background: var(--control); border-radius: 8px; padding: 5px 10px; width: 100%; min-width: 0; }
+.macro-row input:focus { outline: 2px solid var(--ring); outline-offset: 1px; }
+.macro-row input.invalid { border-color: var(--danger); }
+.macro-row .ghost { border: 0; background: none; color: var(--fg-muted); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+.macro-row .ghost:hover { background: var(--hover); color: var(--fg); }
+
+/* ================= Hero (trang Gõ tiếng Việt) ================= */
+.hero { position: relative; overflow: hidden; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+  background: var(--card); border: 1px solid var(--card-border); }
+[data-material="glass"] .hero { background: var(--lg-card); border-color: transparent; backdrop-filter: blur(16px) saturate(180%); }
+/* Mesh 4 đốm màu: nhạt sau logo/chữ bên trái, đậm dần sang phải; trôi chậm 18s, dừng khi cửa sổ mất focus */
+.hero-glow { position: absolute; inset: -24px; pointer-events: none; filter: blur(22px) saturate(140%);
+  background:
+    radial-gradient(22% 70% at 6% 30%, color-mix(in srgb, var(--a) 40%, transparent), transparent 70%),
+    radial-gradient(26% 90% at 58% 110%, color-mix(in srgb, var(--m) 55%, transparent), transparent 70%),
+    radial-gradient(24% 95% at 74% 10%, color-mix(in srgb, var(--a) 70%, transparent), transparent 70%),
+    radial-gradient(30% 110% at 96% 75%, color-mix(in srgb, var(--c) 85%, transparent), transparent 70%);
+  animation: mesh 18s ease-in-out infinite alternate; }
+@keyframes mesh { 50% { transform: translateX(-3%) scale(1.04); } to { transform: translate(-1%, 4%) scale(1.02); } }
+[data-focus="off"] .hero-glow { animation-play-state: paused; }
+.hero > :not(.hero-glow) { position: relative; z-index: 3; }
+.hero .logo { width: 50px; height: 50px; border-radius: 14px; font-size: 25px; }
+.hero .mode { font-size: 17px; font-weight: 700; }
+.hero .meta { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.logo.lg { width: 60px; height: 60px; border-radius: 18px; font-size: 30px; }
+
+/* ================= Dropdown tuỳ biến (menu fixed để không bị cha cắt) ================= */
+.dd { position: relative; flex: none; }
+.dd-btn { display: flex; align-items: center; gap: 8px; min-width: 156px; padding: 5px 10px 5px 12px; min-height: 28px; border: 1px solid var(--card-border); border-radius: 8px;
+  background: var(--control); cursor: pointer; transition: background 150ms ease, transform 260ms var(--bounce); }
+.dd-btn:hover { background: var(--hover); }
+.dd-btn:active { transform: scale(.97); transition-duration: 90ms; }
+.dd-btn:focus-visible, .dd.open .dd-btn { outline: 2px solid var(--ring); outline-offset: 1px; }
+.dd-label { flex: 1; text-align: left; }
+.dd-btn svg { flex: none; width: 14px; height: 14px; fill: none; stroke: var(--fg-muted); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform 200ms var(--spring); }
+.dd.open .dd-btn svg { transform: rotate(180deg); }
+.dd-menu { position: fixed; z-index: 50; margin: 0; padding: 4px; list-style: none; border: 1px solid var(--card-border); border-radius: 10px;
+  background: color-mix(in srgb, Canvas 92%, transparent); backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18); animation: dd-in 140ms ease-out; }
+.dd-menu li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.dd-menu li:hover, .dd-menu li.focus { background: var(--hover); }
+.dd-menu li[aria-selected="true"] { font-weight: 600; }
+.dd-menu li[aria-selected="true"]::after { content: ""; width: 10px; height: 6px; flex: none; border-left: 2px solid var(--m); border-bottom: 2px solid var(--m); transform: translateY(-1px) rotate(-45deg); }
+@keyframes dd-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+
+/* ================= "Nâng cao" ================= */
+.adv > summary { cursor: pointer; color: var(--fg-muted); font-size: 12px; margin: 0 0 8px 14px; list-style: none; width: max-content; transition: color 150ms; }
+.adv > summary:hover { color: var(--fg); }
+.adv > summary::-webkit-details-marker { display: none; }
+.adv > summary::before { content: "›"; display: inline-block; margin-right: 6px; transition: transform 300ms var(--spring); }
+.adv[open] > summary::before { transform: rotate(90deg); }
+.adv > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 4px; }
+.adv-body { overflow: hidden; }
+
+/* ================= Ô phím tắt: viên glass dùng chung với theme.css (.hk) ================= */
+.rec-clear svg { display: block; }
+.hk .kbd, .hk kbd { pointer-events: none; }
+
+/* ================= Banner lỗi cấu hình, toast, ghim, thanh cuộn ================= */
+.err-banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; margin: 0 0 14px; border: 1px solid var(--danger); border-radius: 12px; color: var(--danger); background: var(--control); }
+.err-banner span { flex: 1; }
+#config-error { margin-right: 44px; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 20px); margin: 0; padding: 8px 16px; border-radius: 999px; background: color-mix(in srgb, Canvas 92%, transparent);
+  border: 1px solid var(--card-border); box-shadow: 0 6px 20px rgba(0, 0, 0, .15); opacity: 0; pointer-events: none; transition: opacity 200ms, transform 200ms var(--spring); z-index: 60; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.ok { color: var(--success); }
+.toast.err { color: var(--danger); }
+.pin { position: fixed; top: 10px; right: 14px; z-index: 10; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--fg); opacity: .65; cursor: pointer; transition: transform 260ms var(--bounce), background 150ms ease, opacity 150ms; }
+.pin:hover { background: var(--hover); opacity: 1; }
+.pin:active { transform: scale(.9); transition-duration: 90ms; }
+.pin svg { transition: transform 150ms; }
+.pin.active { color: var(--m); opacity: 1; }
+.pin.active svg { fill: currentColor; transform: rotate(45deg); }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--switch-off); border: 3px solid transparent; background-clip: padding-box; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); background-clip: padding-box; }
+
+/* ================= Welcome (mở lần đầu) ================= */
+.welcome { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: rgba(0, 0, 0, .28); animation: fade-in 200ms ease-out; }
+.welcome-card { display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(540px, 100%); max-height: calc(100vh - 48px); overflow: auto; padding: 28px 28px 22px;
+  border-radius: 8px; text-align: center; background: color-mix(in srgb, Canvas 94%, transparent); backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--card-border); box-shadow: 0 24px 64px rgba(0, 0, 0, .3); animation: pop-in 300ms var(--spring); }
+.welcome-card h1 { margin: 10px 0 0; }
+.welcome-sub { margin: 0 0 10px; max-width: 420px; color: var(--fg-muted); }
+.welcome-steps { display: flex; flex-direction: column; gap: 16px; width: 100%; margin: 6px 0 0; padding: 0; list-style: none; counter-reset: step; text-align: left; }
+.welcome-steps li { display: grid; grid-template-columns: 28px 1fr; gap: 8px 12px; align-items: center; counter-increment: step; }
+.welcome-steps li::before { content: counter(step); grid-row: span 2; align-self: start; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #fff; font-weight: 700; background: var(--brand-fill); }
+.welcome-steps li > :not(b) { grid-column: 2; }
+.welcome-line { color: var(--fg-muted); }
+#welcome-try { width: 100%; min-height: 58px; font-family: inherit; }
+.welcome .actions { width: 100%; margin-top: 18px; }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .welcome, .welcome-card, .dd-menu { animation: none; } }

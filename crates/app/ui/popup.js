@@ -1,12 +1,5 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
-// Theme chosen in the settings window (same origin, so same local storage); "system" follows Windows.
-const applyTheme = () => {
-  const t = localStorage.getItem("evkey-theme") ?? "system";
-  window.__TAURI__.window.getCurrentWindow().setTheme(t === "system" ? null : t).catch(console.error);
-};
-applyTheme();
-window.addEventListener("storage", (e) => e.key === "evkey-theme" && applyTheme());
 const $ = (id) => document.getElementById(id);
 const INPUTS = { telex: "Telex", vni: "VNI", simple_telex1: "Simple Telex 1", simple_telex2: "Simple Telex 2" };
 // Table labels are read per build, since the UI language can change while the popup lives.
@@ -28,12 +21,13 @@ function fit() {
   requestAnimationFrame(() => invoke("popup_resize", { height: $("panel").offsetHeight }).catch(console.error));
 }
 
+// Each choice is a menu row with a check mark; the check shows only on the selected value.
 function buildChoices(listId, options, command, arg) {
   const list = $(listId);
   for (const [value, label] of Object.entries(options)) {
-    const b = Object.assign(document.createElement("button"), { className: "choice" });
+    const b = Object.assign(document.createElement("button"), { className: "mi" });
     b.dataset.value = value;
-    b.append(label, Object.assign(document.createElement("span"), { className: "check", textContent: "✓" }));
+    b.append(Object.assign(document.createElement("span"), { className: "chk", textContent: "✓" }), label);
     b.onclick = () => act(command, { [arg]: value });
     list.append(b);
   }
@@ -61,6 +55,7 @@ async function refresh() {
     $("mode").checked = s.mode === "vietnamese";
     $("input-value").textContent = INPUTS[s.input_type];
     $("table-value").textContent = tables()[s.code_table];
+    $("popup-sub").textContent = `${INPUTS[s.input_type]} · ${tables()[s.code_table]}`;
     mark("input-list", s.input_type);
     mark("table-list", s.code_table);
     fit();
@@ -69,14 +64,13 @@ async function refresh() {
   }
 }
 
-for (const name of ["input", "table"]) {
-  $(name + "-head").onclick = () => {
-    const section = $(name + "-section");
-    section.classList.toggle("open");
-    $(name + "-list").hidden = !section.classList.contains("open");
-    fit();
-  };
-}
+// Only the code-table section collapses; the input method list is always visible.
+$("table-head").onclick = () => {
+  const section = $("table-section");
+  section.classList.toggle("open");
+  $("table-list").hidden = !section.classList.contains("open");
+  fit();
+};
 
 $("mode").onchange = () => act("popup_toggle_mode");
 $("macro").onclick = () => act("popup_open_settings", { tab: "macro" });

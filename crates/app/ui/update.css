@@ -1,10 +1,13 @@
-body.update { padding: 14px; }
-.update-card { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 18px; }
+/* Cửa sổ cập nhật (mockup stage 6). Token theo theme.css. */
+body.update { padding: 14px; font: 13px/1.4 var(--font); color: var(--fg); background: transparent; }
+.update-card { display: flex; flex-direction: column; gap: 10px; height: 100%; box-sizing: border-box; padding: 18px; border-radius: 8px; }
 .update-head { display: flex; align-items: center; gap: 12px; }
-.update-head b { display: block; font-size: 15px; }
-.update-head small { color: var(--muted); }
-.update-card h2 { margin: 4px 0 0; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-.update-notes { flex: 1; margin: 0; padding: 10px 12px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; font: inherit; border-radius: 12px; background: var(--field); border: 1px solid var(--divider); }
+.update-head b { display: block; font-size: 15px; font-weight: 600; }
+.update-head small { color: var(--fg-muted); }
+.update-card h2 { margin: 4px 0 0; font-size: 12px; color: var(--fg-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.update-notes { flex: 1; margin: 0; padding: 10px 12px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; font: inherit; border-radius: 10px; background: var(--card); border: 1px solid var(--card-border); }
 .update-card .note { margin: 0; }
-.note.err { color: var(--err); }
+.note.err { color: var(--danger); }
 .update-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.update-skip { margin-right: auto; }
+.update-actions .btn:active { transform: scale(.95); }

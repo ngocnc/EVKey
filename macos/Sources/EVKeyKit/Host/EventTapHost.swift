@@ -1,3 +1,4 @@
+import os
 import ApplicationServices
 import Carbon.HIToolbox
 import CoreGraphics
@@ -108,7 +109,7 @@ final class EventTapHost {
             core.mouseClick()
             return Unmanaged.passUnretained(event)
         case .keyDown, .keyUp, .flagsChanged:
-            if event.getIntegerValueField(.eventSourceUserData) == KeyInjector.marker {
+            if event.getIntegerValueField(.eventSourceUserData) == KeyInjector.marker || HotkeyRecording.isActive {
                 return Unmanaged.passUnretained(event)
             }
             return keyEvent(type: type, event: event)
@@ -166,4 +167,12 @@ private func eventTapCallback(
 ) -> Unmanaged<CGEvent>? {
     guard let refcon else { return Unmanaged.passUnretained(event) }
     return Unmanaged<EventTapHost>.fromOpaque(refcon).takeUnretainedValue().handle(type: type, event: event)
+}
+
+/// Ô ghi phím tắt trong Bảng điều khiển đang ghi: event tap cho mọi phím đi thẳng, để tổ hợp đã gán (ví dụ phím dịch)
+/// không bị nuốt mà tới được ô ghi, và gõ tiếng Việt không chen vào.
+public enum HotkeyRecording {
+    private static let flag = OSAllocatedUnfairLock(initialState: false)
+    public static var isActive: Bool { flag.withLock { $0 } }
+    public static func setActive(_ on: Bool) { flag.withLock { $0 = on } }
 }

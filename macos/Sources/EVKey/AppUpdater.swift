@@ -105,6 +105,9 @@ final class AppUpdater: ObservableObject {
         let fm = FileManager.default
         let work = fm.temporaryDirectory.appendingPathComponent("evkey-update-\(UUID().uuidString)")
         try fm.createDirectory(at: work, withIntermediateDirectories: true)
+        var staged = false
+        // Runs after the detach below (defers unwind in reverse); a successful stage is removed by the relaunch script.
+        defer { if !staged { try? fm.removeItem(at: work) } }
         let (file, response) = try await URLSession.shared.download(from: release.downloadURL)
         try ok(response)
         let dmg = work.appendingPathComponent("EVKey.dmg")
@@ -121,6 +124,7 @@ final class AppUpdater: ObservableObject {
         } catch {
             throw UpdateError.signature
         }
+        staged = true
         return newApp
     }
 
@@ -129,17 +133,23 @@ final class AppUpdater: ObservableObject {
     private static func relaunch(with newApp: URL) throws {
         let target = Bundle.main.bundleURL
         let parent = target.deletingLastPathComponent().path
-        guard FileManager.default.isWritableFile(atPath: parent) else { throw UpdateError.notWritable(parent) }
+        let work = newApp.deletingLastPathComponent().deletingLastPathComponent()
+        guard FileManager.default.isWritableFile(atPath: parent) else {
+            try? FileManager.default.removeItem(at: work)
+            throw UpdateError.notWritable(parent)
+        }
         // Copy beside the target first, so a failed copy leaves the current app in place.
         let script = """
         while kill -0 "$3" 2>/dev/null; do sleep 0.2; done
-        ditto "$1" "$2.new" && rm -rf "$2" && mv "$2.new" "$2" || exit 1
+        ditto "$1" "$2.new" && rm -rf "$2" && mv "$2.new" "$2"; status=$?
+        rm -rf "$4"
+        [ $status -eq 0 ] || exit 1
         xattr -dr com.apple.quarantine "$2" 2>/dev/null
         open "$2"
         """
         let shell = Process()
         shell.executableURL = URL(fileURLWithPath: "/bin/sh")
-        shell.arguments = ["-c", script, "evkey-update", newApp.path, target.path, String(ProcessInfo.processInfo.processIdentifier)]
+        shell.arguments = ["-c", script, "evkey-update", newApp.path, target.path, String(ProcessInfo.processInfo.processIdentifier), work.path]
         try shell.run()
     }
 

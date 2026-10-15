@@ -19,8 +19,12 @@ public extension AppState {
     }
 
     /// Runs a Gemini action with the saved key. Reads the Keychain here, so a locked item asks at the moment of use.
+    /// The read runs off the main thread: while macOS shows its Keychain access prompt (after every ad-hoc signed update)
+    /// the call blocks, and on the main thread that froze the panels and dropped hotkeys.
     func runGemini(_ action: GeminiAction, text: String) async throws -> String {
-        guard let key = GeminiKeychain.load() else { throw GeminiError(UIStrings.tr("gemini.error.noKey")) }
+        guard let key = await Task.detached(operation: { GeminiKeychain.load() }).value else {
+            throw GeminiError(UIStrings.tr("gemini.error.noKey"))
+        }
         return try await Gemini.run(action: action, text: text, key: key, userAgent: userAgent)
     }
 }

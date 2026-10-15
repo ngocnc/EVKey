@@ -133,14 +133,6 @@ function paintHint(seg, value) {
 const activeValue = (seg) => seg.querySelector("button.active")?.dataset.value;
 
 function setSeg(seg, value) {
-  // A hotkey written by hand in config.toml that is not one of the presets gets its own button, so saving never rewrites it.
-  if (seg.dataset.key === "toggle_hotkey") {
-    seg.querySelector(".extra")?.remove();
-    if (![...seg.children].some((b) => b.dataset.value === value)) {
-      seg.append(Object.assign(document.createElement("button"), { className: "extra", textContent: value === "none" ? t("common.off") : value }));
-      seg.lastChild.dataset.value = value;
-    }
-  }
   for (const b of seg.children) b.classList.toggle("active", b.dataset.value === value);
   paintHint(seg, value);
   placeThumb(seg);
@@ -148,30 +140,6 @@ function setSeg(seg, value) {
 
 
 
-// Secure Input banner look: the preview uses the same renderer as the overlay window.
-const BANNER_FIELDS = ["bn-opacity", "bn-blur", "bn-bg", "bn-border", "bn-text"];
-
-function renderBannerPreview() {
-  $("bn-opacity-value").textContent = $("bn-opacity").value + "%";
-  $("bn-blur-value").textContent = $("bn-blur").value + "%";
-  renderBanner($("bn-preview"), {
-    app: "Chrome",
-    opacity: Number($("bn-opacity").value),
-    blur: Number($("bn-blur").value),
-    bg: $("bn-bg").value,
-    border: $("bn-border").value,
-    text: $("bn-text").value,
-  });
-}
-
-function fillBanner(s) {
-  $("bn-opacity").value = s.banner_opacity;
-  $("bn-blur").value = s.banner_blur;
-  $("bn-bg").value = s.banner_bg;
-  $("bn-border").value = s.banner_border;
-  $("bn-text").value = s.banner_text;
-  renderBannerPreview();
-}
 function fill() {
   const s = state.settings;
   setUiLanguage(s.ui_language);
@@ -190,12 +158,11 @@ function fill() {
   $("autostart").disabled = state.admin;
   $("admin").checked = state.admin;
   $("config-dir").textContent = state.config_dir;
-  $("version").textContent = "v" + state.version;
-  $("about-version").textContent = "v" + state.version;
+  $("app-version").textContent = "v" + state.version;
   $("config-error").hidden = !state.config_error;
   $("config-error-text").textContent = state.config_error ?? "";
   $("excluded_apps").placeholder = "game.exe";
-  fillBanner(s);
+  paintHero();
   fillTime(s.translate_popup_ms);
   paintHotkey();
   paintWelcome();
@@ -208,7 +175,7 @@ function fill() {
 function applyLanguage(lang) {
   setUiLanguage(lang);
   applyI18n();
-  renderBannerPreview();
+  paintHero();
   for (const seg of document.querySelectorAll(".seg")) if (activeValue(seg)) paintHint(seg, activeValue(seg));
   for (const dd of DDS) setDropdown(dd, dd.value);
   renderCustomConsonants(state.settings.custom_consonants);
@@ -231,11 +198,6 @@ function readForm() {
   for (const dd of DDS) s[dd.dataset.key] = dd.value || s[dd.dataset.key];
   s.excluded_apps = lines($("excluded_apps").value);
   for (const id of WORD_LISTS) s[id] = $(id).value.split(/[\s,]+/).filter(Boolean);
-  s.banner_opacity = Number($("bn-opacity").value);
-  s.banner_blur = Number($("bn-blur").value);
-  s.banner_bg = $("bn-bg").value;
-  s.banner_border = $("bn-border").value;
-  s.banner_text = $("bn-text").value;
   s.translate_popup_ms = timeMs();
   return s;
 }
@@ -300,13 +262,33 @@ async function addLastApp() {
 
 let currentTab = 0;
 const tabs = [...document.querySelectorAll(".tab")];
+const navPill = document.querySelector(".nav-pill");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+// Thanh chọn trượt nằm dưới tab đang mở (transform + height; chuyển động do CSS .nav-pill).
+function placePill(index, instant = false) {
+  const b = tabs[index];
+  if (instant) navPill.style.transition = "none";
+  navPill.style.height = b.offsetHeight + "px";
+  navPill.style.transform = `translateY(${b.offsetTop}px)`;
+  if (instant) {
+    void navPill.offsetWidth;
+    navPill.style.transition = "";
+  }
+}
 function showTab(name) {
   const index = tabs.findIndex((t) => t.dataset.tab === name);
   if (index < 0 || index === currentTab) return;
+  // Trang mới trượt vào từ phía tab được bấm: tab phía sau từ phải, tab phía trước từ trái.
+  const dir = index > currentTab ? 1 : -1;
   tabs.forEach((t, i) => t.classList.toggle("active", i === index));
-  for (const p of document.querySelectorAll(".pane")) {
-    p.hidden = p.dataset.pane !== name;
-    p.classList.toggle("from-left", index < currentTab);
+  placePill(index);
+  const pane = document.querySelector(`.pane[data-pane="${name}"]`);
+  for (const p of document.querySelectorAll(".pane")) p.hidden = p !== pane;
+  if (!reduceMotion.matches) {
+    pane.animate([{ opacity: 0, transform: `translateX(${dir * 28}px)` }, { opacity: 1, transform: "none" }], {
+      duration: 300,
+      easing: "cubic-bezier(.32,.72,0,1)",
+    });
   }
   currentTab = index;
 }
@@ -314,71 +296,45 @@ for (const tab of tabs) tab.onclick = () => showTab(tab.dataset.tab);
 listen("settings-tab", (e) => showTab(e.payload));
 if (window.__evkeyTab) showTab(window.__evkeyTab);
 
-// Liquid glass look: look-only preferences in local storage (contract in glass.js); not saved to config.toml.
-const glassStrength = $("glass-strength");
-const glassTint = $("glass-tint");
-const glassTintEnd = $("glass-tint-end");
-const glassGradient = $("glass-gradient");
-const defaultTint = matchMedia("(prefers-color-scheme: dark)").matches ? "#000000" : "#ffffff";
-function syncGlassControls() {
-  glassStrength.value = glassGet("strength");
-  $("glass-strength-value").textContent = glassStrength.value + "%";
-  glassTint.value = glassGet("tint") || defaultTint;
-  glassTintEnd.value = glassGet("tint-end") || companionTint(glassTint.value);
-  glassGradient.checked = glassGet("tint-end") !== "";
-  $("glass-tint-end-wrap").hidden = !glassGradient.checked;
-  $("accent-color").value = glassGet("accent") || "#ff6b8a";
-  syncRanges();
-}
-syncGlassControls();
-$("accent-color").oninput = () => {
-  localStorage.setItem("evkey-glass-accent", $("accent-color").value);
-  applyGlassLook();
-};
-$("accent-default").onclick = () => {
-  localStorage.removeItem("evkey-glass-accent");
-  $("accent-color").value = "#ff6b8a";
-  applyGlassLook();
-};
-glassStrength.oninput = () => {
-  localStorage.setItem("evkey-glass-strength", glassStrength.value);
-  $("glass-strength-value").textContent = glassStrength.value + "%";
-  applyGlassLook();
-};
-glassTint.oninput = () => {
-  localStorage.setItem("evkey-glass-tint", glassTint.value);
-  applyGlassLook();
-};
-glassGradient.onchange = () => {
-  const on = glassGradient.checked;
-  glassTintEnd.value = companionTint(glassTint.value);
-  localStorage.setItem("evkey-glass-tint-end", on ? glassTintEnd.value : "");
-  $("glass-tint-end-wrap").hidden = !on;
-  applyGlassLook();
-};
-glassTintEnd.oninput = () => {
-  localStorage.setItem("evkey-glass-tint-end", glassTintEnd.value);
-  applyGlassLook();
-};
-$("gl-reset").onclick = async () => {
-  for (const k of Object.keys(localStorage)) if (k.startsWith("evkey-glass-")) localStorage.removeItem(k);
-  localStorage.removeItem("evkey-theme");
-  syncGlassControls();
-  for (const seg of localSegs) {
-    paintLocalSeg(seg, LOCAL_SEG_DEFAULTS[seg.dataset.local]);
-    placeThumb(seg);
+// Tùy chọn giao diện (glass.js giữ và áp lên <html>): sáng/tối, chất liệu, màu nhấn, độ trong suốt. Chỉ lưu trên máy này.
+const transparencyInput = $("glass-transparency");
+function paintSwatches() {
+  const box = $("accent-swatches");
+  if (!box.children.length) {
+    box.replaceChildren(
+      ...LOOK_ACCENTS.map((name) => {
+        const b = Object.assign(document.createElement("button"), { type: "button", className: "swatch", title: name });
+        b.dataset.accent = name;
+        b.setAttribute("aria-label", name);
+        b.onclick = () => {
+          lookSet("accent", name);
+          paintLook();
+        };
+        return b;
+      }),
+    );
   }
-  applyTheme("system");
-  applyGlassLook();
-  const d = await invoke("banner_defaults");
-  $("bn-opacity").value = d.opacity;
-  $("bn-blur").value = d.blur;
-  $("bn-bg").value = d.bg;
-  $("bn-border").value = d.border;
-  $("bn-text").value = d.text;
-  renderBannerPreview();
+  for (const b of box.children) {
+    const on = b.dataset.accent === lookGet("accent");
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", String(on));
+  }
+}
+function paintLook() {
+  for (const seg of localSegs) paintLocalSeg(seg, lookGet(seg.dataset.local));
+  paintSwatches();
+  transparencyInput.value = lookGet("transparency");
+  $("glass-transparency-value").textContent = transparencyInput.value + "%";
   syncRanges();
-  saveSettings();
+  updateVisibility();
+}
+transparencyInput.oninput = () => {
+  lookSet("transparency", transparencyInput.value);
+  $("glass-transparency-value").textContent = transparencyInput.value + "%";
+};
+$("gl-reset").onclick = () => {
+  lookReset();
+  paintLook();
 };
 for (const seg of SEGS) {
   seg.onclick = (e) => {
@@ -394,28 +350,18 @@ for (const seg of SEGS) {
     if (seg.dataset.key === "input_type") paintWelcome();
   };
 }
-// Look-only segmented controls (theme, glass style) persist in local storage; the popup reads the same keys.
-const LOCAL_SEG_DEFAULTS = { theme: "system", "glass-style": "regular" };
+// Tùy chọn giao diện dạng segment (sáng/tối, chất liệu): lưu qua glass.js, không vào config.toml.
 const localSegs = [...document.querySelectorAll(".seg[data-local]")];
-const localKey = (seg) => "evkey-" + seg.dataset.local;
 function paintLocalSeg(seg, value) {
   for (const b of seg.querySelectorAll("button")) b.classList.toggle("active", b.dataset.value === value);
   paintHint(seg, value);
 }
-// Colour theme of the settings and popup windows; "system" follows Windows.
-function applyTheme(theme) {
-  window.__TAURI__.window.getCurrentWindow().setTheme(theme === "system" ? null : theme).catch((e) => say(String(e), "err"));
-}
-for (const seg of localSegs) paintLocalSeg(seg, localStorage.getItem(localKey(seg)) ?? LOCAL_SEG_DEFAULTS[seg.dataset.local]);
-applyTheme(localStorage.getItem("evkey-theme") ?? "system");
 for (const seg of localSegs) {
   seg.onclick = (e) => {
     const b = e.target.closest("button");
     if (!b) return;
     paintLocalSeg(seg, b.dataset.value);
-    localStorage.setItem(localKey(seg), b.dataset.value);
-    if (seg.dataset.local === "theme") applyTheme(b.dataset.value);
-    else applyGlassLook();
+    lookSet(seg.dataset.local, b.dataset.value);
   };
 }
 for (const k of BOOLS) $(k).onchange = saveSettings;
@@ -457,26 +403,39 @@ $("admin").onchange = async () => {
 };
 $("open-folder").onclick = () => run(() => invoke("open_config_dir"), t("toast.open_folder_ok"));
 $("reset").onclick = resetConfig;
-for (const id of BANNER_FIELDS) {
-  $(id).oninput = () => renderBannerPreview();
-  $(id).onchange = saveSettings;
-}
 $("reset-broken").onclick = resetConfig;
 
-// Translate and action hotkeys: click a `.rec` button (`data-key` = settings field), then press the new combination (Esc cancels).
+// Ô phím tắt (`button.rec[data-key]`): bấm để ghi, rồi nhấn tổ hợp mới. Esc hủy; `.rec-clear` đặt về none.
+// Cú pháp cấu hình: phím bổ trợ theo thứ tự ctrl, alt, shift, win, rồi một phím ("alt+z").
+// Chỉ ô có data-modonly (phím bật/tắt) nhận tổ hợp chỉ gồm phím bổ trợ ("ctrl+shift").
 const HOTKEY_NAMES = { ctrl: "Ctrl", alt: "Alt", shift: "Shift", win: "Win", space: "Space" };
 const HOTKEY_BTNS = [...document.querySelectorAll("button.rec[data-key]")];
+const MODIFIER_KEYS = ["Control", "Shift", "Alt", "Meta"];
 let recordingHotkey = null;
+let heldMods = []; // phím bổ trợ đã giữ trong lượt ghi hiện tại
+let sawKey = false; // lượt ghi hiện tại đã có phím thường
+function clearBtnOf(btn) {
+  return document.querySelector(`.rec-clear[data-for="${btn.dataset.key}"]`);
+}
 function paintHotkey() {
   for (const btn of HOTKEY_BTNS) {
     const value = state?.settings[btn.dataset.key] ?? "none";
     btn.classList.toggle("recording", recordingHotkey === btn);
     btn.replaceChildren();
-    if (recordingHotkey === btn) btn.textContent = t("translate.hotkey.recording");
-    else if (value === "none") btn.textContent = t("translate.hotkey.unset");
+    if (recordingHotkey === btn) btn.textContent = t("keys.rec.prompt");
+    else if (value === "none") btn.textContent = t("keys.rec.unset");
     else for (const part of value.split("+")) btn.append(Object.assign(document.createElement("kbd"), { textContent: HOTKEY_NAMES[part] ?? part.toUpperCase() }));
-    btn.nextElementSibling.disabled = value === "none";
+    const clear = clearBtnOf(btn);
+    if (clear) clear.disabled = value === "none";
   }
+}
+// Thông báo lỗi nằm ngay dưới hàng phím tắt (`.rec-msg[data-for]`).
+function recMsg(btn, text = "") {
+  const el = document.querySelector(`.rec-msg[data-for="${btn.dataset.key}"]`);
+  if (el) el.textContent = text;
+}
+function rowName(btn) {
+  return btn.dataset.name ?? btn.closest(".row")?.querySelector("b")?.textContent ?? btn.dataset.key;
 }
 // Key name in the config grammar (letter, digit, f1-f12, space) for a keydown event, or null.
 function hotkeyKey(e) {
@@ -486,8 +445,16 @@ function hotkeyKey(e) {
   if ((m = e.code.match(/^F(\d+)$/)) && m[1] >= 1 && m[1] <= 12) return "f" + Number(m[1]);
   return e.code === "Space" ? "space" : null;
 }
+function modsOf(e) {
+  return [e.ctrlKey && "ctrl", e.altKey && "alt", e.shiftKey && "shift", e.metaKey && "win"].filter(Boolean);
+}
 async function setHotkey(btn, value) {
+  if (value !== "none") {
+    const other = HOTKEY_BTNS.find((b) => b !== btn && state.settings[b.dataset.key] === value);
+    if (other) return recMsg(btn, t("keys.rec.used", { name: rowName(other) }));
+  }
   recordingHotkey = null;
+  recMsg(btn);
   state.settings[btn.dataset.key] = value;
   await saveSettings();
   paintHotkey();
@@ -495,31 +462,51 @@ async function setHotkey(btn, value) {
 for (const btn of HOTKEY_BTNS) {
   btn.onclick = () => {
     recordingHotkey = btn;
+    heldMods = [];
+    sawKey = false;
+    recMsg(btn);
     paintHotkey();
   };
   btn.onblur = () => {
     recordingHotkey = null;
+    recMsg(btn);
     paintHotkey();
   };
   btn.onkeydown = (e) => {
     if (recordingHotkey !== btn) return;
     e.preventDefault();
-    if (["Control", "Shift", "Alt", "Meta"].includes(e.key)) return;
     if (e.key === "Escape") {
       recordingHotkey = null;
+      recMsg(btn);
       paintHotkey();
       return;
     }
+    if (MODIFIER_KEYS.includes(e.key)) {
+      const mods = modsOf(e);
+      if (mods.length === 1) {
+        heldMods = mods;
+        sawKey = false;
+      } else if (mods.length > heldMods.length) heldMods = mods;
+      return;
+    }
+    sawKey = true;
     const key = hotkeyKey(e);
-    if (!key) return say(t("translate.hotkey.bad_key"), "err");
-    const mods = [e.ctrlKey && "ctrl", e.altKey && "alt", e.shiftKey && "shift"].filter(Boolean);
-    if (!mods.length && !/^f\d+$/.test(key)) return say(t("translate.hotkey.need_modifier"), "err");
-    const value = [...mods, key].join("+");
-    const other = HOTKEY_BTNS.find((b) => b !== btn && state.settings[b.dataset.key] === value);
-    if (other) return say(t("hotkey.taken"), "err");
-    setHotkey(btn, value);
+    if (!key) return recMsg(btn, t("translate.hotkey.bad_key"));
+    const mods = modsOf(e);
+    if (!mods.length) return recMsg(btn, t("keys.rec.need_modifier"));
+    setHotkey(btn, [...mods, key].join("+"));
   };
-  btn.nextElementSibling.onclick = () => setHotkey(btn, "none");
+  btn.onkeyup = (e) => {
+    if (recordingHotkey !== btn || sawKey || !MODIFIER_KEYS.includes(e.key) || !btn.hasAttribute("data-modonly")) return;
+    if (heldMods.length < 2) return recMsg(btn, t("keys.rec.need_two_mods"));
+    setHotkey(btn, heldMods.join("+"));
+  };
+}
+for (const clear of document.querySelectorAll(".rec-clear[data-for]")) {
+  clear.onclick = () => {
+    const btn = HOTKEY_BTNS.find((b) => b.dataset.key === clear.dataset.for);
+    if (btn) setHotkey(btn, "none");
+  };
 }
 
 // Popup display time: a number plus a unit (ms, s, or "never" = 0, the popup stays until clicked).
@@ -671,13 +658,35 @@ load().then(() => {
   if (!localStorage.getItem("evkey-welcomed")) showWelcome();
 });
 
-// Advanced sections: closed by default, the open state is remembered per pane.
-for (const d of document.querySelectorAll("details.advanced")) {
+// Mục "Nâng cao": mở và đóng bằng hoạt ảnh chiều cao + độ mờ; trạng thái mở được nhớ theo từng trang.
+for (const d of document.querySelectorAll("details.adv")) {
+  const body = d.querySelector(".adv-body");
   const key = "evkey-adv-" + d.dataset.adv;
   d.open = localStorage.getItem(key) === "1";
-  d.ontoggle = () => {
-    localStorage.setItem(key, d.open ? "1" : "0");
-    updateVisibility();
+  d.querySelector(":scope > summary").onclick = (e) => {
+    e.preventDefault();
+    // Đang đóng dở thì `_closing` giữ mục mở tới hết hoạt ảnh; bấm lại sẽ mở ngay từ vị trí hiện tại.
+    const opening = !d.open || d._closing;
+    const from = d.open ? { h: body.offsetHeight, o: Number(getComputedStyle(body).opacity) } : { h: 0, o: 0 };
+    localStorage.setItem(key, opening ? "1" : "0");
+    d._closing = !opening;
+    if (opening) d.open = true;
+    if (reduceMotion.matches) {
+      stopAnim(body);
+      d.open = opening;
+      d._closing = false;
+      return;
+    }
+    animateBox(
+      body,
+      opening,
+      opening ? 320 : 240,
+      () => {
+        if (!opening) d.open = false;
+        d._closing = false;
+      },
+      from,
+    );
   };
 }
 
@@ -782,8 +791,9 @@ $("gemini-delete").onclick = async () => {
 };
 refreshGemini();
 
-// Items marked data-when ("key", "key=value" or "key!=value") only show while that option is chosen.
+// data-when: "key", "key=value", "key!=value" theo khóa cấu hình; "local:<tên>=value" đọc tùy chọn giao diện (glass.js).
 function currentValue(key) {
+  if (key.startsWith("local:")) return lookGet(key.slice(6));
   const control = document.querySelector(`.dd[data-key="${key}"]`);
   if (control) return control.value;
   const seg = document.querySelector(`.seg[data-key="${key}"]`);
@@ -791,31 +801,69 @@ function currentValue(key) {
   return $(key)?.checked;
 }
 
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
-// Shows or hides a data-when item; the first pass in updateVisibility sets it without animation.
-// Only opacity and transform are animated: animating height relayouts the glass group every frame, and its
-// backdrop blur is then redrawn every frame too, which stutters on integrated GPUs. The height changes at once.
-function animateWhen(el, show) {
+// `.content` mang class `animating` khi đang có hoạt ảnh; theme.css bỏ backdrop-filter lúc đó vì relayout kính
+// mỗi khung hình gây giật trên GPU tích hợp.
+const contentEl = document.querySelector(".content");
+const animRunning = new Set();
+function syncAnimating() {
+  contentEl.classList.toggle("animating", animRunning.size > 0);
+}
+function stopAnim(el) {
+  if (el._anim) animRunning.delete(el._anim);
   el._anim?.cancel();
-  el.hidden = !show;
-  if (!show || reduceMotion.matches) return;
-  el._anim = el.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 1, transform: "none" }], {
-    duration: 180,
-    easing: "ease-out",
+  el._anim = null;
+  el.style.height = "";
+  el.style.overflow = "";
+  syncAnimating();
+}
+// Animates height + opacity to shown/hidden, starting from `from` (default: the current frame) so an interrupted
+// animation reverses smoothly. onDone runs only when the animation finishes, never when it is interrupted.
+function animateBox(el, show, duration, onDone, from) {
+  const fromH = from?.h ?? el.offsetHeight;
+  const fromO = from?.o ?? Number(getComputedStyle(el).opacity);
+  stopAnim(el);
+  el.style.overflow = "hidden";
+  el.style.height = "auto";
+  const toH = show ? el.offsetHeight : 0;
+  const anim = el.animate([{ height: fromH + "px", opacity: fromO }, { height: toH + "px", opacity: show ? 1 : 0 }], {
+    duration,
+    easing: "cubic-bezier(.32,.72,0,1)",
   });
+  el._anim = anim;
+  animRunning.add(anim);
+  syncAnimating();
+  anim.onfinish = () => {
+    el._anim = null;
+    animRunning.delete(anim);
+    el.style.height = "";
+    el.style.overflow = "";
+    syncAnimating();
+    onDone?.();
+  };
+}
+// Hiện hoặc ẩn một mục data-when; lần đặt đầu tiên không có hoạt ảnh (xử lý trong updateVisibility).
+function setWhen(el, show) {
+  if (reduceMotion.matches) {
+    stopAnim(el);
+    el.hidden = !show;
+    return;
+  }
+  const wasHidden = el.hidden;
+  if (show) el.hidden = false;
+  animateBox(el, show, show ? 320 : 240, () => (el.hidden = !show), show && wasHidden ? { h: 0, o: 0 } : undefined);
 }
 
 function updateVisibility() {
   for (const el of document.querySelectorAll("[data-platform], [data-when]")) {
     let hide = false;
     if (el.dataset.when) {
-      const [, key, op, want] = el.dataset.when.match(/^(\w+)(?:(!?=)(.+))?$/);
+      const [, key, op, want] = el.dataset.when.match(/^((?:local:)?\w+)(?:(!?=)(.+))?$/);
       const value = currentValue(key);
       hide ||= op === "=" ? value !== want : op === "!=" ? value === want : !value;
     }
     const show = !hide;
     if (el.dataset.vis === undefined) el.hidden = hide;
-    else if (el.dataset.vis !== String(show)) animateWhen(el, show);
+    else if (el.dataset.vis !== String(show)) setWhen(el, show);
     el.dataset.vis = String(show);
   }
   for (const group of document.querySelectorAll(".group")) {
@@ -849,3 +897,38 @@ function syncRanges() {
 }
 document.addEventListener("input", syncRanges);
 syncRanges();
+
+// Hero (tab Gõ tiếng Việt): chế độ hiện tại, phím tắt bật/tắt, công tắc V/E. popup_state trả chế độ thực tế;
+// popup_toggle_mode đảo chế độ (cùng lệnh với popup khay hệ thống).
+function hotkeyText(value) {
+  return value === "none" ? t("keys.rec.unset") : value.split("+").map((p) => HOTKEY_NAMES[p] ?? p.toUpperCase()).join(" + ");
+}
+async function paintHero() {
+  const s = await invoke("popup_state").catch(() => null);
+  const vi = s?.mode === "vietnamese";
+  const input = document.querySelector('.dd[data-key="input_type"] .dd-btn')?.firstElementChild?.textContent ?? "";
+  $("hero-mode").textContent = `${t(vi ? "hero.vi" : "hero.en")} · ${input}`;
+  $("hero-toggle").checked = vi;
+  $("hero-hotkey").textContent = hotkeyText(state?.settings.toggle_hotkey ?? "none");
+}
+$("hero-toggle").onchange = async () => {
+  try {
+    await invoke("popup_toggle_mode");
+  } catch (e) {
+    say(String(e), "err");
+  }
+  paintHero();
+};
+// Nền mesh của hero tạm dừng khi cửa sổ mất tiêu điểm (theme.css đọc <html data-focus>).
+const setFocusAttr = (on) => document.documentElement.toggleAttribute("data-focus", on && !document.hidden);
+addEventListener("focus", () => {
+  setFocusAttr(true);
+  paintHero();
+});
+addEventListener("blur", () => setFocusAttr(false));
+document.addEventListener("visibilitychange", () => setFocusAttr(document.hasFocus()));
+setFocusAttr(document.hasFocus());
+
+paintLook();
+placePill(currentTab, true);
+new ResizeObserver(() => placePill(currentTab, true)).observe(navPill.parentElement);

@@ -1,8 +1,8 @@
 import EVKeyKit
 import SwiftUI
 
-/// "Gõ tắt": editable abbreviation table. Typing in the last row appends an empty one (no "add row" button), deleting a
-/// stored row writes the file at once, and Save needs both fields of every row that has any text. Rows are validated and
+/// "Gõ tắt": editable abbreviation table. "Thêm gõ tắt" adds an empty row after the last filled one, deleting a stored
+/// row writes the file at once, and Save needs both fields of every row that has any text. Rows are validated and
 /// saved by `AppState.saveMacros`.
 struct SettingsMacroTab: View {
     @ObservedObject private var state = AppState.shared
@@ -27,6 +27,12 @@ struct SettingsMacroTab: View {
             title: UIStrings.tr("tab.macro"),
             note: UIStrings.tr("macro.note")
         ) {
+            // Không có cờ bật/tắt gõ tắt trong cấu hình (engine tự bật khi có macro), nên danh sách luôn hiện.
+            SettingsCard {
+                SettingsToggleLine(
+                    title: UIStrings.tr("smart.macroCase"), subtitle: UIStrings.tr("smart.macroCase.detail"),
+                    isOn: state.binding(\.autoCapsMacro))
+            }
             SettingsCard {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach($rows) { $row in
@@ -39,12 +45,16 @@ struct SettingsMacroTab: View {
                                 .textFieldStyle(.roundedBorder)
                                 .overlay(invalidOutline(row, empty: isBlank(row.value)))
                             Button(UIStrings.tr("macro.delete")) { delete(row) }
+                                .buttonStyle(PressButtonStyle())
                         }
                         .transition(.opacity)
                     }
                     HStack {
+                        Button(UIStrings.tr("macro.add"), action: addRow)
+                        .buttonStyle(PressButtonStyle(primary: true))
                         Spacer()
                         Button(UIStrings.tr("macro.save"), action: save)
+                            .buttonStyle(PressButtonStyle())
                             .keyboardShortcut(.defaultAction)
                     }
                     .padding(.top, 4)
@@ -56,15 +66,15 @@ struct SettingsMacroTab: View {
                 }
                 .padding(14)
             }
-            SettingsAdvanced(pane: "macro") {
-                SettingsMacroImportRow(onImported: reload)
-            }
+            SettingsMacroImportRow(onImported: reload)
         }
         .onAppear(perform: reload)
-        // Typing in the last row appends a fresh empty one.
-        .onChange(of: rows.last.map { !isBlank($0.key) || !isBlank($0.value) } ?? true) {
-            withAnimation(.easeInOut(duration: 0.2)) { rows.append(MacroRow(key: "", value: "")) }
-        }
+    }
+
+    /// Adds an empty row unless the last row is still empty, so the button never stacks blank rows.
+    private func addRow() {
+        guard rows.last.map({ !isBlank($0.key) || !isBlank($0.value) }) ?? true else { return }
+        withAnimation(.easeInOut(duration: 0.2)) { rows.append(MacroRow(key: "", value: "")) }
     }
 
     @ViewBuilder

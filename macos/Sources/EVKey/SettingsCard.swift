@@ -43,16 +43,25 @@ extension View {
     }
 }
 
-/// Dark mode: a soft light fill. Light mode: a milky white fill with a hairline edge, so blocks stand out from the glass.
+/// Thẻ: chất liệu Thường là nền đặc có viền mảnh; Liquid Glass là nền trong kèm viền khúc xạ và vệt sáng.
 private struct SettingsBlockStyle: ViewModifier {
     @Environment(\.colorScheme) private var scheme
+    @ObservedObject private var appearance = GlassAppearance.shared
 
     func body(content: Content) -> some View {
+        let tokens = Tokens(scheme)
         let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
-        content
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(scheme == .dark ? Color.primary.opacity(0.12) : Color.white.opacity(0.55), in: shape)
-            .overlay { if scheme == .light { shape.strokeBorder(Color.black.opacity(0.08), lineWidth: 0.5) } }
+        // Màu chữ cố định theo token: trong kính, `.primary`/`.secondary` bị vibrancy làm xám và thiếu tương phản.
+        let framed = content.frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(tokens.fg, tokens.fgMuted)
+        if appearance.material == .glass {
+            framed
+                .background(tokens.lgCard, in: shape)
+                .liquidGlassEdge(cornerRadius: 12)
+        } else {
+            framed
+                .background(tokens.card, in: shape)
+                .overlay { shape.strokeBorder(tokens.cardBorder, lineWidth: 0.5) }
+        }
     }
 }
 

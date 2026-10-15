@@ -26,30 +26,58 @@ struct PopupView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(UIStrings.tr("popup.header")).font(.system(size: 15, weight: .semibold))
+            HStack(spacing: 10) {
+                LogoMark(letter: state.isEnglish ? "E" : "V", size: 30)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(UIStrings.tr("popup.header")).font(.system(size: 13, weight: .semibold))
+                    Text("\(currentLabel(Self.inputChoices, state.settings.inputType)) · \(currentLabel(Self.tableChoices, state.settings.codeTable))")
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.secondary)
+                }
                 Spacer(minLength: 8)
                 Toggle("", isOn: vietnameseBinding)
                     .labelsHidden()
                     .toggleStyle(SettingsSwitchStyle())
             }
             .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
 
-            PopupChoiceSection(title: UIStrings.tr("popup.inputMethod"), choices: Self.inputChoices, selected: state.settings.inputType) { kind in
+            if let app = excludedApp {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text(UIStrings.tr("popup.excluded", app))
+                        .font(.system(size: 11.5))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.orange.opacity(0.14), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .padding(.horizontal, 4)
+                .padding(.bottom, 6)
+            }
+
+            Divider().padding(.horizontal, 8).padding(.bottom, 2)
+
+            PopupChoiceSection(
+                title: UIStrings.tr("popup.inputMethod"), choices: Self.inputChoices,
+                selected: state.settings.inputType, collapsible: false
+            ) { kind in
                 state.updateSettings { $0.inputType = kind }
             }
+
+            Divider().padding(.horizontal, 8).padding(.vertical, 4)
+
             PopupChoiceSection(title: UIStrings.tr("popup.codeTable"), choices: Self.tableChoices, selected: state.settings.codeTable) { table in
                 state.updateSettings { $0.codeTable = table }
             }
 
-            Divider().padding(.vertical, 4)
+            Divider().padding(.horizontal, 8).padding(.vertical, 4)
 
             PopupRow(title: UIStrings.tr("popup.macros"), systemImage: "text.badge.plus") { openSettings(.macro) }
             PopupRow(title: UIStrings.tr("popup.controlPanel"), systemImage: "gearshape", hint: "⌘,") { openSettings(nil) }
-
-            Divider().padding(.vertical, 4)
-
             PopupRow(title: UIStrings.tr("popup.quit"), systemImage: "power", hint: "⌘Q") { NSApp.terminate(nil) }
         }
         .padding(6)
@@ -68,6 +96,16 @@ struct PopupView: View {
 
     private var vietnameseBinding: Binding<Bool> {
         Binding(get: { !state.isEnglish }, set: { state.setEnglish(!$0) })
+    }
+
+    /// Tên ứng dụng phía trước khi nó nằm trong danh sách loại trừ.
+    private var excludedApp: String? {
+        guard let app = state.lastApp, state.settings.excludedAppsMacos.contains(app.bundleID) else { return nil }
+        return app.name
+    }
+
+    private func currentLabel<V: Hashable>(_ choices: [ChoiceOption<V>], _ value: V) -> String {
+        choices.first { $0.value == value }?.label ?? ""
     }
 
     private func openSettings(_ tab: SettingsTab?) {

@@ -19,6 +19,7 @@ struct SettingsMacroImportRow: View {
                     Toggle(UIStrings.misc("macroImport.replace"), isOn: $replace)
                         .toggleStyle(.checkbox)
                     Button(UIStrings.misc("macroImport.button"), action: pick)
+                        .buttonStyle(PressButtonStyle())
                 }
             }
             if let message {

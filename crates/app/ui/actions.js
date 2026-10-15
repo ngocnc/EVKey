@@ -2,11 +2,6 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
 
-const applyTheme = () => {
-  const th = localStorage.getItem("evkey-theme") ?? "system";
-  window.__TAURI__.window.getCurrentWindow().setTheme(th === "system" ? null : th).catch(console.error);
-};
-applyTheme();
 
 const menu = $("ac-menu");
 const setup = menu.querySelector(".ac-setup");
@@ -27,7 +22,7 @@ async function render() {
   setUiLanguage(v.ui_language);
   const menuOpen = v.status === "menu";
   const loading = v.status === "loading";
-  for (const el of menu.querySelectorAll("[data-key]")) (el.querySelector("span") ?? el).textContent = t(el.dataset.key);
+  for (const el of menu.querySelectorAll("[data-key]")) (el.querySelector(":scope > span:not(.tile):not(.ai)") ?? el).textContent = t(el.dataset.key);
   for (const btn of menu.querySelectorAll("[data-ai]")) btn.disabled = !v.gemini;
   setup.hidden = v.gemini;
   menu.hidden = !menuOpen;
@@ -41,6 +36,7 @@ async function render() {
   const copy = $("ac-copy");
   copy.hidden = v.status !== "ok";
   copy.title = t(v.replace ? "actions.replace" : "actions.copy");
+  $("ac-copy-label").textContent = t(v.replace ? "actions.replace" : "actions.copy");
   copy.dataset.cmd = v.replace ? "actions_replace" : "actions_copy";
   $("ac-copy-icon").hidden = v.replace;
   $("ac-replace-icon").hidden = !v.replace;

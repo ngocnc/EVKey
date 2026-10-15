@@ -7,6 +7,7 @@ struct ActionPanelView: View {
     @ObservedObject var model: ActionPanelModel
     /// Observed so a live UI language switch and a changed display time redraw.
     @ObservedObject private var state = AppState.shared
+    @Environment(\.colorScheme) private var scheme
 
     private static let corner: CGFloat = 14
 
@@ -17,6 +18,7 @@ struct ActionPanelView: View {
             content
         }
         .frame(width: ActionPanelController.width)
+        .background(WindowDragArea())
         .glassSurface(cornerRadius: Self.corner)
         .liquidGlassEdge(cornerRadius: Self.corner)
         .clipShape(RoundedRectangle(cornerRadius: Self.corner, style: .continuous))
@@ -34,24 +36,26 @@ struct ActionPanelView: View {
         case .ok(let result):
             text(result)
         case .failed(let message):
-            text(message).foregroundStyle(.red)
+            text(message).foregroundStyle(Tokens(scheme).danger)
         }
     }
 
-    /// Result, error or progress text. A click on it closes the panel, as on the translate popup.
+    /// Result, error or progress text; dragging it moves the panel. A click on a result or error closes the panel, as on
+    /// the translate popup; while loading a click does nothing, so extra clicks on a chosen entry cannot close it.
     private func text(_ string: String) -> some View {
-        ScrollView {
-            Text(string)
-                .font(.system(size: 15, weight: .medium))
-                .lineSpacing(7)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 14)
-                .padding(.leading, 18)
-                .padding(.trailing, 70)
-                .padding(.bottom, 16)
+        let body = Text(string)
+            .font(.system(size: 15, weight: .medium))
+            .lineSpacing(7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 14)
+            .padding(.leading, 18)
+            .padding(.trailing, 70)
+            .padding(.bottom, 16)
+        // Natural height when it fits; scrolls only past the controller's max height.
+        return ViewThatFits(in: .vertical) {
+            body.overlay(WindowDragArea { if model.mode.isSettled { ActionPanelController.shared.close() } })
+            ScrollView { body }
         }
-        .contentShape(Rectangle())
-        .onTapGesture { ActionPanelController.shared.close() }
     }
 
     private var tools: some View {

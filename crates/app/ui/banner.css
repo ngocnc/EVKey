@@ -1,19 +1,26 @@
-/* Secure Input banner. Shared by banner.html (the overlay window) and the live preview in settings.html. */
+/* Secure Input banner. Dùng chung cho banner.html (cửa sổ overlay) và preview trong settings.html. Token theo theme.css. */
 .sec-banner {
-  --bn-bg: rgba(28, 28, 30, 0.8);
-  --bn-border: #ff9f0a;
-  --bn-text: #ffffff;
+  --bn-opacity: 1;
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
-  border: 1px solid var(--bn-border);
-  border-radius: 14px;
-  background: var(--bn-bg);
-  color: var(--bn-text);
-  font: 13px/1.3 "Segoe UI", system-ui, sans-serif;
+  padding: 12px 18px 12px 12px;
+  border-radius: 8px; /* Windows: 8px theo mockup */
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--win-glass) calc(var(--bn-opacity) * 100%), transparent);
+  color: var(--fg);
+  font: 13px/1.3 var(--font);
   white-space: nowrap;
 }
-.sec-banner svg { width: 22px; height: 22px; flex: none; color: #ff9f0a; }
-.sec-banner b { display: block; font-size: 14px; font-weight: 650; }
-.sec-banner span { display: block; opacity: 0.75; }
+.sec-banner .lock {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--brand-fill);
+  flex: none;
+}
+.sec-banner .lock svg { width: 18px; height: 18px; fill: #fff; }
+.sec-banner b { display: block; font-size: 14px; font-weight: 600; }
+.sec-banner span { display: block; font-size: 11.5px; color: var(--fg-muted); }
