@@ -72,28 +72,62 @@ struct SettingsSidebar: View {
     }
 
     private func footer(tokens: Tokens) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(UIStrings.tr("sidebar.version", state.version))
                 .font(.system(size: 11))
                 .foregroundStyle(tokens.fgMuted)
-            Button(UIStrings.tr("update.checkNow")) {
+            footerLink(
+                updater.status == .checking ? UIStrings.tr("update.checking") : UIStrings.tr("update.checkNow"),
+                symbol: "arrow.triangle.2.circlepath", tokens: tokens
+            ) {
                 Task { await updater.check(manual: true) }
             }
-            .buttonStyle(PressButtonStyle())
             .disabled(updater.status == .checking)
-            .pointerCursor()
             if let updateStatus {
                 Text(updateStatus)
                     .font(.system(size: 11))
                     .foregroundStyle(tokens.fgMuted)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 18)
             }
-            Button(UIStrings.tr("info.openGitHub"), action: state.openGitHub)
-                .buttonStyle(.plain)
-                .font(.system(size: 11))
-                .foregroundStyle(tokens.fgMuted)
-                .pointerCursor()
+            footerLink(UIStrings.tr("info.openGitHub"), symbol: "arrow.up.right.square", tokens: tokens, action: state.openGitHub)
         }
         .padding(.horizontal, 12)
+    }
+
+    /// Liên kết chân sidebar: icon nhỏ + chữ phụ, rê chuột thì chữ đậm màu lên. Nhẹ hơn nút để không tranh với các mục.
+    private func footerLink(_ title: String, symbol: String, tokens: Tokens, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .font(.system(size: 11.5))
+                .labelStyle(.titleAndIcon)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(FooterLinkStyle(tokens: tokens))
+    }
+}
+
+/// Chữ phụ, rê chuột thì sáng lên, bấm thì lún nhẹ.
+private struct FooterLinkStyle: ButtonStyle {
+    let tokens: Tokens
+
+    func makeBody(configuration: Configuration) -> some View {
+        FooterLinkLabel(label: configuration.label, pressed: configuration.isPressed, tokens: tokens)
+    }
+}
+
+private struct FooterLinkLabel<Label: View>: View {
+    let label: Label
+    let pressed: Bool
+    let tokens: Tokens
+    @State private var hovered = false
+
+    var body: some View {
+        label
+            .foregroundStyle(hovered ? tokens.fg : tokens.fgMuted)
+            .scaleEffect(pressed ? 0.97 : 1)
+            .onHover { hovered = $0 }
+            .pointerCursor()
+            .motion(.easeOut(duration: 0.12), value: hovered)
     }
 }

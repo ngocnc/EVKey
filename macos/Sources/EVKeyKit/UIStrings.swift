@@ -204,6 +204,7 @@ public enum UIStrings {
         "update.skip": ("Bỏ qua bản này", "Skip this version"),
         "update.later": ("Để sau", "Later"),
         "update.checkNow": ("Kiểm tra cập nhật", "Check for updates"),
+        "update.checking": ("Đang kiểm tra…", "Checking…"),
         "update.latest": ("Bạn đang dùng bản mới nhất", "You are on the latest version"),
         "update.error": ("Không kiểm tra được: %@", "Could not check: %@"),
         "update.autoTitle": ("Tự động kiểm tra cập nhật", "Check for updates automatically"),

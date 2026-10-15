@@ -87,14 +87,9 @@ struct SettingsTranslateTab: View {
                 .onChange(of: timeFocused) { focused in
                     if !focused { commitDisplayTime() }
                 }
-            Picker("", selection: unitBinding) {
-                ForEach(TranslateDisplayTime.DisplayUnit.allCases, id: \.self) { unit in
-                    Text(unitLabel(unit)).tag(unit)
-                }
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .fixedSize()
+            SettingsDropdown(
+                choices: TranslateDisplayTime.DisplayUnit.allCases.map { ChoiceOption(value: $0, label: unitLabel($0)) },
+                selection: unitBinding)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
