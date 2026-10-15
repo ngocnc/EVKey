@@ -52,7 +52,7 @@ public enum UIStrings {
         "typing.inputMethod": ("Kiểu gõ", "Input method"),
         "typing.inputMethod.detail": ("Chọn cách gõ dấu. Telex: as → á. VNI: a1 → á.", "How you type tone marks. Telex: as → á. VNI: a1 → á."),
         "typing.tonePlacement": ("Vị trí đặt dấu", "Tone mark position"),
-        "typing.tonePlacement.detail": ("Với oa, oe, uy: kiểu mới đặt dấu ở chữ thứ hai (hòa), kiểu cũ ở chữ thứ nhất (hoà).", "For oa, oe and uy: the new style puts the mark on the second letter (hòa), the old style on the first (hoà)."),
+        "typing.tonePlacement.detail": ("Với oa, oe, uy: kiểu mới đặt dấu ở chữ thứ nhất (hòa), kiểu cũ ở chữ thứ hai (hoà).", "For oa, oe and uy: the new style puts the mark on the first letter (hòa), the old style on the second (hoà)."),
         "typing.tone.modern": ("Kiểu mới (hòa)", "New style (hòa)"),
         "typing.tone.classic": ("Kiểu cũ (hoà)", "Old style (hoà)"),
         "typing.codeTable": ("Bảng mã", "Text encoding"),

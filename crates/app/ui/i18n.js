@@ -123,8 +123,8 @@ const STRINGS = {
     en: "Tone mark position",
   },
   "typing.tone.desc": {
-    vi: "Với oa, oe, uy: kiểu mới đặt dấu ở chữ thứ hai (hòa), kiểu cũ ở chữ thứ nhất (hoà).",
-    en: "For oa, oe and uy: the new style puts the mark on the second letter (hòa), the old style on the first (hoà).",
+    vi: "Với oa, oe, uy: kiểu mới đặt dấu ở chữ thứ nhất (hòa), kiểu cũ ở chữ thứ hai (hoà).",
+    en: "For oa, oe and uy: the new style puts the mark on the first letter (hòa), the old style on the second (hoà).",
   },
   "typing.tone.new": { vi: "Kiểu mới (hòa)", en: "New style (hòa)" },
   "typing.tone.old": { vi: "Kiểu cũ (hoà)", en: "Old style (hoà)" },
