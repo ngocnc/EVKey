@@ -6,7 +6,7 @@
 .side { display: flex; flex-direction: column; padding: 14px 10px 12px; border-right: 1px solid var(--separator); min-height: 0; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; font-size: 15px; font-weight: 700; }
 .tabs { position: relative; display: grid; gap: 2px; }
-.tab { all: unset; position: relative; z-index: 3; box-sizing: border-box; display: flex; align-items: center; width: 100%; min-height: 34px; padding: 0 12px; border-radius: 9px; cursor: pointer;
+.tab { all: unset; position: relative; z-index: 3; box-sizing: border-box; display: flex; align-items: center; width: 100%; min-height: 38px; padding: 0 14px; border-radius: 10px; cursor: pointer;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: transform 260ms var(--bounce), background 150ms ease, color 200ms ease; }
 .tab:not(.active):hover { background: var(--hover); }
 .tab.active { color: #fff; font-weight: 600; text-shadow: 0 1px 1px rgba(0, 0, 0, .2); }

@@ -18,7 +18,8 @@ struct SettingsSegmented<Value: Hashable>: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(selected ? Color.white : tokens.fg)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
                     .background {
                         if selected {
                             BrandFill()
@@ -32,7 +33,7 @@ struct SettingsSegmented<Value: Hashable>: View {
                     .onTapGesture { selection = choice.value }
             }
         }
-        .padding(2)
+        .padding(3)
         .background(appearance.material == .glass ? tokens.lgBtn : tokens.control, in: Capsule())
         .motion(Motion.slide(), value: selection)
     }

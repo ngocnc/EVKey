@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Switch thương hiệu: bật = `brand-fill`, tắt = `switch-off`. Cỡ thường 36×21, cỡ lớn 50×30 (hero).
+/// Switch thương hiệu: bật = `brand-fill`, tắt = `switch-off`. Cỡ thường 40×24, cỡ lớn 54×32 (hero).
 /// Núm trắng giãn ngang khi đang bấm rồi nảy sang vị trí mới.
 struct SettingsSwitchStyle: ToggleStyle {
     var large = false
@@ -21,9 +21,9 @@ struct SettingsSwitchStyle: ToggleStyle {
         @Environment(\.colorScheme) private var scheme
 
         func makeBody(configuration: Configuration) -> some View {
-            let width: CGFloat = large ? 50 : 36
-            let height: CGFloat = large ? 30 : 21
-            let inset: CGFloat = 2
+            let width: CGFloat = large ? 54 : 40
+            let height: CGFloat = large ? 32 : 24
+            let inset: CGFloat = 3
             let knob = height - inset * 2
             let knobWidth = configuration.isPressed ? knob * 1.35 : knob
             let travel = width - inset * 2 - knobWidth

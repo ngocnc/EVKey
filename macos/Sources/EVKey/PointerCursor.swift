@@ -1,28 +1,25 @@
 import AppKit
 import SwiftUI
 
-/// Pointing-hand cursor while the mouse is over a clickable control.
+/// Con trỏ bàn tay trên control bấm được. NSHostingView tự đặt lại mũi tên mỗi lần cập nhật con trỏ, nên push/pop
+/// hay cursor rect đều bị đè; đặt lại bàn tay ở mỗi lần chuột di chuyển (onContinuousHover) thì luôn thắng.
 private struct PointerCursor: ViewModifier {
     @State private var inside = false
 
     func body(content: Content) -> some View {
         content
-            .onHover { hovering in
-                if hovering, !inside {
-                    NSCursor.pointingHand.push()
+            .onContinuousHover { phase in
+                switch phase {
+                case .active:
                     inside = true
-                } else if !hovering, inside {
-                    NSCursor.pop()
+                    NSCursor.pointingHand.set()
+                case .ended:
                     inside = false
+                    NSCursor.arrow.set()
                 }
             }
-            // A control that disappears under the mouse never reports the exit, so release the cursor here.
-            .onDisappear {
-                if inside {
-                    NSCursor.pop()
-                    inside = false
-                }
-            }
+            // Control biến mất ngay dưới chuột thì không có .ended: trả lại mũi tên ở đây.
+            .onDisappear { if inside { NSCursor.arrow.set() } }
     }
 }
 

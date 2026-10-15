@@ -56,8 +56,8 @@ struct SettingsSidebar: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
                 .background {
                     if selected {
                         BrandFill()
