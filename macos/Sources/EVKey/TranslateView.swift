@@ -7,6 +7,7 @@ struct TranslateView: View {
     @ObservedObject var model: TranslateModel
     /// Observed so a live UI language switch and a changed display time redraw.
     @ObservedObject private var state = AppState.shared
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let ms = state.settings.translatePopupMs
@@ -44,7 +45,7 @@ struct TranslateView: View {
             Text(model.result)
         case .failed(let failure):
             Text(failure.message)
-                .foregroundStyle(.red)
+                .foregroundStyle(Tokens(scheme).danger)
         }
     }
 }
@@ -58,10 +59,7 @@ struct DrainBar: View {
     @State private var drained = false
 
     var body: some View {
-        Rectangle()
-            .fill(LinearGradient(
-                colors: [Color.accentColor.opacity(0.55), Color.accentColor],
-                startPoint: .leading, endPoint: .trailing))
+        BrandLine()
             .frame(maxWidth: .infinity)
             .frame(height: 3)
             .scaleEffect(x: drained ? 0 : 1, anchor: .leading)

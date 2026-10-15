@@ -51,7 +51,8 @@ private struct SettingsBlockStyle: ViewModifier {
     func body(content: Content) -> some View {
         let tokens = Tokens(scheme)
         let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
-        let framed = content.frame(maxWidth: .infinity, alignment: .leading)
+        // Màu chữ cố định theo token: trong kính, `.primary`/`.secondary` bị vibrancy làm xám và thiếu tương phản.
+        let framed = content.frame(maxWidth: .infinity, alignment: .leading).foregroundStyle(tokens.fg, tokens.fgMuted)
         if appearance.material == .glass {
             framed
                 .background(tokens.lgCard, in: shape)

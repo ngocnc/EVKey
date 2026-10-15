@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Plain popup row: optional icon, title, and a right-aligned shortcut hint.
+/// Hàng popup: icon tuỳ chọn, tiêu đề, gợi ý phím tắt bên phải. Màu chữ lấy từ `PopupRowStyle` (trắng khi rê chuột).
 struct PopupRow: View {
     let title: String
     var systemImage: String? = nil
@@ -13,7 +13,7 @@ struct PopupRow: View {
                 if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+                        .opacity(0.7)
                         .frame(width: 16)
                 }
                 Text(title)
@@ -21,12 +21,12 @@ struct PopupRow: View {
                 Spacer(minLength: 8)
                 if let hint {
                     Text(hint)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12, weight: .medium))
+                        .opacity(0.65)
                 }
             }
         }
-            .pointerCursor()
         .buttonStyle(PopupRowStyle())
+        .pointerCursor()
     }
 }

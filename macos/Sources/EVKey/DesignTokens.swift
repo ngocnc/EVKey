@@ -105,6 +105,8 @@ struct Tokens {
     var success: Color { dark ? Color(hex: 0x30D158) : Color(hex: 0x1E8E3E) }
     var warning: Color { dark ? Color(hex: 0xFFB340) : Color(hex: 0xB25000) }
     var danger: Color { dark ? Color(hex: 0xFF6961) : Color(hex: 0xC62828) }
+    /// Nền đặc (Reduce Transparency, lớp phủ banner).
+    var surface: Color { dark ? Color(hex: 0x1E1E20) : Color(hex: 0xF2F2F4) }
 }
 
 /// Đường cong chuyển động chung (MASTER.md › Motion).

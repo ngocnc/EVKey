@@ -7,6 +7,7 @@ struct ActionPanelView: View {
     @ObservedObject var model: ActionPanelModel
     /// Observed so a live UI language switch and a changed display time redraw.
     @ObservedObject private var state = AppState.shared
+    @Environment(\.colorScheme) private var scheme
 
     private static let corner: CGFloat = 14
 
@@ -35,7 +36,7 @@ struct ActionPanelView: View {
         case .ok(let result):
             text(result)
         case .failed(let message):
-            text(message).foregroundStyle(.red)
+            text(message).foregroundStyle(Tokens(scheme).danger)
         }
     }
 

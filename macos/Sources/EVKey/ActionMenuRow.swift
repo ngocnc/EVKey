@@ -1,35 +1,57 @@
 import SwiftUI
 
-/// One line of the action menu: an SF Symbol and a label, highlighted under the pointer. Dimmed and inert when disabled.
+/// Một hàng của bảng hành động: ô icon màu, nhãn, badge AI tuỳ chọn. Rê chuột thì nền `brand-fill` chữ trắng; mờ và không
+/// bấm được khi tắt.
 struct ActionMenuRow: View {
     let symbol: String
+    let tile: [Color]
     let title: String
+    var ai = false
     var enabled = true
     let action: () -> Void
-    @State private var hovering = false
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: symbol)
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundStyle(Color.accentColor)
-                    .frame(width: 18)
-                Text(title)
-                    .font(.system(size: 14))
+                ActionTile(symbol: symbol, colors: tile)
+                Text(title).font(.system(size: 13.5))
                 Spacer(minLength: 0)
+                if ai { AIBadge() }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                hovering && enabled ? Color.primary.opacity(0.1) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PopupRowStyle())
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.4)
-        .onHover { hovering = $0 }
+        .pointerCursor()
+    }
+}
+
+/// Ô vuông 22pt bo 6, nền gradient màu riêng của từng hành động, icon trắng.
+struct ActionTile: View {
+    let symbol: String
+    let colors: [Color]
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
+            .overlay {
+                Image(systemName: symbol)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .frame(width: 22, height: 22)
+            .shadow(color: .black.opacity(0.15), radius: 1, y: 1)
+    }
+}
+
+/// Badge "AI" nền `brand-fill`.
+struct AIBadge: View {
+    var body: some View {
+        Text("AI")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 1)
+            .background { BrandFill().clipShape(Capsule()) }
     }
 }

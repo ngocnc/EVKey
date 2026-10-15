@@ -35,7 +35,8 @@ public enum UIStrings {
         // Menu bar popup
         "popup.header": ("Gõ tiếng Việt", "Vietnamese typing"),
         "popup.inputMethod": ("KIỂU GÕ", "INPUT METHOD"),
-        "popup.codeTable": ("BẢNG MÃ", "CODE TABLE"),
+        "popup.codeTable": ("Bảng mã", "Code table"),
+        "popup.excluded": ("Đang tắt trong %@ (ứng dụng loại trừ)", "Off in %@ (excluded app)"),
         "popup.macros": ("Quản lý gõ tắt…", "Manage macros…"),
         "popup.controlPanel": ("Mở cài đặt…", "Open settings…"),
         "popup.quit": ("Thoát EVKey", "Quit EVKey"),
@@ -195,6 +196,7 @@ public enum UIStrings {
         // Updates
         "update.title": ("Đã có bản EVKey mới", "A new version of EVKey is available"),
         "update.version": ("Phiên bản %@", "Version %@"),
+        "update.current": ("bạn đang dùng %@", "you have %@"),
         "update.notes": ("Có gì mới", "What's new"),
         "update.noNotes": ("Bản này chưa có ghi chú phát hành.", "This release has no notes."),
         "update.install": ("Cài đặt và mở lại", "Install and relaunch"),

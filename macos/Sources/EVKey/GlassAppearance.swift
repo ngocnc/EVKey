@@ -53,9 +53,12 @@ final class GlassAppearance: ObservableObject {
         transparency = defaults.object(forKey: "glass.transparency") as? Int ?? Self.defaultTransparency
     }
 
-    /// Độ đậm lớp phủ nền kính: càng trong suốt càng nhẹ.
+    /// Độ đậm lớp phủ nền kính: càng trong suốt càng nhẹ. Kính sáng không có cạnh tối nên cần lớp trắng đậm hơn,
+    /// nếu không cửa sổ thành màu xám đục.
     func tintOpacity(_ scheme: ColorScheme) -> Double {
-        (1 - Double(transparency) / 100) * (scheme == .dark ? 0.6 : 0.7) + 0.05
+        scheme == .dark
+            ? (1 - Double(transparency) / 100) * 0.6 + 0.05
+            : (1 - Double(transparency) / 100) * 0.55 + 0.35
     }
 
     /// Applies the saved theme; call once at launch (the setter only runs on changes).
@@ -81,11 +84,22 @@ private struct GlassSurface<S: Shape>: ViewModifier {
         if appearance.material == .plain {
             content.background(Color(nsColor: .windowBackgroundColor), in: shape)
         } else if #available(macOS 26.0, *) {
-            content.glassEffect(.regular.tint(tint), in: shape)
+            content.glassEffect(.regular.tint(tint), in: shape).overlay { lightSheen }
         } else {
             content
                 .background(.ultraThinMaterial, in: shape)
                 .background(tint, in: shape)
+                .overlay { lightSheen }
+        }
+    }
+
+    /// Vệt sáng chéo từ góc trên trái cho kính sáng, thay cho cạnh tối mà kính tối có sẵn.
+    @ViewBuilder private var lightSheen: some View {
+        if scheme == .light {
+            shape.fill(LinearGradient(
+                colors: [.white.opacity(0.5), .white.opacity(0.05), .white.opacity(0.22)],
+                startPoint: .topLeading, endPoint: .bottomTrailing))
+                .allowsHitTesting(false)
         }
     }
 }

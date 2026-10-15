@@ -1,68 +1,72 @@
+/* Bảng hành động (3a) và kết quả trong cùng panel (3b). Giá trị theo mockup; token dùng chung lấy từ theme.css. */
+:root {
+  --t-blue: linear-gradient(135deg, #64D1FF, #5E5CE6); --t-orange: linear-gradient(135deg, #FFB340, #FF7A1A);
+  --t-gray: linear-gradient(135deg, #9AA0AA, #5F6570); --t-green: linear-gradient(135deg, #4CD97B, #1E9E4A);
+  --t-purple: linear-gradient(135deg, #C58BFF, #8A4DE8); --t-teal: linear-gradient(135deg, #3FD3C6, #0F9C9C);
+}
+html, body { height: auto; background: transparent; }
+body { user-select: none; -webkit-user-select: none; font-family: var(--font); color: var(--fg); }
+button { background: none; border: 0; padding: 0; text-align: left; font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 
-/* Liquid glass over the native acrylic: a thin fill, a specular sheen from the top-left and a bright inner rim.
-   The OS draws the window's corners and shadow, so the rim is an inset shadow on the panel. */
-:root {
-  --lg-fill: rgba(255, 255, 255, 0.28);
-  --lg-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08) 35%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.12));
-  --lg-rim: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
-  --lg-btn: rgba(255, 255, 255, 0.42);
-  --lg-btn-rim: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --lg-fill: rgba(30, 30, 38, 0.32);
-    --lg-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 35%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.05));
-    --lg-rim: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-    --lg-btn: rgba(255, 255, 255, 0.1);
-    --lg-btn-rim: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 3px rgba(0, 0, 0, 0.25);
-  }
-}
+.tr-panel { display: flex; flex-direction: column; width: 100%; height: max-content; max-height: 360px; overflow: hidden;
+  cursor: grab; background: var(--win-glass); }
+/* Khi kéo cửa sổ, Acrylic tắt (dễ giật); lớp đặc thay thế. */
+.tr-panel.dragging { background: rgb(240, 240, 244); }
+@media (prefers-color-scheme: dark) { .tr-panel.dragging { background: rgb(36, 36, 44); } }
 
-/* The panel is as tall as its content; actions.js reports the height so the window can follow. */
-.tr-panel {
-  position: relative; display: flex; flex-direction: column; width: 100%; height: max-content; max-height: 360px;
-  padding: 0; overflow: hidden; cursor: grab;
-  background: var(--lg-sheen), var(--lg-fill);
-  box-shadow: var(--lg-rim);
-}
-/* While dragging the native acrylic is off (it stutters when the window moves): an opaque fill stands in. */
-.tr-panel.dragging { background: var(--lg-sheen), rgb(240, 240, 244); }
-@media (prefers-color-scheme: dark) { .tr-panel.dragging { background: var(--lg-sheen), rgb(36, 36, 44); } }
-/* Time left before the panel hides: runs along the top edge and shrinks from full to empty. */
-.tr-bar { flex: none; height: 3px; background: transparent; }
-.tr-bar i { display: block; height: 100%; transform-origin: left; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+/* Thanh đếm ngược: gradient thương hiệu, co từ đầy về rỗng. */
+.tr-bar { flex: none; height: 2px; background: transparent; }
+.tr-bar i { display: block; height: 100%; transform-origin: left; background: var(--brand-line); }
 
-.tr-text { min-height: 0; overflow-y: auto; padding: 12px 70px 16px 18px; white-space: pre-wrap; word-break: break-word; font-size: 15px; font-weight: 500; line-height: 1.5; letter-spacing: 0.1px; user-select: text; -webkit-user-select: text; }
-.tr-text.loading { color: var(--muted); font-weight: 400; }
-.tr-text.error { color: #c4291c; }
-@media (prefers-color-scheme: dark) { .tr-text.error { color: #ff8a80; } }
+/* Hàng nút: Sao chép/Thay thế (primary) và Đóng, góc trên phải. */
+.ac-tools { display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding: 8px 8px 0; }
+.ac-tool { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: var(--fg-muted); cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 260ms var(--bounce); }
+.ac-tool:hover { background: var(--hover); color: var(--fg); }
+.ac-tool:active { transform: scale(.9); }
+.ac-primary { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 99px; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: #fff; background: var(--brand-fill); box-shadow: 0 3px 12px var(--brand-shadow), inset 0 1px 0 rgba(255, 255, 255, .3);
+  transition: transform 260ms var(--bounce), filter 150ms ease; }
+.ac-primary:hover { filter: brightness(1.08) saturate(1.05); }
+.ac-primary:active { transform: scale(.95); transition-duration: 90ms; }
 
-/* Copy and close, top-right. The rest of the panel is a drag handle. */
-.ac-tools { position: absolute; top: 8px; right: 8px; z-index: 1; display: flex; gap: 4px; }
-.ac-tool {
-  display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border-radius: 50%;
-  color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s;
-}
-.ac-tool:hover { background: var(--lg-btn); box-shadow: var(--lg-btn-rim); color: var(--fg); }
+.tr-text { min-height: 0; overflow-y: auto; padding: 10px 16px 14px; white-space: pre-wrap; word-break: break-word;
+  font-size: 14px; line-height: 1.5; user-select: text; -webkit-user-select: text; }
+.tr-text.loading { color: var(--fg-muted); }
+.tr-text.error { color: var(--danger); }
 
-.ac-menu { display: flex; flex-direction: column; gap: 2px; padding: 4px 8px 10px; }
-.ac-title { padding: 6px 10px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.ac-menu { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px 10px; }
+.ac-title { padding: 6px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-muted); }
 
-.ac-item, .ac-label { display: flex; align-items: center; gap: 10px; padding: 8px 10px; font-size: 14px; }
-.ac-item { width: 100%; border-radius: 10px; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
-.ac-menu svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; color: var(--accent); }
-.ac-item:hover:not(:disabled) { background: var(--lg-btn); box-shadow: var(--lg-btn-rim); }
+.ac-item, .ac-label { display: flex; align-items: center; gap: 10px; padding: 6px 10px; font-size: 14px; }
+.ac-item { width: 100%; min-height: 34px; border-radius: 9px; cursor: pointer;
+  transition: transform 260ms var(--bounce), background 150ms ease, color 150ms ease, box-shadow 150ms ease; }
+.ac-item:hover:not(:disabled) { background: var(--brand-fill); color: #fff; box-shadow: 0 3px 10px var(--brand-shadow); }
+.ac-item:active:not(:disabled) { transform: scale(.97); transition-duration: 90ms; }
 .ac-item:disabled, .ac-chip:disabled { opacity: 0.4; cursor: default; }
+.ac-item > span:not(.tile):not(.ai) { flex: 1; }
+
+/* Ô màu nhỏ đứng trước mỗi nhóm; nền là gradient --t-* ở trên. */
+.tile { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; flex: none; color: #fff;
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .35), 0 1px 2px rgba(0, 0, 0, .15); }
+.tile svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ac-item:hover .tile, .ac-item:hover .ai { filter: none; }
+
+.ai { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px; color: #fff; background: var(--brand-fill); }
 
 .ac-group { display: flex; flex-direction: column; }
-.ac-label { padding-bottom: 4px; }
-.ac-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 6px 36px; }
-.ac-chip {
-  padding: 5px 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
-  background: var(--lg-btn); box-shadow: var(--lg-btn-rim); transition: filter 0.15s, transform 0.1s;
-}
-.ac-chip:hover:not(:disabled) { filter: brightness(1.08); }
-.ac-chip:active:not(:disabled) { transform: scale(0.97); }
+.ac-label { padding-bottom: 4px; font-weight: 500; }
+.ac-label > span:not(.tile) { flex: 1; }
+.ac-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 6px 32px; }
+.ac-chip { padding: 3px 11px; border-radius: 99px; font-size: 12px; cursor: pointer; background: var(--card); border: 1px solid var(--card-border);
+  transition: transform 260ms var(--bounce), background 150ms ease, color 150ms ease, box-shadow 150ms ease; }
+.ac-chip:hover:not(:disabled) { background: var(--brand-fill); color: #fff; border-color: transparent; box-shadow: 0 3px 10px var(--brand-shadow); }
+.ac-chip:active:not(:disabled) { transform: scale(.95); transition-duration: 90ms; }
 
-.ac-setup { margin-top: 4px; padding: 6px 10px; font-size: 12px; color: var(--accent); cursor: pointer; }
+.ac-setup { margin: 4px 6px; padding: 8px 10px; border-radius: 9px; font-size: 11.5px; color: var(--fg-muted); cursor: pointer;
+  background: var(--card); border: 1px dashed var(--card-border); }
+.ac-setup:hover { color: var(--m); }
+.ac-setup:active { transform: scale(.98); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

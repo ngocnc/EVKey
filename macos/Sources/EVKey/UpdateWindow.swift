@@ -39,29 +39,37 @@ struct UpdateView: View {
     @ObservedObject private var updater = AppUpdater.shared
     @ObservedObject private var state = AppState.shared
 
+    @Environment(\.colorScheme) private var scheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(UIStrings.tr("update.title"))
-                    .font(.system(size: 16, weight: .bold))
-                if let version = updater.pending?.version {
-                    Text(UIStrings.tr("update.version", version))
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+            HStack(spacing: 14) {
+                LogoMark(letter: "V", size: 50)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(UIStrings.tr("update.title"))
+                        .font(.system(size: 17, weight: .bold))
+                    if let version = updater.pending?.version {
+                        Text(UIStrings.tr("update.version", version) + " · " + UIStrings.tr("update.current", state.version))
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
+            .padding(.top, 14)
 
-            Text(UIStrings.tr("update.notes"))
-                .font(.system(size: 12, weight: .semibold))
+            Text(UIStrings.tr("update.notes").uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .tracking(0.4)
                 .foregroundStyle(.secondary)
 
             SettingsCard {
                 ScrollView {
                     Text(notesText)
-                        .font(.system(size: 12))
+                        .font(.system(size: 12.5))
+                        .lineSpacing(3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
-                        .padding(12)
+                        .padding(14)
                 }
                 .frame(maxHeight: .infinity)
             }
@@ -70,7 +78,7 @@ struct UpdateView: View {
             if let error = updater.installError {
                 Text(error)
                     .font(.system(size: 12))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Tokens(scheme).danger)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -81,13 +89,16 @@ struct UpdateView: View {
                     }
                     UpdateWindowController.shared.close()
                 }
+                .buttonStyle(PressButtonStyle())
                 Spacer()
                 Button(UIStrings.tr("update.later")) {
                     UpdateWindowController.shared.close()
                 }
+                .buttonStyle(PressButtonStyle())
                 Button(installTitle) {
                     Task { await updater.install() }
                 }
+                .buttonStyle(PressButtonStyle(primary: true))
                 .keyboardShortcut(.defaultAction)
                 .disabled(updater.installing || updater.pending == nil)
             }

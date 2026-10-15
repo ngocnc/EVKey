@@ -165,6 +165,7 @@ struct SettingsHotkeyRow: View {
             }
             return nil
         }
+        HotkeyRecording.setActive(true)
         recorder = id
     }
 
@@ -192,6 +193,7 @@ struct SettingsHotkeyRow: View {
     private func removeMonitor() {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
+        HotkeyRecording.setActive(false)
     }
 
     private func clear() {
