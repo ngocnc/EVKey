@@ -15,6 +15,7 @@ impl Engine {
             if self.cfg.use_macro != 0 {
                 if let Some(k) = self.hook.macro_key.first_mut() {
                     *k |= CAPS_MASK;
+                    self.macro_first_auto_capped = self.cfg.macro_ignores_auto_caps != 0;
                 }
             }
         }

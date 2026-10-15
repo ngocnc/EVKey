@@ -252,6 +252,7 @@ impl Settings {
             upper_case_after_exclaim: self.upper_case_after_punct as i32,
             upper_case_after_enter: self.upper_case_after_enter as i32,
             upper_case_on_reset: self.upper_case_first_letter as i32,
+            macro_ignores_auto_caps: 1,
             allow_consonant_zfwj: self.allow_consonant_zfwj as i32,
             quick_start_consonant: self.quick_start_consonant as i32,
             quick_end_consonant: self.quick_end_consonant as i32,

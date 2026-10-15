@@ -8,7 +8,7 @@ use std::time::{Instant, SystemTime};
 
 use evkey_engine::composer::Composer;
 use evkey_engine::consts::CAPS_MASK;
-use evkey_engine::engine::V_RESTORE_AND_START_NEW_SESSION;
+use evkey_engine::engine::{V_REPLACE_MACRO, V_RESTORE_AND_START_NEW_SESSION};
 use evkey_engine::hotkey::Hotkey;
 use evkey_engine::keys::{KEY_DELETE, KEY_ESC};
 use evkey_engine::settings::{self, Settings};
@@ -152,7 +152,9 @@ impl Session {
         }
         if let Some(g) = group(vk) {
             let hotkey_toggled = self.on_modifier(g, down, mods);
-            return Reaction { hotkey_toggled, ..Reaction::default() };
+            // Releasing Alt right after a toggle would open the window's menu bar and swallow the next keys.
+            let dummy_key = hotkey_toggled && self.hotkey.is_some_and(|h| h.alt);
+            return Reaction { hotkey_toggled, dummy_key, ..Reaction::default() };
         }
         if !down {
             return Reaction::default();
@@ -224,12 +226,15 @@ impl Session {
             let ch = key_code_to_character(vk as u32 | if caps != 0 { CAPS_MASK } else { 0 });
             if ch != 0 { Resend::Char(ch) } else { Resend::Vk(vk) }
         });
+        // A macro types a long run of text; the extra char (U+202F, shown as a space) can be left behind mid-text by
+        // editors that apply input late (Lark), so macros go without it. Only a browser address bar autocompletes here.
+        let guard = engine.hook.code != V_REPLACE_MACRO;
         Reaction {
             swallow: true,
             edit: Some(Output {
-                prefix_empty_char: true,
+                prefix_empty_char: guard,
                 // ponytail: OpenKey's "fix recommend browser" for every app; per-app opt-out if some app dislikes it.
-                backspaces: edit.backspaces + 1,
+                backspaces: edit.backspaces + guard as usize,
                 text: edit.text,
                 resend,
             }),
@@ -267,6 +272,28 @@ mod tests {
         dir
     }
 
+    #[test]
+    fn macro_edit_has_no_empty_char_but_word_edits_keep_it() {
+        let dir = dir_with("macro-edit", Settings::default());
+        let macros = BTreeMap::from([("ms".to_string(), "millisecond".to_string())]);
+        settings::save(&dir, &Loaded { settings: Settings::default(), macros }).unwrap();
+        let mut s = Session::new(Some(dir.clone()));
+        let no_mods = mods(false, false, false);
+        for vk in [0x4D, 0x53] {
+            s.on_key(key(vk, true, no_mods));
+        }
+        let out = s.on_key(key(0x20, true, no_mods)).edit.expect("macro expands");
+        assert!(!out.prefix_empty_char);
+        assert_eq!((out.backspaces, out.text.as_str()), (2, "millisecond"));
+        // A Telex edit still starts with the guard char.
+        for vk in [0x41, 0x41] {
+            if let Some(e) = s.on_key(key(vk, true, no_mods)).edit {
+                assert!(e.prefix_empty_char);
+            }
+        }
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
     fn with_hotkey(hk: &str) -> Settings {
         Settings { toggle_hotkey: hk.into(), ..Settings::default() }
     }
@@ -294,6 +321,20 @@ mod tests {
         let r = s.on_key(key(SHIFT, false, mods(true, false, false)));
         assert!(!r.hotkey_toggled && !s.is_english());
         let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn alt_chord_asks_for_dummy_key_whichever_modifier_is_released_first() {
+        for alt_first in [false, true] {
+            let dir = dir_with("chord-alt", with_hotkey("alt+shift"));
+            let mut s = Session::new(Some(dir.clone()));
+            s.on_key(key(SHIFT, true, mods(false, false, true)));
+            s.on_key(key(ALT, true, mods(false, true, true)));
+            let (up, left) = if alt_first { (ALT, mods(false, false, true)) } else { (SHIFT, mods(false, true, false)) };
+            let r = s.on_key(key(up, false, left));
+            assert!(r.hotkey_toggled && r.dummy_key && !r.swallow, "alt_first={alt_first}");
+            let _ = std::fs::remove_dir_all(dir);
+        }
     }
 
     #[test]

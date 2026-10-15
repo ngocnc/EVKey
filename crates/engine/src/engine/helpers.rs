@@ -159,11 +159,13 @@ impl Engine {
     }
 
     pub(super) fn find_macro(&mut self) -> bool {
-        self.macros.find(
+        let found = self.macros.find(
             &mut self.hook.macro_key,
             &mut self.hook.macro_data,
             self.cfg.code_table as usize,
-            self.cfg.auto_caps_macro != 0,
-        )
+            self.cfg.auto_caps_macro != 0 || self.macro_first_auto_capped,
+        );
+        self.macro_first_auto_capped = false;
+        found
     }
 }

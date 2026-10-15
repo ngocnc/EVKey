@@ -106,8 +106,8 @@ mod tests {
     }
 
     /// Types (vk, shift, char) triples with "capitalize sentence starts" on.
-    fn type_vks(settings: Settings, keys: &[(u16, bool, char)]) -> String {
-        let loaded = Loaded { settings, macros: BTreeMap::new() };
+    fn type_vks(settings: Settings, macros: BTreeMap<String, String>, keys: &[(u16, bool, char)]) -> String {
+        let loaded = Loaded { settings, macros };
         let mut c = Composer::new(Settings::default().to_config(false));
         c.apply(&loaded);
         let mut field = String::new();
@@ -137,7 +137,7 @@ mod tests {
             keys.push(end);
             keys.extend(sep);
             keys.extend(word("chao"));
-            type_vks(settings, &keys)
+            type_vks(settings, BTreeMap::new(), &keys)
         };
         let on = || Settings { upper_case_first_char: true, ..Settings::default() };
         let (dot, question, exclaim, enter) = ((0xBE, false, '.'), (0xBF, true, '?'), (0x31, true, '!'), (0x0D, false, '\n'));
@@ -156,5 +156,21 @@ mod tests {
         assert_eq!(after(Settings { upper_case_after_enter: false, ..on() }, enter, None), "xin\nchao");
         // The master switch wins.
         assert_eq!(after(Settings::default(), dot, space), "xin. chao");
+    }
+
+    #[test]
+    fn macro_still_expands_when_sentence_start_capitalizes_its_first_letter() {
+        let on = Settings { upper_case_first_char: true, ..Settings::default() };
+        let macros = BTreeMap::from([("ms".to_string(), "millisecond".to_string())]);
+        let word = |s: &str| s.chars().map(|c| (c.to_ascii_uppercase() as u16, false, c)).collect::<Vec<_>>();
+        let mut keys = word("xin");
+        keys.extend([(0xBE, false, '.'), (0x20, false, ' ')]);
+        keys.extend(word("ms"));
+        keys.push((0x20, false, ' '));
+        assert_eq!(type_vks(on.clone(), macros.clone(), &keys), "xin. Millisecond ");
+        // Mid-sentence the case is untouched; a Shift-typed abbreviation is a different word.
+        let mut mid = word("xin ms ");
+        mid.extend([(b'M' as u16, true, 'M'), (b'S' as u16, false, 's'), (0x20, false, ' ')]);
+        assert_eq!(type_vks(on, macros, &mid), "xin millisecond Ms ");
     }
 }

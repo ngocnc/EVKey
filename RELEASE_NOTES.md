@@ -1,5 +1,11 @@
 # Release notes
 
+## v3.1.1
+
+### Sửa lỗi & cải thiện
+
+- Menu khay: bỏ viền hồng quanh dòng **Gõ tiếng Việt** khi vừa mở menu (ô chọn nhận focus tự động nên hiện khung focus). Điều hướng bằng phím vẫn có khung focus ở các mục còn lại.
+
 ## v3.1.0
 
 ### Tính năng mới

@@ -126,6 +126,7 @@ impl Engine {
         self.state_index = 0;
         self.raw_len = 0;
         self.has_handled_macro = false;
+        self.macro_first_auto_capped = false;
         self.has_handle_quick_consonant = false;
         self.long_word_helper.clear();
     }
