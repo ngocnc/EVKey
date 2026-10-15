@@ -5,6 +5,6 @@ members = ["crates/*"]
 default-members = ["crates/engine", "crates/core"]
 
 [workspace.package]
-version = "3.1.0"
+version = "3.1.1"
 edition = "2024"
 license = "GPL-3.0-only"
