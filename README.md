@@ -4,15 +4,7 @@ Bộ gõ tiếng Việt cá nhân (Rust). Windows 11 x64 dùng hook bàn phím n
 
 ## Cài đặt
 
-### Cách 1: winget (khuyên dùng)
-
-```powershell
-winget install --id chrisnguyen.EVKey -e
-```
-
-Gói chỉ có trên winget sau khi manifest đầu tiên được Microsoft duyệt (xem `packaging/winget/`). Trước đó dùng cách 2.
-
-### Cách 2: tải installer
+### Windows
 
 Tải `EVKey-Setup-<version>.exe` từ [Releases](https://github.com/ngocnc/EVKey/releases), rồi chạy file. Installer cần quyền admin (UAC) vì cài vào Program Files.
 
@@ -32,29 +24,22 @@ Bỏ tùy chọn: thêm `/TASKS=""` (không khởi động cùng Windows).
 
 Yêu cầu macOS 13 Ventura trở lên. Bản phát hành là universal (Apple Silicon + Intel) và **ad-hoc signed**, chưa notarize.
 
-Cài bằng Homebrew:
-
-```sh
-brew tap ngocnc/evkey
-brew install --cask evkey
-```
-
-Hoặc tải `EVKey-<version>-universal.dmg` từ [Releases](https://github.com/ngocnc/EVKey/releases), kéo `EVKey.app` vào `Applications`.
+Tải `EVKey-<version>-universal.dmg` từ [Releases](https://github.com/ngocnc/EVKey/releases), mở file và kéo `EVKey.app` vào `Applications`.
 
 **Build từ source**: cần macOS 13+, Command Line Tools (Swift 6+), Rust stable. Chạy `scripts/build-macos.sh` ở root repo; script build lõi Rust (`evkey-core`) cho arm64 + x86_64, build app SwiftUI trong `macos/` (SwiftPM), đóng gói `build/EVKey.app` và `build/EVKey-<version>-universal.dmg` (ad-hoc signed, kèm SHA256 in ra terminal). Giao diện macOS là SwiftUI; phần engine dùng chung Rust qua C FFI.
 
-**Lần mở đầu tiên**: vì app chưa notarize, Gatekeeper có thể chặn. Bản cài bằng Homebrew đã tự gỡ cờ quarantine. Bản tải dmg thì chuột phải `EVKey.app` → **Mở** → **Mở**.
+**Lần mở đầu tiên**: vì app chưa notarize, Gatekeeper có thể chặn. Chuột phải `EVKey.app` → **Mở** → **Mở**.
 
 **Cấp quyền**: vào **System Settings → Privacy & Security** và bật EVKey trong **Accessibility** và **Input Monitoring**. Chưa cấp quyền thì EVKey không gõ được; app tự kiểm tra lại và bắt đầu hoạt động khi quyền đã được cấp.
 
 - Sau khi cập nhật phiên bản mới, bản ad-hoc có thể bị macOS reset quyền do chữ ký đổi. Khi build từ source, tạo một lần chứng chỉ tự ký tên `EVKey Local Signing` (Keychain Access → Certificate Assistant → Create a Certificate → Code Signing); `build-macos.sh` sẽ dùng nó nên quyền được giữ qua các lần build.
 - Khi có **Secure Input** (ô nhập mật khẩu, hoặc app như Terminal bật "Secure Keyboard Entry"), EVKey tạm không xử lý tiếng Việt và hiện banner ở cạnh dưới màn hình, nêu tên ứng dụng đang giữ Secure Input. Windows có banner tương tự khi phát hiện ô mật khẩu.
 
-Gỡ: `brew uninstall --cask evkey`. Thêm `--zap` để xóa cấu hình trong `~/Library/Application Support/EVKey` và LaunchAgent.
+Gỡ: thoát EVKey, xóa `EVKey.app` khỏi `Applications`. Muốn bỏ hẳn cấu hình thì xóa thêm `~/Library/Application Support/EVKey` và LaunchAgent của EVKey trong `~/Library/LaunchAgents`.
 
 ### Gỡ cài đặt (Windows)
 
-Gỡ trong **Settings → Apps → Installed apps → EVKey**, hoặc `winget uninstall --id chrisnguyen.EVKey -e`. Gỡ sẽ đóng EVKey và bỏ khởi động cùng Windows, nhưng **giữ nguyên cấu hình** trong `%APPDATA%\EVKey`. Xóa thư mục đó nếu muốn bỏ hẳn cấu hình.
+Gỡ trong **Settings → Apps → Installed apps → EVKey**. Gỡ sẽ đóng EVKey và bỏ khởi động cùng Windows, nhưng **giữ nguyên cấu hình** trong `%APPDATA%\EVKey`. Xóa thư mục đó nếu muốn bỏ hẳn cấu hình.
 
 ## Cấu hình
 
@@ -116,7 +101,6 @@ vn = "Việt Nam"
 | `crates/app` | App khay Windows (Tauri): hook bàn phím, cửa sổ Cài đặt, popup, banner (UI web ở `crates/app/ui`) |
 | `tools/difftest` | Harness C++ build engine OpenKey gốc để so sánh |
 | `installer/` | Script Inno Setup (`evkey.iss`) và ngôn ngữ tiếng Việt |
-| `packaging/winget/` | Manifest winget |
 | `scripts/` | Smoke test Notepad, build installer, build macOS |
 
 ### Build installer
@@ -153,4 +137,4 @@ cargo run -p evkey-core --release --example gen_english_words -- en_50k.txt vi_5
 
 ### Phát hành
 
-Đẩy tag `v<version>` (khớp version trong `Cargo.toml`) để chạy `.github/workflows/release.yml`. Các bước một lần cần làm: xem comment đầu file workflow.
+Đẩy tag `v<version>` (khớp version trong `Cargo.toml`) để chạy `.github/workflows/release.yml`: workflow build `EVKey-Setup-<version>.exe` và `EVKey-<version>-universal.dmg` rồi đính vào GitHub Release.

@@ -2,6 +2,10 @@
 
 ## v4.0.0 (chưa phát hành)
 
+### Cài đặt
+
+- Bỏ cài qua winget và Homebrew. Cài bằng file tải từ GitHub Releases: `EVKey-Setup-<version>.exe` (Windows) hoặc `EVKey-<version>-universal.dmg` (macOS). Ai đã cài qua winget/Homebrew thì vẫn dùng được; bản mới cài đè bằng file .exe/.dmg, hoặc cập nhật trong app.
+
 ### Sửa lỗi & cải thiện (macOS)
 
 - Bảng hành động không còn đơ vài giây khi chạy Dịch / Thêm dấu / Sửa / Viết lại: key Gemini được đọc từ Keychain ngoài luồng giao diện. Trước đây, khi macOS hỏi quyền Keychain (sau mỗi lần cập nhật), cả bảng và phím tắt đứng chờ tới khi trả lời hộp thoại. Nên chọn **Luôn cho phép** để không bị hỏi lại.

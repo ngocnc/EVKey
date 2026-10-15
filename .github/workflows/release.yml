@@ -1,15 +1,6 @@
-# Release pipeline: push a tag `v<version>` -> tests, installer build, GitHub Release, winget submission.
-#
-# One-time user steps:
-#   1. Create a classic PAT with `public_repo` scope (or fine-grained with access to microsoft/winget-pkgs)
-#      and store it as repository secret `WINGET_TOKEN`. Without it the winget job is skipped.
-#   2. Fork https://github.com/microsoft/winget-pkgs to your account (the `fork-user` below = repo owner).
-#   3. Submit the first manifest by hand: `wingetcreate new <installer-url>` (or `winget-create`), using
-#      packaging/winget/ as the reference. winget-releaser only updates an existing package.
-# Pre-release tags (containing `-`, e.g. v2.1.0-rc1) build and publish the GitHub Release but skip winget.
-#   4. (macOS) Create repo `ngocnc/homebrew-evkey` with `Casks/evkey.rb` (copy of packaging/homebrew/evkey.rb) and
-#      store a PAT with `contents: write` on that repo as secret `HOMEBREW_TAP_TOKEN`. The macos job also needs it.
-# macOS: a universal ad-hoc signed dmg is built on macos-latest and attached to the same GitHub Release.
+# Release pipeline: push a tag `v<version>` -> tests, Windows installer (.exe) and macOS dmg attached to a GitHub Release.
+# Pre-release tags (containing `-`, e.g. v2.1.0-rc1) are published as GitHub pre-releases.
+# macOS: a universal dmg is built on macos-latest and attached to the same GitHub Release.
 
 name: release
 
@@ -79,29 +70,6 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           fail_on_unmatched_files: true
 
-  winget:
-    needs: build
-    # Skip pre-releases. The secret itself is checked in a step (secrets are not allowed in job-level `if`).
-    if: ${{ !contains(github.ref_name, '-') }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check WINGET_TOKEN is set
-        id: gate
-        env:
-          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
-        run: |
-          if [ -n "$WINGET_TOKEN" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; else echo "WINGET_TOKEN not set; skipping winget" >> "$GITHUB_STEP_SUMMARY"; fi
-
-      - name: Publish to winget
-        if: steps.gate.outputs.enabled == 'true'
-        uses: vedantmgoyal9/winget-releaser@v2
-        with:
-          identifier: chrisnguyen.EVKey
-          installers-regex: 'EVKey-Setup-.*\.exe$'
-          release-tag: ${{ github.ref_name }}
-          token: ${{ secrets.WINGET_TOKEN }}
-          fork-user: ${{ github.repository_owner }}
-
   macos:
     needs: build
     runs-on: macos-latest
@@ -155,50 +123,3 @@ jobs:
           files: ${{ steps.dmg.outputs.dmg }}
           prerelease: ${{ contains(github.ref_name, '-') }}
           fail_on_unmatched_files: true
-
-      - name: Check HOMEBREW_TAP_TOKEN is set
-        id: tap-gate
-        env:
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-        run: |
-          # Pre-releases (tags containing `-`) do not update the cask.
-          enabled=false
-          if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
-            echo "HOMEBREW_TAP_TOKEN not set; skipping Homebrew tap update" >> "$GITHUB_STEP_SUMMARY"
-          elif [[ "$GITHUB_REF_NAME" == *-* ]]; then
-            echo "Pre-release tag; skipping Homebrew tap update" >> "$GITHUB_STEP_SUMMARY"
-          else
-            enabled=true
-          fi
-          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout Homebrew tap
-        if: steps.tap-gate.outputs.enabled == 'true'
-        uses: actions/checkout@v4
-        with:
-          repository: ngocnc/homebrew-evkey
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: tap
-
-      - name: Update cask version and sha256
-        if: steps.tap-gate.outputs.enabled == 'true'
-        working-directory: tap
-        env:
-          VERSION: ${{ needs.build.outputs.version }}
-          SHA256: ${{ steps.dmg.outputs.sha256 }}
-        run: |
-          # BSD sed needs an explicit backup suffix on macOS; the runner is macOS, so use -i.bak and delete it.
-          sed -i.bak -E \
-            -e "s/^  version \".*\"/  version \"${VERSION}\"/" \
-            -e "s/^  sha256 \".*\"/  sha256 \"${SHA256}\"/" \
-            Casks/evkey.rb
-          rm -f Casks/evkey.rb.bak
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Casks/evkey.rb
-          if git diff --cached --quiet; then
-            echo "Cask already at ${VERSION}"
-          else
-            git commit -m "chore(cask): bump evkey to ${VERSION}"
-            git push
-          fi
