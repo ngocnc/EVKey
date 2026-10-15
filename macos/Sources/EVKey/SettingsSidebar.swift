@@ -71,39 +71,33 @@ struct SettingsSidebar: View {
         .buttonStyle(PressButtonStyle(chrome: false))
     }
 
+    /// Chân sidebar: một cột chữ thẳng mép với chữ của các mục (lề 12), cùng cỡ chữ; phiên bản và trạng thái là chữ phụ,
+    /// hai liên kết sáng lên khi rê chuột.
     private func footer(tokens: Tokens) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(UIStrings.tr("sidebar.version", state.version))
-                .font(.system(size: 11))
                 .foregroundStyle(tokens.fgMuted)
-            footerLink(
-                updater.status == .checking ? UIStrings.tr("update.checking") : UIStrings.tr("update.checkNow"),
-                symbol: "arrow.triangle.2.circlepath", tokens: tokens
-            ) {
+            if let updateStatus {
+                Text(updateStatus)
+                    .foregroundStyle(tokens.fgMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            footerLink(updater.status == .checking ? UIStrings.tr("update.checking") : UIStrings.tr("update.checkNow"), tokens: tokens) {
                 Task { await updater.check(manual: true) }
             }
             .disabled(updater.status == .checking)
-            if let updateStatus {
-                Text(updateStatus)
-                    .font(.system(size: 11))
-                    .foregroundStyle(tokens.fgMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, 18)
-            }
-            footerLink(UIStrings.tr("info.openGitHub"), symbol: "arrow.up.right.square", tokens: tokens, action: state.openGitHub)
+            footerLink(UIStrings.tr("info.openGitHub"), tokens: tokens, action: state.openGitHub)
         }
+        .font(.system(size: 12))
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .overlay(alignment: .top) { Rectangle().fill(tokens.separator).frame(height: 1).padding(.horizontal, 2) }
     }
 
-    /// Liên kết chân sidebar: icon nhỏ + chữ phụ, rê chuột thì chữ đậm màu lên. Nhẹ hơn nút để không tranh với các mục.
-    private func footerLink(_ title: String, symbol: String, tokens: Tokens, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: symbol)
-                .font(.system(size: 11.5))
-                .labelStyle(.titleAndIcon)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(FooterLinkStyle(tokens: tokens))
+    private func footerLink(_ title: String, tokens: Tokens, action: @escaping () -> Void) -> some View {
+        Button(action: action) { Text(title).contentShape(Rectangle()) }
+            .buttonStyle(FooterLinkStyle(tokens: tokens))
     }
 }
 
